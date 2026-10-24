@@ -15,11 +15,11 @@ parentheses; we store 96.7, not −96.7). The build output carries this as
 2. *One-time resources*: the review states a total of one-time resources used to balance the
    budget and no structural figure; `structural_deficit_m` = that total (net of one-time
    expenditures only if the review states them; none of these reviews do).
-3. *Zero*: the review states no one-time reliance; value 0 with the sentence quoted.
+3. *Zero*: the review states outright that no one-time resources were used (FY2013 only); value 0 with the sentence quoted.
 4. *Derived sum*: the review itemizes one-time balancing resources but prints no total (FY2018–FY2020).
    `structural_deficit_m` = `one_time_resources_m` = the sum of the listed items, with `source.doc`
    starting "derived: sum of one-time resources itemized in IBA ...". Not net of one-time expenditures.
-5. *Not reported*: no statement, or only a partial list (FY2016, FY2017, FY2021).
+5. *Not reported*: no statement, or only a partial list (FY2015, FY2016, FY2017, FY2021).
 
 **Basis** (required `basis` field on every entry):
 - `"proposed budget; gross one-time resources"` (FY2012–FY2021): the figure comes from the IBA's review of
@@ -41,7 +41,7 @@ FY2022–FY2026 and the **proposed** budget for FY2027. Earlier years cover the 
 | 2012 | 35.1 (includes $14.1M suspended reserve contributions) | One-time resources | IBA 11-25, p.6 — https://www.sandiego.gov/sites/default/files/11_25.pdf | "The Mayor's budget balancing actions include $35.1 million of one-time resources- close to half of the $73.1 of balancing solutions. These actions include $14.1 million in cost savings from suspending the FY 2012 contributions to the City's reserves for the second year; $10.9 million as a result of using various available fund balances; $4.0 million recovered from CALFEMA and insurance providers ... and a $6.1 million one-time increase from federal stimulus dollars" (pp.6–7) |
 | 2013 | 0 | Zero | IBA 12-16, p.2 — https://www.sandiego.gov/sites/default/files/rpt1216120427.pdf | "For the first time in six years no "one-time" solutions were used to balance the budget, nor were any services reduced." |
 | 2014 | 23.7 | One-time resources | IBA 13-19, p.1 — https://www.sandiego.gov/sites/default/files/13_19_130429.pdf | "The FY 2014 budget was balanced by using approximately $19.6 million (44%) in ongoing resources and $23.7 million (56%) in one-time resources" |
-| 2015 | 0 (judgment call) | Zero | IBA 14-15, p.1 — https://www.sandiego.gov/sites/default/files/14_15_140428.pdf | "With negligible use of one-time resources and sound revenue assumptions, this proposed budget and its corresponding service levels are likely more sustainable than those proposed over the past eight years." |
+| 2015 | not reported | — | IBA 14-15, pp.1, 7 — https://www.sandiego.gov/sites/default/files/14_15_140428.pdf | "With negligible use of one-time resources and sound revenue assumptions, this proposed budget and its corresponding service levels are likely more sustainable than those proposed over the past eight years." (p.1). Partial list, p.7: revenue increases "include an increase of $5.4 million in one-time use of Transient Occupancy Tax fund balance, $2.2 million in Office of Homeland Security revenue reimbursements, and a $1.1 million increase in TransNet/gas tax funding"; "several non-recurring revenues are also incorporated". No total, so not reported ("negligible" is not "none"). |
 | 2016 | not reported | — | IBA 15-16 — https://www.sandiego.gov/sites/default/files/15_16_150427.pdf | No statement of one-time reliance or structural balance in the review. |
 | 2017 | not reported | — | IBA 16-05 — https://www.sandiego.gov/sites/default/files/16_05_review_of_the_fiscal_year_2017_proposed_budget_complete_report.pdf | No statement of one-time reliance or structural balance in the review. |
 | 2018 | 52.1 | Derived sum | IBA 17-16, p.2 (text pp.2–3) — https://www.sandiego.gov/sites/default/files/17_16_review_of_the_fiscal_year_2018_proposed_budget_complete_report.pdf | Chart "General Fund Mitigation Actions: $81.0 Million" itemizes one-time resources ($16.0M Pension Payment Stabilization Reserve, $15.5M Risk Management reserves, $8.3M Excess Equity, $8.3M Chargers lease termination fee, $4.0M Capital Outlay Fund); 16.0+15.5+8.3+8.3+4.0 = 52.1. No stated total or one-time-expenditure net. |

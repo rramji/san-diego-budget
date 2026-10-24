@@ -96,22 +96,15 @@
   },
   {
     "fy": 2015,
-    "reported": true,
-    "structural_deficit_m": {
-      "value": 0,
-      "source": {
-        "doc": "IBA Report 14-15, Review of the FY 2015 Proposed Budget",
-        "page": 1,
-        "url": "https://www.sandiego.gov/sites/default/files/14_15_140428.pdf"
-      }
-    },
+    "reported": false,
+    "structural_deficit_m": null,
     "one_time_resources_m": null,
     "one_time_expenditures_m": null,
     "suspended_reserve_m": null,
     "includes_suspended_reserve": false,
     "components": null,
     "basis": "proposed budget; gross one-time resources",
-    "note": "Reported as zero (judgment call): the review gives no dollar figure but says 'With negligible use of one-time resources and sound revenue assumptions, this proposed budget and its corresponding service levels are likely more sustainable than those proposed over the past eight years.' (p.1)."
+    "note": "Not reported: IBA Report 14-15 (Review of the FY 2015 Proposed Budget, https://www.sandiego.gov/sites/default/files/14_15_140428.pdf) states no total. It says 'With negligible use of one-time resources and sound revenue assumptions, this proposed budget and its corresponding service levels are likely more sustainable than those proposed over the past eight years.' (p.1), and on p.7 gives a partial list: revenue increases since the Outlook 'include an increase of $5.4 million in one-time use of Transient Occupancy Tax fund balance, $2.2 million in Office of Homeland Security revenue reimbursements, and a $1.1 million increase in TransNet/gas tax funding, among a number of other revenue changes', and 'several non-recurring revenues are also incorporated into the FY 2015 Proposed Budget, as there are several non-recurring expenditures.' Only the $5.4M TOT item is labelled one-time; no total is printed."
   },
   {
     "fy": 2016,
