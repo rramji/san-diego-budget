@@ -19,7 +19,9 @@ def _build(tmp_path):
 
 def test_build_all_writes_expected_files(tmp_path):
     out, paths = _build(tmp_path)
-    assert sorted(p.name for p in paths) == ["funnel.json", "headline.json", "series.json"]
+    assert sorted(p.name for p in paths) == [
+        "funnel.json", "headline.json", "series.json", "structural_deficit.json"
+    ]
     assert sorted(p.name for p in out.glob("*.json")) == sorted(p.name for p in paths)
     text = (out / "series.json").read_text()
     assert "\n" not in text.strip() and ": " not in text
@@ -56,3 +58,45 @@ def test_series_values_rounded_to_three_decimals_and_compact(tmp_path):
     prop = json.loads(text)["gf_by_fy"]["2023"]["by_account_type"]["Property Tax Revenue"]
     assert prop == 0.123
     assert "0.123456" not in text
+
+
+def _fig(value):
+    return {"value": value, "source": {"doc": "IBA test doc", "page": 1, "url": "https://example.org/x.pdf"}}
+
+
+def test_structural_deficit_merges_gf_expenditure(tmp_path):
+    cur = tmp_path / "curated"
+    shutil.copytree(CURATED, cur)
+    base = {"one_time_resources_m": None, "one_time_expenditures_m": None,
+            "suspended_reserve_m": None, "includes_suspended_reserve": False, "components": None}
+    entries = [
+        {"fy": 2013, "reported": False, "structural_deficit_m": None, **base,
+         "note": "IBA report 12-16 not located online"},
+        {"fy": 2023, "reported": True, "structural_deficit_m": _fig(38.3), **base, "note": "t"},
+        {"fy": 2027, "reported": True, "structural_deficit_m": _fig(11.2), **base, "note": "t"},
+    ]
+    (cur / "structural_deficit.json").write_text(json.dumps(entries))
+    out = tmp_path / "build"
+    build_all(FIX, cur, out)
+    built = json.loads((out / "structural_deficit.json").read_text())
+    assert built["convention"] == "positive = size of General Fund structural gap, $ millions"
+    years = {e["fy"]: e for e in built["years"]}
+    assert years[2023]["gf_expenditure_adopted_m"] == 0.0  # fixture: $150 -> 0.00015M, rounded
+    assert years[2023]["structural_deficit_m"]["value"] == 38.3
+    assert years[2013]["reported"] is False and years[2013]["structural_deficit_m"] is None
+    assert years[2013]["gf_expenditure_adopted_m"] is None  # FY absent from fixture series
+    assert years[2027]["gf_expenditure_adopted_m"] is None
+    markers = {m["fy"]: m for m in built["markers"]}
+    assert sorted(markers) == [2010, 2024, 2025, 2028]
+    assert markers[2028]["source"]["value"] == 30
+    assert "kpbs.org" in markers[2028]["source"]["source"]["url"]
+
+
+def test_structural_deficit_rejects_unsourced_figure(tmp_path):
+    cur = tmp_path / "curated"
+    shutil.copytree(CURATED, cur)
+    (cur / "structural_deficit.json").write_text(json.dumps(
+        [{"fy": 2020, "reported": True, "structural_deficit_m": {"value": 5}, "note": ""}]))
+    import pytest
+    with pytest.raises(ValueError, match=r"^\[0\]\.structural_deficit_m"):
+        build_all(FIX, cur, tmp_path / "build")

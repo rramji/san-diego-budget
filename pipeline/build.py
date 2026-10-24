@@ -55,15 +55,52 @@ def build_series(rows: list[dict], vintage: dict | None = None) -> dict:
     }
 
 
+DEFICIT_CONVENTION = "positive = size of General Fund structural gap, $ millions"
+KPBS_2026_06_09 = (
+    "https://www.kpbs.org/news/politics/2026/06/09/"
+    "san-diego-city-council-looks-to-close-15-3-million-gap-going-into-tuesdays-budget-vote"
+)
+DEFICIT_MARKERS = [
+    {"fy": 2010, "label": "Sales tax measure fails"},
+    {"fy": 2024, "label": "Sales tax measure fails"},
+    {"fy": 2025, "label": "Trash fee adopted"},
+    {
+        "fy": 2028,
+        "label": "IBA projects ~$30M gap",
+        "source": {
+            "value": 30,
+            "source": {
+                "doc": "KPBS, 2026-06-09: the structural deficit 'will grow to around $30 million next year, according to' IBA Charles Modica",
+                "page": None,
+                "url": KPBS_2026_06_09,
+            },
+        },
+    },
+]
+
+
+def build_structural_deficit(entries: list[dict], series: dict) -> dict:
+    """Curated per-FY structural deficit entries, each with that FY's adopted GF expense merged in."""
+    gf = series["gf_by_fy"]
+    years = []
+    for e in sorted(entries, key=lambda e: e["fy"]):
+        fy_totals = gf.get(str(e["fy"])) or gf.get(e["fy"])
+        years.append({**e, "gf_expenditure_adopted_m": fy_totals["expense_m"] if fy_totals else None})
+    return {"convention": DEFICIT_CONVENTION, "years": years, "markers": DEFICIT_MARKERS}
+
+
 def build_all(raw_dir: Path, curated_dir: Path, out_dir: Path) -> list[Path]:
     """Write every published file. To add a file, append one (name, fn) to steps."""
     raw_dir, curated_dir, out_dir = Path(raw_dir), Path(curated_dir), Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     rows = load_budget_rows(raw_dir)
+    series = build_series(rows, _vintage(raw_dir))
     steps = [
-        ("series", lambda: build_series(rows, _vintage(raw_dir))),
+        ("series", lambda: series),
         ("headline", lambda: curated.load(curated_dir, "headline")),
         ("funnel", lambda: curated.load(curated_dir, "funnel")),
+        ("structural_deficit", lambda: build_structural_deficit(
+            curated.load(curated_dir, "structural_deficit"), series)),
     ]
     return [_write(out_dir, name, fn()) for name, fn in steps]
 
