@@ -3,6 +3,8 @@ import * as deficitBars from './charts/deficit-bars.js';
 import * as funnel from './charts/funnel.js';
 import { renderCuts } from './cuts.js';
 export { renderCuts };
+import { mountGapToggle, gapMoney } from './gapui.js';
+export { mountGapToggle };
 import * as sankey from './charts/sankey.js';
 import { themeColors, observeWidth } from './charts/util.js';
 
@@ -279,6 +281,15 @@ function renderSankey(flows) {
   });
 }
 
+function renderChapter3(data) {
+  const g = data.gap;
+  for (const sp of document.querySelectorAll('[data-gap-fig]')) {
+    const f = g[sp.dataset.gapFig];
+    sp.replaceWith(figureSpan(f, gapMoney(f.value)));
+  }
+  mountGapToggle(document.getElementById('ch3-calc'), g);
+}
+
 async function main() {
   mountProgress();
   mountDigDeeper(document);
@@ -288,6 +299,7 @@ async function main() {
   renderGlossary(data.glossary);
   renderChapter1(data);
   renderChapter2(data);
+  renderChapter3(data);
   mountPopovers(document);
   document.dispatchEvent(new CustomEvent('data-ready', { detail: data }));
 }

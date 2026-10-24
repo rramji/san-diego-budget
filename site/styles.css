@@ -153,3 +153,21 @@ main { padding-bottom: 80px; }
 .flowlist li.is-highlight { border-left: 4px solid var(--gap); padding-left: 8px; }
 .flowlist p { margin: 0 0 2px; }
 .flowlist .flow-rule { color: var(--muted); }
+
+/* ---- Chapter 3: gap calculator ---- */
+.seg { display: flex; gap: 0; border: 1px solid var(--rule); border-radius: 10px; background: var(--surface); padding: 3px; margin-bottom: 16px; }
+.seg-opt { flex: 1; min-height: 44px; padding: 8px 10px; border: 0; border-radius: 7px; background: transparent; color: var(--text); font: 600 0.9rem/1.25 var(--font-ui); cursor: pointer; }
+.seg-opt[aria-checked="true"] { background: var(--text); color: var(--bg); }
+.gap-cols { display: grid; gap: 16px; grid-template-columns: 1fr; }
+@media (min-width: 640px) { .gap-cols.n2 { grid-template-columns: 1fr 1fr; } }
+.gap-col { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 16px; min-width: 0; }
+.gap-framing { margin: 0; font: 650 0.8rem/1.3 var(--font-ui); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.gap-amount { margin: 4px 0 12px; font: 1.1rem/1.3 var(--font-ui); }
+.gap-amount .figure { font-size: 2.1rem; color: var(--gap); }
+.gap-rows { margin: 0; }
+.gap-rows dt { font: 0.8rem/1.4 var(--font-ui); color: var(--muted); margin-top: 10px; }
+.gap-rows dd { margin: 0; font-size: 1rem; }
+.gap-rows .figure { white-space: normal; }
+.gap-compare { margin: 14px 0 0; padding-top: 12px; border-top: 1px solid var(--rule); font-size: 0.95rem; line-height: 1.5; }
+.gap-reserve, .gap-note { margin: 14px 0 0; font-size: 0.95rem; max-width: 34em; }
+.gap-note { color: var(--muted); }
