@@ -2,7 +2,7 @@
 
 Date: 2026-10-23
 Owner: Robert Ramji
-Status: draft, pending builder check
+Status: builder check complete; awaiting Robert's approval
 
 ## Intent
 
@@ -174,21 +174,34 @@ marked B):
 
 ### Chapter 1: How long has this been going on? (R)
 
-Primary chart: two lines, FY2011 to FY2027, General Fund ongoing revenue
-vs. General Fund ongoing expenditure, with the gap shaded. Where the IBA
-publishes a structural deficit figure for the year, annotate it.
+Primary chart (B, after builder check): one bar per fiscal year, FY2012
+to FY2027, showing the structural deficit the IBA identified in its review
+of that year's proposed or adopted budget (one-time resources used to
+cover ongoing costs, net of one-time expenditures). This is the only
+series that shows the problem: an adopted budget balances by construction,
+so adopted revenue minus adopted expenditure from the CSV is zero every
+year and must not be drawn as the gap. Behind the bars, a faint line of
+total General Fund adopted expenditure from the CSV gives scale, so the
+reader can see the deficit as a share of the budget.
 
-Dig deeper: a stacked bar per year showing what filled the gap: federal
-COVID relief, excess equity, suspended reserve contributions, other
-one-time resources. Source: IBA structural deficit tables (FY2022–FY2027
-in 26-11; earlier years from each year's IBA proposed-budget review). Add
-two or three dated markers for context: 2010 sales tax measure failed,
-2024 sales tax measure failed, 2025 trash fee adopted.
+Years where the IBA review does not state a structural figure are drawn
+as a hatched "not reported" bar, never interpolated. Transcribing these
+figures from roughly sixteen IBA reviews is the main research task of
+chapter 1 and is on the critical path; the reports are listed at
+https://www.sandiego.gov/iba/reports/abr and each review has a summary
+section that states the one-time-resource reliance.
 
-Data: `data/curated/structural_deficit.json` (hand-transcribed per year),
-plus CSV-derived General Fund revenue and expense totals per year for the
-lines. Where the CSV total and the IBA table disagree, the chart uses the
-IBA figure and the popover shows both. (B)
+Dig deeper: for FY2022–FY2027, a stacked bar per year showing what filled
+the gap (federal COVID relief, excess equity, suspended reserve
+contributions, other one-time resources) from the IBA 26-11 table. For
+earlier years, show the breakdown only where the IBA review itemizes it.
+Add dated markers for context: 2010 sales tax measure failed, 2024 sales
+tax measure failed, 2025 trash fee adopted.
+
+Data: `data/curated/structural_deficit.json` (hand-transcribed per year,
+each with source document and page, and a flag for whether suspended
+reserve contributions are included; see chapter 3 for how that flag is
+used), plus CSV-derived General Fund expenditure totals per year.
 
 ### Chapter 2: Where is the money, and what can actually be cut? (R)
 
@@ -200,12 +213,27 @@ Primary visual: the funnel. Four horizontal stacked bars, top to bottom
 2. Remove enterprise, special revenue, internal service, capital project
    funds and CIP. Caption: legally walled off, one sentence why ("your
    water bill can't fix a pothole; a state bike grant can't either").
-3. $2.26B General Fund, segmented into pension ADC, debt service, and
-   everything else. Caption: the part Council actually votes on.
-4. The "everything else" bar segmented by department (police, fire, parks,
-   library, transportation, homelessness, all other), with the FY2027 gap
-   ($118M) drawn to the same scale beside it. Caption: the gap is about 7%
-   of what's cuttable.
+3. $2.26B General Fund, segmented into pension ADC ($396.1M), General
+   Fund debt service, and everything else. Caption: the part Council
+   actually votes on; the first two segments are contractual.
+4. The full General Fund segmented by department, gross (police, fire,
+   parks, library, transportation, homelessness, all other), with the
+   FY2027 gap ($118M) drawn to the same scale beside it. Caption: the gap
+   is about 7% of what's cuttable, where "cuttable" is bar 3's
+   "everything else." Department bars include each department's pension
+   share, and the caption says so in a clause; bars 3 and 4 are therefore
+   not required to nest exactly. (B, after builder check: netting ADC out
+   of each department is possible from the FY2026 CSV but not from the
+   FY2027 PDFs, and the teaching point does not need it.)
+
+Fiscal year for detail (B, after builder check): all four funnel bars
+are FY2027, from the PDFs. Bar 1 and bar 3 from the Executive Summary;
+bar 4 from the "General Fund Expenditures by Department" table in Vol. I
+General Fund Expenditures. The FY2026 CSV is used to cross-check that the
+department ordering and shares are consistent, and `checks.py` asserts
+CSV FY2026 General Fund totals against the published FY2026 figures, not
+against FY2027. Anything drawn from FY2026 data is labeled FY2026 on
+screen.
 
 Dig deeper, part 1: the flow diagram (R chose to include both). Three
 columns: revenue source → rule that governs it → what it pays for, drawn
@@ -225,8 +253,21 @@ to FY2027 PDF totals; FY2027 numbers from PDFs. Sankey ribbons from
 
 ### Chapter 3: What would closing the gap cost you? (R)
 
-Show the FY2027 pre-mitigation gap ($118M) and the IBA's projected FY2028
-structural gap (~$30M) in these terms (B):
+Which number is "the gap" (R approved B's framing, 2026-10-24): lead
+with the $118M pre-cut FY2027 gap, which both the IBA and the city's
+budget office use and which readers heard in the news. A toggle, "after
+this year's cuts," shows two numbers side by side: $23.1M (the city's
+residual structural deficit, Exec Summary p.5) and ~$103M (the same figure
+plus the $80.1M General Fund reserve contribution the budget skipped,
+which the IBA treats as a one-time resource; IBA 26-11 p.78). One
+sentence explains the difference in plain words: the city's Reserve Policy
+calls for a rainy-day deposit each year, the FY2027 budget made almost
+none, nothing was borrowed, but the obligation to catch up remains, so
+the IBA counts the skipped deposit as money the budget is living on. The
+IBA's ~$30M projection for FY2028 is a forward estimate of a different
+quantity and belongs in chapter 1 as a marker, not in this toggle.
+
+Show the selected gap in these terms (B):
 
 - Per resident per year, using the most recent California Department of
   Finance E-1 population estimate for the city (~1.4M; builder to fetch
@@ -240,9 +281,12 @@ structural gap (~$30M) in these terms (B):
 Alongside, the cut-only framing from chapter 2: $118M is about one dollar
 in fourteen of cuttable General Fund spending.
 
-A small toggle lets the reader switch between the $118M figure and the
-~$30M residual, with a sentence explaining the difference (one is before
-the FY2027 cuts, one is what's left after them).
+The per-resident, per-household, sales-tax, and flat-fee figures all
+recompute when the toggle changes.
+
+Plain-language glossary entries needed by this chapter and chapter 1
+(builder writes them, Robert reviews): General Fund, one-time resources,
+structural deficit, reserve contribution, pension ADC.
 
 ### Chapter 4: Check a claim (R)
 
@@ -250,11 +294,15 @@ A row of tappable chips. Tapping one expands a card with: the claim in
 quotes, what the data shows in two to four sentences, one small chart or
 figure, and source links. Starter set (B, Robert to add or strike):
 
-1. "The city prioritizes bike lanes over fixing roads." Show FY2027 CIP
-   dollars for bike/active-transportation projects by funding source
-   (grant vs. General Fund vs. TransNet), beside road repair dollars.
-   Identify bike projects by `project_name` match in the CIP CSV and by
-   the FY2027 CIP volume; builder to document the match rule.
+1. "The city prioritizes bike lanes over fixing roads." Show CIP dollars
+   for bike/active-transportation projects by funding source (grant vs.
+   General Fund vs. TransNet vs. other), beside road repair dollars by
+   funding source, using the CIP CSV for the latest year it covers
+   (FY2026) and labeled as such. Identify bike projects by `project_name`
+   match in the CIP CSV; builder to document the match rule and list the
+   matched projects in the card's dig-deeper. Also cite the FY2027
+   General Fund cut to the multimodal team from the Exec Summary. The
+   FY2027 CIP volume is not required for v1. (B, after builder check)
 2. "Pensions eat the whole budget." ADC as share of General Fund (17.7%)
    and citywide (8.8%), funded ratio trend, and the "City has fully funded
    the ADC since FY2006" note.
