@@ -46,6 +46,12 @@ def run(out_dir: Path) -> list[str]:
             )
     except (OSError, KeyError, ValueError) as e:
         failures.append(f"funnel/headline check could not run: {e!r}")
+    try:
+        vintage = _load(out_dir, "series")["vintage"]
+        if not vintage.get("fetched_at") or not vintage.get("sha256"):
+            failures.append("series.json vintage is empty (missing data/raw/manifest.json?)")
+    except (OSError, KeyError, ValueError) as e:
+        failures.append(f"series.json vintage check could not run: {e!r}")
     total = sum(p.stat().st_size for p in out_dir.glob("*.json"))
     if total >= MAX_BYTES:
         failures.append(f"data/build size {total} bytes exceeds 300,000 byte limit")
