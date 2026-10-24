@@ -1,6 +1,6 @@
 // Shared chart helpers. DOM is touched only when these functions are called,
 // so modules importing this file stay loadable in Node.
-const ROLES = ['locked', 'restricted', 'discretionary', 'gap', 'text', 'muted'];
+const ROLES = ['locked', 'restricted', 'discretionary', 'gap', 'text', 'muted', 'bg'];
 
 export function themeColors() {
   const cs = getComputedStyle(document.documentElement);

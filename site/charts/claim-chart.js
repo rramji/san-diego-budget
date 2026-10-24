@@ -1,5 +1,6 @@
 // Chapter 4 claim charts: grouped bars and a single-axis line. prepare() is pure; render() uses the global d3.
 const fmtM = (x) => `$${Number(x.toFixed(x >= 10 ? 1 : 2))}M`;
+const shortLabel = (l) => l.replace(/\/.*$/, '').replace(/ (Financing|Funds?)$/, '');
 const SVGNS = 'http://www.w3.org/2000/svg';
 
 export function prepare(chart) {
@@ -85,7 +86,7 @@ export function render(el, chart, colors, source = null) {
   el.style.position = 'relative';
   const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const W = Math.max(260, Math.round(el.getBoundingClientRect().width || el.parentElement.clientWidth));
-  const H = 230;
+  const H = data.type === 'line' ? 230 : 280;
   const m = { t: 14, r: 10, b: data.type === 'line' ? 28 : 52, l: 40 };
   const iw = W - m.l - m.r, ih = H - m.t - m.b;
   const y = d3.scaleLinear().domain([0, data.max * 1.1]).nice().range([ih, 0]);
@@ -114,7 +115,11 @@ export function render(el, chart, colors, source = null) {
   g.append('line').attr('x1', 0).attr('x2', iw).attr('y1', ih).attr('y2', ih).attr('stroke', colors.muted);
 
   const n = data.type === 'grouped_bar' ? data.seriesLabels.length : 1;
-  const tintAt = (i) => d3.interpolateRgb(colors.discretionary, colors.text)(n > 1 ? (i / (n - 1)) * 0.6 : 0);
+  // Theme-aware tints: keep the base hue and chroma, spread lightness by >= 25 points per theme (light text token => dark theme).
+  const dark = d3.lab(colors.text).l > 50;
+  const [lo, hi] = dark ? [38, 90] : [28, 80];
+  const base = d3.hcl(colors.discretionary);
+  const tintAt = (i) => (n > 1 ? d3.hcl(base.h, base.c, dark ? hi - ((hi - lo) * i) / (n - 1) : lo + ((hi - lo) * i) / (n - 1)).formatRgb() : colors.discretionary);
   const legend = document.createElement('ul');
   legend.className = 'legend';
 
@@ -131,7 +136,13 @@ export function render(el, chart, colors, source = null) {
           .attr('y', reduced ? ih - h : ih).attr('height', reduced ? h : 0);
         if (!reduced) rect.transition().duration(450).attr('y', ih - h).attr('height', h);
         rect.append('title').text(`${s.label}: ${fmtM(s.amount_m)}`);
-        if (s.amount_m === 0) font(gg.append('text').attr('x', bx + bw / 2).attr('y', ih - 6).attr('text-anchor', 'middle').text('$0'));
+        const txt = `${shortLabel(s.label)} ${fmtM(s.amount_m)}`;
+        const len = txt.length * 6.3 + 6;
+        const inside = ih - h - len - 4 < 0 && h > len + 8;
+        const fill = tintAt(s.idx);
+        const ink = Math.abs(d3.lab(fill).l - d3.lab(colors.bg).l) > Math.abs(d3.lab(fill).l - d3.lab(colors.text).l) ? colors.bg : colors.text;
+        gg.append('text').attr('class', 'bar-label').attr('transform', `translate(${bx + bw / 2 + 4},${inside ? ih - h + 6 : ih - h - 4}) rotate(-90)`)
+          .attr('text-anchor', inside ? 'end' : 'start').attr('fill', inside ? ink : colors.text).style('font', '600 11px var(--font-ui)').text(txt);
         const hit = gg.append('rect').attr('x', bx).attr('width', bw).attr('y', 0).attr('height', ih).attr('fill', 'transparent');
         const tipAt = (ev) => { const r = el.getBoundingClientRect(); showTip([gr.label, `${s.label}: ${fmtM(s.amount_m)}`], ev.clientX - r.left, ev.clientY - r.top); };
         hit.on('pointerenter', tipAt).on('pointermove', tipAt).on('pointerleave', () => { tip.hidden = true; }).on('click', tipAt);
