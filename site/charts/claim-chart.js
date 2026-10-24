@@ -197,7 +197,7 @@ export function render(el, chart, colors, source = null) {
   cap.className = 'chart-cap';
   cap.textContent = data.type === 'grouped_bar'
     ? `FY${data.fy} adopted capital budget by funding source, in millions of dollars. Hover or tap a bar for its value.`
-    : 'Hover or tap a dot to see that year’s share of General Fund spending.';
+    : "Hover or tap a dot to see that year's share of General Fund spending.";
   el.append(tip);
   const out = [legend, cap];
   out.push(tableFor(data, source));

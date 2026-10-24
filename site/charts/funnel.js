@@ -160,9 +160,11 @@ export function render(el, data, colors, captions = []) {
     });
     wrap.dataset.hiddenLabels = labelsHidden.length;
 
-    const legend = document.createElement('ul');
+    // Bar 2 repeats bar 1's segments, so it gets a one-line key instead of a second legend.
+    const legend = document.createElement(bar.id === 'locked' ? 'p' : 'ul');
     legend.className = 'legend';
-    bar.segments.forEach((s, i) => {
+    if (bar.id === 'locked') legend.textContent = 'Same funds as above. Faded = legally restricted.';
+    else bar.segments.forEach((s, i) => {
       const li = document.createElement('li');
       const sw = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
       sw.setAttribute('width', 14); sw.setAttribute('height', 14); sw.setAttribute('aria-hidden', 'true');

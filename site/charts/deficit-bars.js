@@ -60,7 +60,7 @@ export function prepare(input) {
 }
 
 const NS = 'http://www.w3.org/2000/svg';
-const yy = (fy) => `’${String(fy).slice(2)}`;
+const yy = (fy) => `'${String(fy).slice(2)}`;
 
 function srcAttrs(el, fig) {
   el.className = 'figure';
@@ -92,12 +92,12 @@ export function render(el, data, colors) {
   const legend = document.createElement('ul');
   legend.className = 'legend';
   legendItem(legend, '<svg width="14" height="14" aria-hidden="true"><rect width="14" height="14" fill="var(--gap)"/></svg>', 'Net structural deficit (adopted budgets, FY2022\u201326)');
-  legendItem(legend, '<svg width="14" height="14" aria-hidden="true"><rect x="1" y="1" width="12" height="12" fill="var(--gap)" stroke="var(--text)" stroke-width="1.5" stroke-dasharray="3 2"/></svg>', 'FY2027: from the proposed-budget review');
   legendItem(legend, '<svg width="14" height="14" aria-hidden="true"><rect x=".5" y=".5" width="13" height="13" fill="var(--gap)" fill-opacity=".38" stroke="var(--gap)"/></svg>', 'One-time money used (proposed budgets, FY2012\u201321)');
   legendItem(legend, '<svg width="14" height="14" aria-hidden="true"><rect x=".5" y=".5" width="13" height="13" fill="url(#hatch)" stroke="var(--muted)" stroke-dasharray="2 2"/></svg>', 'Not reported');
   const note27 = document.createElement('li');
   note27.className = 'legend-note';
-  note27.append('FY2027: figure from the IBA\u2019s review of the proposed budget; the adopted budget\u2019s own residual is ');
+  note27.innerHTML = '<svg width="14" height="14" aria-hidden="true" style="vertical-align:-2px;margin-right:6px"><rect x="1" y="1" width="12" height="12" fill="var(--gap)" stroke="var(--text)" stroke-width="1.5" stroke-dasharray="3 2"/></svg>';
+  note27.append("FY2027 (dashed): from the IBA's review of the proposed budget; the city's budget office puts the adopted budget's own figure at ");
   if (data.fy27_adopted) { const f = document.createElement('span'); srcAttrs(f, data.fy27_adopted); f.textContent = `$${data.fy27_adopted.value}M`; note27.append(f); }
   note27.append('.');
   legend.append(note27);
@@ -230,7 +230,7 @@ export function render(el, data, colors) {
     const pk = data.bars.find((b) => b.fy === data.stats.peak_fy);
     cap.append(`The FY${pk.fy} gap (`);
     const a = document.createElement('span'); srcAttrs(a, pk.figure); a.textContent = money(pk.value_m); cap.append(a);
-    cap.append(`) was about ${Math.round(data.stats.peak_share * 100)}% of that year\u2019s General Fund spending (`);
+    cap.append(`) was about ${Math.round(data.stats.peak_share * 100)}% of that year's General Fund spending (`);
     const b2 = document.createElement('span');
     srcAttrs(b2, { source: { doc: `City of San Diego open data, Operating Budget: General Fund adopted expenditure, FY${pk.fy}`, page: null, url: 'https://seshat.datasd.org/operating_budget/budget_operating_datasd.csv' } });
     b2.textContent = money(data.stats.peak_expense_m);

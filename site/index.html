@@ -9,16 +9,18 @@
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<div id="progress" role="progressbar" aria-label="Reading progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
 
-<header class="masthead">
+<header class="masthead" id="top">
+  <div id="progress" role="progressbar" aria-label="Reading progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
   <h1>San Diego's budget gap, explained</h1>
-  <p class="dek" id="dek">The city plans to spend <span id="dek-total">about $6.5 billion</span> this year, but only <span id="dek-gf">about $2.3 billion</span> of it is the part Council actually votes on (the General Fund). That part does not add up on its own, and the shortfall has a history.</p>
+  <p class="dek" id="dek">The City of San Diego plans to spend <span id="dek-total">about $6.5 billion</span> this budget year (FY2027, July 2026 to June 2027). Only <span id="dek-gf">about $2.3 billion</span> of it is general-purpose money that the City Council decides how to use (the <a class="gl" href="#g-general-fund">General Fund</a>). That part has not added up on its own for years. Here is how long, where the money goes, what closing the gap would cost you, and what the numbers say about five common claims.</p>
   <nav class="toc" aria-label="Chapters">
     <a href="#ch1">How long</a>
     <a href="#ch2">Where the money is</a>
     <a href="#ch3">What it would cost you</a>
     <a href="#ch4">Check a claim</a>
+    <a href="#sources">Sources</a>
+    <a href="#glossary">Glossary</a>
   </nav>
 </header>
 
@@ -27,11 +29,12 @@
 <main>
   <section id="ch1" class="chapter" aria-labelledby="ch1-h">
     <h2 id="ch1-h">How long has this been going on?</h2>
-    <p class="lead" id="ch1-lead">The city has been spending more than it reliably brings in for more than a decade (a structural deficit), and voters turned down a sales-tax increase in 2010 and again in 2024. Year after year the difference was covered with money that will not come back: <span class="cite" data-src-doc="IBA Report 26-11, Review of the FY 2027 Proposed Budget, Key Citywide Issues: Structural Budget Deficit" data-src-page="77" data-src-url="https://www.sandiego.gov/sites/default/files/2026-04/iba-report-26-11-review-of-the-fiscal-year-2027-proposed-budget_0.pdf">federal COVID relief, savings, and skipped deposits into the city's reserve fund</span> (one-time resources). The older bars count the one-time money the city's Independent Budget Analyst (IBA) found in each proposed budget, while the recent ones are net structural deficits in adopted budgets, except the latest, which is from the review of the proposed budget. The gap peaked at <span data-fy-fig="2025">about $181M</span> in FY2025, and the IBA expects about <span data-marker-fig="2028">$30M</span> more in FY2028.</p>
+    <p class="lead" id="ch1-lead">Since FY2012, the city's regular yearly costs have often been bigger than its regular yearly income (a <a class="gl" href="#g-structural-deficit">structural deficit</a>). The difference was covered with money that will not come back, such as <span class="cite" data-src-doc="IBA Report 26-11, Review of the FY 2027 Proposed Budget, Key Citywide Issues: Structural Budget Deficit" data-src-page="77" data-src-url="https://www.sandiego.gov/sites/default/files/2026-04/iba-report-26-11-review-of-the-fiscal-year-2027-proposed-budget_0.pdf">federal COVID relief, savings, and skipped deposits into the city's reserve fund</span> (<a class="gl" href="#g-one-time-resources">one-time resources</a>). Each bar shows that money as counted by the Council's own budget office, the Independent Budget Analyst (IBA); years the IBA did not report are hatched, not zero. The gap peaked at <span data-fy-fig="2025">about $181M</span> in FY2025, and the IBA expects about <span data-marker-fig="2028">$30M</span> in FY2028, according to KPBS.</p>
     <figure class="chart" id="ch1-chart"></figure>
     <details class="dig"><summary>Dig deeper</summary>
       <div class="dig-body" id="ch1-dig">
-        <p>Each bar adds up the one-time money used that year. Money the city spent once (one-time spending) is drawn below the line because it nets the total down. Years with an itemized list show each source as its own slice.</p>
+        <p>The bars are not all measured the same way. Through FY2021, each bar counts all the one-time money in that year's proposed budget. From FY2022, each bar is what was left after subtracting one-time spending, in the adopted budget. The FY2027 bar comes from the IBA's review of the proposed budget.</p>
+        <p>This chart shows what filled the gap. One-time money is stacked above the line. Money the city spent only once (one-time spending) is drawn below it, because it offsets the total. Years with an itemized list show each source as its own slice.</p>
         <figure class="chart" id="ch1-dig-chart"></figure>
         <p class="small">What the IBA said about each year:</p>
         <dl id="ch1-notes" class="notes"></dl>
@@ -41,15 +44,15 @@
 
   <section id="ch2" class="chapter" aria-labelledby="ch2-h">
     <h2 id="ch2-h">Where is the money, and what can actually be cut?</h2>
-    <p class="lead">Most of the city&rsquo;s money is spoken for before anyone votes. Of the <span data-hl-fig="total_budget_m"></span> the city plans to spend, only the <span data-hl-fig="general_fund_m"></span> General Fund is general-purpose money that the City Council decides how to use. The rest is tied by law to specific purposes, such as water service or road projects. Even inside the General Fund, pension and debt payments are contractual, so the four bars below narrow the whole budget down to the part that can actually be cut.</p>
+    <p class="lead">Most of the city's money is spoken for before anyone votes. Of the <span data-hl-fig="total_budget_m"></span> the city plans to spend, only <span data-hl-fig="general_fund_m"></span> is general-purpose money that the City Council decides how to use (the <a class="gl" href="#g-general-fund">General Fund</a>). The rest is tied by law to specific uses, such as water service or road projects. Even inside the General Fund, the yearly pension payment (the <a class="gl" href="#g-pension-adc">pension ADC</a>) and debt payments are set by contract, so the bars below narrow the budget to the part that can be cut.</p>
     <figure class="chart" id="ch2-funnel"
       data-caption-1="Everything the city spends, {total} in all, split by the kind of fund that holds the money."
-      data-caption-2="Only the General Fund ({gf}) can be spent on whatever Council chooses. The rest is legally walled off: your water bill can&rsquo;t fix a pothole, and a restricted grant can&rsquo;t either."
-      data-caption-3="The part Council actually votes on. The first two segments, the yearly pension payment (the actuarially determined contribution) and debt service, are contractual, which leaves {cuttable} in everything else."
-      data-caption-4="The General Fund by department, including each department&rsquo;s share of the pension payment. The gap ({gap}) is drawn beside the bar at the same scale: {ratio} of the {cuttable} that is cuttable."></figure>
+      data-caption-2="Only the General Fund ({gf}) can be spent on whatever Council chooses. The rest is walled off by law: your water bill can't fix a pothole, and a state bike grant can't either."
+      data-caption-3="The part Council actually votes on. The first two pieces, the yearly pension payment (the ADC) and payments on borrowed money (debt service), are set by contract. That leaves {cuttable} for everything else."
+      data-caption-4="The General Fund by department. Each department's amount includes its share of the pension payment. The gap ({gap}) is drawn beside it at the same scale: {ratio} of the {cuttable} that can be cut."></figure>
     <details class="dig"><summary>Dig deeper</summary>
       <div class="dig-body">
-        <!-- COPY --><p class="chart-cap">Tap a ribbon to see the rule that governs that money and where the number comes from. Amounts outside the General Fund are from the FY2026 budget and the FY2025 capital plan; see each ribbon&rsquo;s source.</p>
+        <p class="chart-cap">Tap a ribbon to see the rule that governs that money and where the number comes from. General Fund amounts are FY2027. Most other amounts are from the FY2026 budget or the FY2025 capital plan, the latest detail published, and each ribbon names its source.</p>
         <figure class="chart" id="ch2-sankey" data-col-0="Where it comes from" data-col-1="What rule governs it" data-col-2="What it pays for"></figure>
         <figure class="chart" id="ch2-cuts"></figure>
       </div>
@@ -58,28 +61,30 @@
 
   <section id="ch3" class="chapter" aria-labelledby="ch3-h">
     <h2 id="ch3-h">What would closing the gap cost you?</h2>
-    <p class="lead">For FY2027 the city's budget office first found that the money coming in would fall <span data-gap-fig="pre_cut_m">$118M</span> short of what the city planned to spend, a recurring shortfall that planners call a <a href="#g-structural-deficit">structural deficit</a>. That is the main spending account, the <a href="#g-general-fund">General Fund</a>. Below, the same gap is divided up in everyday terms: per resident, per household, as a sales tax, as a monthly fee. The adopted budget then cut the gap, and the cuts are not the only thing that changed it. The budget also skipped almost all of its yearly rainy-day deposit (the <a href="#g-reserve-contribution">reserve contribution</a>), which is why the "after cuts" view shows two numbers.</p>
+    <p class="lead">Before this year's cuts, the city's budget office and the Council's own budget analyst (the IBA) both put the FY2027 gap at <span data-gap-fig="pre_cut_m">$118M</span>. That gap is in the city's main account for everyday services (the <a class="gl" href="#g-general-fund">General Fund</a>), and it comes back every year until fixed (a <a class="gl" href="#g-structural-deficit">structural deficit</a>). Below, it is split per resident and per household, and turned into a sales tax and a monthly fee. The adopted budget then cut spending and also skipped most of the rainy-day deposit its own policy calls for (the <a class="gl" href="#g-reserve-contribution">reserve contribution</a>), so the "after cuts" view shows two numbers.</p>
     <figure class="chart" id="ch3-calc"></figure>
     <details class="dig"><summary>Dig deeper</summary>
-      <div class="dig-body" id="ch3-dig"><p>The gap has more than one size because it is measured at different moments and counted in different ways. Before this year's cuts, the city's budget office and the Independent Budget Analyst (the City Council's own nonpartisan budget office) agreed on <span data-gap-fig="pre_cut_m">$118M</span>. After the cuts, the city reports a net structural deficit of <span data-gap-fig="post_cut_city_m">$23.1M</span>, while the Analyst counts <span data-gap-fig="post_cut_iba_m">$103.2M</span>, because it adds back the <span data-gap-fig="skipped_reserve_m">$80.1M</span> reserve deposit the budget skipped. Both are real measurements of different things, not a disagreement about arithmetic. The Analyst also expects a gap of about <span data-gap-fig="fy2028_projection_m">$30M</span> in FY2028, but that is a forward estimate of a different quantity (next year's structural deficit, reported by KPBS), so it is shown as a marker on the chapter 1 chart and not in this toggle.</p></div>
+      <div class="dig-body" id="ch3-dig"><p>The gap has more than one size because it is measured at different moments and counted in different ways. Before this year's cuts, the city's budget office and the IBA agreed on <span data-gap-fig="pre_cut_m">$118M</span>. After the cuts, the city's budget office reports a net structural deficit of <span data-gap-fig="post_cut_city_m">$23.1M</span>. Counted the IBA's way, which adds back the <span data-gap-fig="skipped_reserve_m">$80.1M</span> reserve deposit the budget skipped, it is <span data-gap-fig="post_cut_iba_m">$103.2M</span>. Both are real measurements of different things, not a disagreement about arithmetic.</p>
+        <p>According to KPBS, the IBA also expects a gap of about <span data-gap-fig="fy2028_projection_m">$30M</span> in FY2028. That is a forecast for next year, so it appears as a marker on the chapter 1 chart instead of here.</p></div>
     </details>
   </section>
 
   <section id="ch4" class="chapter" aria-labelledby="ch4-h">
     <h2 id="ch4-h">Check a claim</h2>
-    <p class="lead"><!-- COPY -->You will hear a lot of explanations for why the city is short of money. Here are five that come up often. Each card shows what the city’s own numbers say about the claim, and just as important, what those numbers do not cover.</p>
+    <p class="lead">You will hear many explanations for why the city is short of money. Here are five common ones. Tap one to see what the city's budget documents and the Council's own budget analyst (the IBA) show about it, and what those numbers leave out.</p>
     <figure class="chart" id="ch4-claims"></figure>
   </section>
 
   <section id="sources" class="chapter" aria-labelledby="sources-h">
     <h2 id="sources-h">Sources</h2>
-    <!-- COPY --><p>Placeholder: every document used, listed once.</p>
+    <p>Every document this page draws on, listed once. The page numbers are the pages cited in the footnotes above.</p>
     <ul id="sources-list"></ul>
   </section>
 
   <section id="glossary" class="chapter" aria-labelledby="glossary-h">
     <h2 id="glossary-h">Plain-English glossary</h2>
     <dl id="glossary-list"></dl>
+    <p class="small"><a href="#top">Back to the top</a></p>
   </section>
 </main>
 
