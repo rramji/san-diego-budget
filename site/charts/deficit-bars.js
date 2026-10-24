@@ -20,8 +20,8 @@ export function prepare(input) {
       if (r.components) {
         stack = { up: r.components.map((c) => ({ label: c.label, amount_m: c.amount_m, kind: c.label.startsWith('Suspended reserve') ? 'reserve' : 'resources' })), down: null };
       } else if (resources != null) {
-        // The IBA notes say when the one-time resources figure already contains the suspended reserve.
-        const inside = reserve != null && /one_time_resources_m includes it/.test(r.note || '');
+        // Explicit data flag: true when the one-time resources figure already contains the suspended reserve.
+        const inside = reserve != null && r.resources_include_reserve === true;
         const up = [{ label: 'One-time resources', amount_m: inside ? resources - reserve : resources, kind: 'resources' }];
         if (reserve) up.push({ label: 'Suspended reserve contribution', amount_m: reserve, kind: 'reserve' });
         const exp = val(r.one_time_expenditures_m);
@@ -35,6 +35,9 @@ export function prepare(input) {
       components: r.components || null,
       stack,
       gross: /gross/.test(r.basis),
+      proposed_net: /^proposed budget; net/.test(r.basis),
+      expense_m: r.gf_expenditure_adopted_m ?? null,
+      share: reported && r.gf_expenditure_adopted_m ? val(r.structural_deficit_m) / r.gf_expenditure_adopted_m : null,
       basis: r.basis,
       includes_suspended_reserve: !!r.includes_suspended_reserve,
       note: r.note || '',
@@ -50,6 +53,8 @@ export function prepare(input) {
     max_m: peak ? peak.value_m : null,
     peak_fy: peak ? peak.fy : null,
     unreported: bars.filter((b) => !b.reported).length,
+    peak_share: peak ? peak.share : null,
+    peak_expense_m: peak ? peak.expense_m : null,
   };
   return { bars, scale, markers: markers.map((m) => ({ fy: m.fy, label: m.label, source: m.source || null })), stats };
 }
@@ -79,17 +84,23 @@ export function render(el, data, colors) {
   const W = Math.max(280, Math.round(el.getBoundingClientRect().width || el.parentElement.clientWidth));
   const narrow = W < 520;
   const H = narrow ? 280 : 360;
-  const m = { top: 26, right: narrow ? 34 : 46, bottom: 30, left: narrow ? 40 : 52 };
+  const m = { top: 26, right: 12, bottom: 30, left: narrow ? 40 : 52 };
   const iw = W - m.left - m.right;
   const ih = H - m.top - m.bottom;
 
   // Legend (HTML, above the chart)
   const legend = document.createElement('ul');
   legend.className = 'legend';
-  legendItem(legend, '<svg width="14" height="14" aria-hidden="true"><rect width="14" height="14" fill="var(--gap)"/></svg>', 'Net structural deficit (adopted budgets, FY2022 on)');
-  legendItem(legend, '<svg width="14" height="14" aria-hidden="true"><rect x=".5" y=".5" width="13" height="13" fill="var(--gap)" fill-opacity=".38" stroke="var(--gap)"/></svg>', 'One-time money used (proposed budgets, FY2012–21)');
+  legendItem(legend, '<svg width="14" height="14" aria-hidden="true"><rect width="14" height="14" fill="var(--gap)"/></svg>', 'Net structural deficit (adopted budgets, FY2022\u201326)');
+  legendItem(legend, '<svg width="14" height="14" aria-hidden="true"><rect x="1" y="1" width="12" height="12" fill="var(--gap)" stroke="var(--text)" stroke-width="1.5" stroke-dasharray="3 2"/></svg>', 'FY2027: from the proposed-budget review');
+  legendItem(legend, '<svg width="14" height="14" aria-hidden="true"><rect x=".5" y=".5" width="13" height="13" fill="var(--gap)" fill-opacity=".38" stroke="var(--gap)"/></svg>', 'One-time money used (proposed budgets, FY2012\u201321)');
   legendItem(legend, '<svg width="14" height="14" aria-hidden="true"><rect x=".5" y=".5" width="13" height="13" fill="url(#hatch)" stroke="var(--muted)" stroke-dasharray="2 2"/></svg>', 'Not reported');
-  legendItem(legend, '<svg width="14" height="14" aria-hidden="true"><line x1="0" x2="14" y1="7" y2="7" stroke="var(--muted)" stroke-width="2" stroke-opacity=".7"/></svg>', 'City spending, right axis');
+  const note27 = document.createElement('li');
+  note27.className = 'legend-note';
+  note27.append('FY2027: figure from the IBA\u2019s review of the proposed budget; the adopted budget\u2019s own residual is ');
+  if (data.fy27_adopted) { const f = document.createElement('span'); srcAttrs(f, data.fy27_adopted); f.textContent = `$${data.fy27_adopted.value}M`; note27.append(f); }
+  note27.append('.');
+  legend.append(note27);
   el.append(legend);
 
   const svg = d3.select(el).append('svg')
@@ -107,8 +118,6 @@ export function render(el, data, colors) {
   const fys = d3.range(2011, 2029);
   const x = d3.scaleBand().domain(fys).range([0, iw]).paddingInner(0.18).paddingOuter(0.05);
   const y = d3.scaleLinear().domain([0, Math.ceil(data.stats.max_m / 50) * 50]).range([ih, 0]);
-  const maxExp = d3.max(data.scale, (s) => s.expense_m);
-  const y2 = d3.scaleLinear().domain([0, Math.ceil(maxExp / 500) * 500]).range([ih, 0]);
   const g = svg.append('g').attr('transform', `translate(${m.left},${m.top})`);
   const cx = (fy) => x(fy) + x.bandwidth() / 2;
 
@@ -121,23 +130,12 @@ export function render(el, data, colors) {
     .attr('x', -6).attr('y', (t) => y(t)).attr('dy', '0.32em').attr('text-anchor', 'end')
     .attr('fill', colors.muted).style('font', '11px var(--font-ui)')
     .text((t) => (t === 0 ? '$0' : `$${t}M`));
-  const y2t = [1000, 2000].filter((t) => t <= y2.domain()[1]);
-  g.selectAll('.y2tick').data(y2t).join('text')
-    .attr('x', iw + 6).attr('y', (t) => y2(t)).attr('dy', '0.32em').attr('text-anchor', 'start')
-    .attr('fill', colors.muted).style('font', '11px var(--font-ui)')
-    .text((t) => `$${t / 1000}B`);
-
   // x labels, thinned when slots are narrow
   const step = x.bandwidth() < 22 ? 2 : 1;
   g.selectAll('.xl').data(fys.filter((fy) => (fy - 2012) % step === 0 && fy >= 2012 && fy <= 2027)).join('text')
     .attr('x', cx).attr('y', ih + 17).attr('text-anchor', 'middle')
     .attr('fill', colors.muted).style('font', '11px var(--font-ui)').text((fy) => (narrow ? yy(fy) : `FY${yy(fy)}`));
   g.append('line').attr('x1', 0).attr('x2', iw).attr('y1', ih).attr('y2', ih).attr('stroke', colors.muted);
-
-  // spending scale line (faint)
-  const line = d3.line().x((s) => cx(s.fy)).y((s) => y2(s.expense_m)).defined((s) => s.expense_m != null);
-  g.append('path').datum(data.scale).attr('d', line).attr('fill', 'none')
-    .attr('stroke', colors.muted).attr('stroke-opacity', 0.55).attr('stroke-width', 2);
 
   // bars
   const bw = x.bandwidth();
@@ -155,7 +153,9 @@ export function render(el, data, colors) {
     h.textContent = `FY${b.fy}: ${b.reported ? money(b.value_m) : 'not reported'}`;
     const p1 = document.createElement('div'); p1.textContent = b.basis.replace(/^./, (c) => c.toUpperCase()).split(';').slice(0, 2).join(';');
     const p2 = document.createElement('div'); p2.textContent = b.includes_suspended_reserve ? `${b.summary} (Includes a suspended reserve contribution.)` : b.summary;
-    tip.append(h, p1, p2);
+    tip.append(h, p1);
+    if (b.share != null) { const ps = document.createElement('div'); ps.textContent = `${(b.share * 100).toFixed(1)}% of General Fund spending`; tip.append(ps); }
+    tip.append(p2);
     tip.hidden = false;
     const er = el.getBoundingClientRect();
     const left = Math.min(Math.max(0, cx(b.fy) + m.left - 110), W - 220);
@@ -168,7 +168,7 @@ export function render(el, data, colors) {
     const x0 = x(b.fy);
     const gb = g.append('g');
     const title = b.reported
-      ? `FY${b.fy}: ${money(b.value_m)}. ${b.basis}. ${b.summary}${b.includes_suspended_reserve ? ' Includes a suspended reserve contribution.' : ''}`
+      ? `FY${b.fy}: ${money(b.value_m)}${b.share != null ? `, ${(b.share * 100).toFixed(1)}% of General Fund spending` : ''}. ${b.basis}. ${b.summary}${b.includes_suspended_reserve ? ' Includes a suspended reserve contribution.' : ''}`
       : `FY${b.fy}: not reported`;
     if (!b.reported) {
       gb.append('rect').attr('x', x0).attr('y', 0).attr('width', bw).attr('height', ih)
@@ -177,7 +177,8 @@ export function render(el, data, colors) {
       const h = ih - y(b.value_m);
       if (h > 0) {
         gb.append('path').attr('d', topRound(x0, y(b.value_m), bw, h)).attr('fill', colors.gap)
-          .attr('fill-opacity', b.gross ? 0.38 : 1).attr('stroke', b.gross ? colors.gap : 'none');
+          .attr('fill-opacity', b.gross ? 0.38 : 1).attr('stroke', b.gross ? colors.gap : b.proposed_net ? colors.text : 'none')
+          .attr('stroke-width', b.proposed_net ? 1.5 : 1).attr('stroke-dasharray', b.proposed_net ? '3 2' : null);
       } else {
         gb.append('rect').attr('x', x0).attr('y', ih - 2).attr('width', bw).attr('height', 2).attr('fill', colors.gap);
       }
@@ -223,6 +224,19 @@ export function render(el, data, colors) {
     ol.append(li);
   });
   el.append(ol);
+  if (data.stats.peak_share != null) {
+    const cap = document.createElement('p');
+    cap.className = 'chart-cap';
+    const pk = data.bars.find((b) => b.fy === data.stats.peak_fy);
+    cap.append(`The FY${pk.fy} gap (`);
+    const a = document.createElement('span'); srcAttrs(a, pk.figure); a.textContent = money(pk.value_m); cap.append(a);
+    cap.append(`) was about ${Math.round(data.stats.peak_share * 100)}% of that year\u2019s General Fund spending (`);
+    const b2 = document.createElement('span');
+    srcAttrs(b2, { source: { doc: `City of San Diego open data, Operating Budget: General Fund adopted expenditure, FY${pk.fy}`, page: null, url: 'https://seshat.datasd.org/operating_budget/budget_operating_datasd.csv' } });
+    b2.textContent = money(data.stats.peak_expense_m);
+    cap.append(b2, ').');
+    el.append(cap);
+  }
 }
 
 // ---- Dig deeper: what filled the gap -------------------------------------------------

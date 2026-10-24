@@ -88,6 +88,8 @@ def build_structural_deficit(entries: list[dict], series: dict) -> dict:
     for i, e in enumerate(entries):
         if not isinstance(e.get("basis"), str) or not e["basis"].strip():
             raise ValueError(f"[{i}].basis: required non-empty string")
+        if not isinstance(e.get("resources_include_reserve"), bool):
+            raise ValueError(f"[{i}].resources_include_reserve: required boolean")
     for e in sorted(entries, key=lambda e: e["fy"]):
         fy_totals = gf.get(str(e["fy"])) or gf.get(e["fy"])
         years.append({**e, "gf_expenditure_adopted_m": fy_totals["expense_m"] if fy_totals else None})

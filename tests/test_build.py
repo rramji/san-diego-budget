@@ -70,6 +70,7 @@ def test_structural_deficit_merges_gf_expenditure(tmp_path):
     shutil.copytree(CURATED, cur)
     base = {"one_time_resources_m": None, "one_time_expenditures_m": None,
             "suspended_reserve_m": None, "includes_suspended_reserve": False, "components": None,
+            "resources_include_reserve": False,
             "basis": "proposed budget; gross one-time resources"}
     entries = [
         {"fy": 2013, "reported": False, "structural_deficit_m": None, **base,
@@ -99,7 +100,8 @@ def test_structural_deficit_rejects_unsourced_figure(tmp_path):
     cur = tmp_path / "curated"
     shutil.copytree(CURATED, cur)
     (cur / "structural_deficit.json").write_text(json.dumps(
-        [{"fy": 2020, "reported": True, "structural_deficit_m": {"value": 5}, "basis": "x", "note": ""}]))
+        [{"fy": 2020, "reported": True, "structural_deficit_m": {"value": 5}, "basis": "x", "note": "",
+          "resources_include_reserve": False}]))
     import pytest
     with pytest.raises(ValueError, match=r"^\[0\]\.structural_deficit_m"):
         build_all(FIX, cur, tmp_path / "build")
@@ -113,6 +115,24 @@ def test_structural_deficit_requires_basis(tmp_path):
     import pytest
     with pytest.raises(ValueError, match=r"^\[0\]\.basis"):
         build_all(FIX, cur, tmp_path / "build")
+
+
+def test_structural_deficit_requires_resources_include_reserve(tmp_path):
+    cur = tmp_path / "curated"
+    shutil.copytree(CURATED, cur)
+    (cur / "structural_deficit.json").write_text(json.dumps(
+        [{"fy": 2016, "reported": False, "structural_deficit_m": None, "basis": "x", "note": ""}]))
+    import pytest
+    with pytest.raises(ValueError, match=r"^\[0\]\.resources_include_reserve"):
+        build_all(FIX, cur, tmp_path / "build")
+
+
+def test_curated_resources_include_reserve_flags():
+    from pipeline import curated
+    years = {e["fy"]: e for e in curated.load(CURATED, "structural_deficit")}
+    assert [fy for fy, e in years.items() if e["resources_include_reserve"]] == [2012, 2025, 2026]
+    for e in years.values():
+        assert "_m" not in e["note"] and "null" not in e["note"] and "http" not in e["note"]
 
 
 FY2027_BASIS = (

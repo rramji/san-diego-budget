@@ -163,6 +163,7 @@ function renderGlossary(items) {
 
 function renderChapter1(data) {
   const prep = deficitBars.prepare(data.structural);
+  prep.fy27_adopted = data.gap.post_cut_city_m;
   for (const sp of document.querySelectorAll('[data-fy-fig]')) {
     const b = prep.bars.find((x) => x.fy === Number(sp.dataset.fyFig));
     sp.replaceWith(figureSpan(b.figure, money(b.value_m)));

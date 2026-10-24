@@ -47,3 +47,25 @@ test('prepare stacks: components when present, direct fields otherwise, no doubl
   assert.ok(Math.abs(s27.up.reduce((a, c) => a + c.amount_m, 0) - (24.8 + 80.1)) < 1e-9);
   assert.equal(p.bars.find((b) => b.fy === 2015).stack, null);
 });
+
+test('reserve is subtracted from resources only when resources_include_reserve is true', () => {
+  const fig = (v) => ({ value: v, source: { doc: 'd', page: 1, url: 'https://example.org/x' } });
+  const mk = (fy, flag) => ({
+    fy, reported: true, structural_deficit_m: fig(50), one_time_resources_m: fig(100), one_time_expenditures_m: fig(20),
+    suspended_reserve_m: fig(30), includes_suspended_reserve: false, resources_include_reserve: flag, components: null,
+    basis: 'adopted budget; net of one-time expenditures', note: 'x. y.', gf_expenditure_adopted_m: 1000,
+  });
+  const p = prepare([mk(2030, true), mk(2031, false)]);
+  const [yes, no] = p.bars.map((b) => b.stack.up);
+  assert.deepEqual(yes.map((c) => c.amount_m), [70, 30]);
+  assert.deepEqual(no.map((c) => c.amount_m), [100, 30]);
+  assert.equal(p.bars[0].share, 0.05);
+});
+
+test('prepare computes peak share of General Fund spending; null where spending is unknown', () => {
+  const p = prepare(data);
+  assert.ok(Math.abs(p.stats.peak_share - 181.4 / 2160.943) < 1e-9);
+  assert.equal(p.bars.find((b) => b.fy === 2027).share, null);
+  assert.equal(p.bars.find((b) => b.fy === 2027).proposed_net, true);
+  assert.equal(p.bars.find((b) => b.fy === 2026).proposed_net, false);
+});
