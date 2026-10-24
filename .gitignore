@@ -1,0 +1,4 @@
+.superpowers/
+data/raw/
+__pycache__/
+.venv/
