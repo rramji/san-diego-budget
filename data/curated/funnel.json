@@ -32,7 +32,7 @@
       "amount_m": {
         "value": 718.3,
         "source": {
-          "doc": "FY2027 Adopted Budget Vol. I, General Fund Expenditures (Figure 2: FY2027 General Fund Expenditures by Department)",
+          "doc": "FY2027 Adopted Budget Vol. I, General Fund Expenditures, Figure 2 chart label read from the rendered page image (not in the PDF text layer); equals general_fund_m minus the other Figure 2 slices",
           "page": 89,
           "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1generalfundexpenditures.pdf"
         }
