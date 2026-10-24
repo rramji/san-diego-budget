@@ -1,9 +1,32 @@
 # San Diego Budget Explainer
 
-A static web explainer of the City of San Diego General Fund structural deficit, built from the city's open budget data (seshat.datasd.org) and budget PDFs.
+A static, single-page explainer of the City of San Diego's General Fund structural deficit, written for readers with no budget background who arrive on a phone. Four chapters: how long the gap has been going on, where the money is and what can legally be cut, what closing the gap would cost a resident, and what the numbers say about five common claims. Every number on the page opens a footnote with the document, page and link it came from, and the page ends with a list of every source and a plain-English glossary.
 
-Fetch the raw CSVs with `python3 -I run.py fetch` (writes `data/raw/`, which is git-ignored). Rebuild the published JSON in `data/build/` and run the figure checks with `python3 -I run.py build`.
+There is no build step for the site and no server code: `site/` is plain HTML, CSS and ES modules (d3 and d3-sankey are vendored in `site/lib/`), and it reads the published JSON in `data/build/`.
+
+## View it locally
+
+From the repository root:
+
+```sh
+python3 -m http.server 8000
+```
+
+Then open http://localhost:8000/site/. The page fetches `../data/build/*.json`, so serve the repository root, not `site/`. Add `?debug` to the URL to expose the loaded data as `window.__data`.
+
+Tests: `npm test` (site helpers and chart data prep, Node's built-in test runner, no dependencies) and `python3 -m pytest -q` (pipeline).
+
+## Refresh the data next year
+
+The page is updated by hand once a year, after the adopted budget and the IBA's reviews are published.
+
+1. **Fetch the CSVs.** `python3 -I run.py fetch` downloads the operating and capital budget CSVs from the city's open data portal into `data/raw/` (git-ignored) and writes `data/raw/manifest.json` with URLs, SHA-256 hashes and fetch times.
+2. **Transcribe the new PDFs into `data/curated/`.** The adopted budget (Vol. I Executive Summary, General Fund Revenues and Expenditures) and the IBA's review of the proposed budget, May Revision review and outlook review supply the figures the CSVs cannot: headline totals, the funnel, the gap, the cuts and restorations, the new structural-deficit year and the claim cards. Every figure is a `{value, source: {doc, page, url}}` object; see `.superpowers/sdd/2026-10-24-sd-budget-explainer/data-contracts.md` for each file's shape and `docs/research/*.md` for where each number was found. Never interpolate a year the IBA did not report: mark it `"reported": false`.
+3. **Build.** `python3 -I run.py build` validates the curated files, computes the CSV-derived series and charts, writes `data/build/*.json`, and runs the figure checks in `pipeline/checks.py` (CSV totals against published totals). It exits non-zero if any check fails.
+4. **Check.** Run both test suites, then open the page at 375px and 1200px in light and dark mode: no console errors, no horizontal scroll, every number has a footnote, the Sources list is complete. Update the copy in `site/index.html` where years or comparisons changed.
 
 ## Data vintage
 
-Raw CSVs fetched at 2026-10-24T16:25:44+00:00 (UTC); see `data/raw/manifest.json` for per-file URLs and SHA-256 hashes.
+- Budget figures: FY2027 Adopted Budget (published August 2026) and IBA Reports 26-11 (April 2026) and 26-15 (May 2026); earlier years from the IBA's review of each year's proposed budget, FY2012 to FY2026.
+- Raw CSVs fetched 2026-10-24T16:25:44+00:00 (UTC); see `data/raw/manifest.json` for per-file URLs and hashes. The capital budget CSV's latest adopted year is FY2025 and the operating budget CSV's is FY2026; the page labels anything drawn from them with its year.
+- Population and households: California Department of Finance E-5 estimates, January 1, 2026.
