@@ -3,13 +3,13 @@ data/curated/flows.json. Run: python3 -I docs/research/flows_nongf.py   (from th
 Groupings are documented in docs/research/flows-sources.md."""
 import csv
 import json
-import re
 import sys
 from collections import defaultdict
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT))
+from pipeline.bike_match import is_bike_project  # noqa: E402
 from pipeline.csv_loader import EXPENSE_TYPES, load_budget_rows, load_cip_rows, select_cycle  # noqa: E402
 
 RAW = ROOT / "data" / "raw"
@@ -17,7 +17,6 @@ OP_URL = "https://data.sandiego.gov/datasets/operating-budget/"
 CIP_URL = "https://data.sandiego.gov/datasets/cip-fy-budget/"
 CBO_URL = "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1cbo.pdf"
 GRANTS_FY2027_M = 25.1  # Vol. I Citywide Budget Overview p.44, homelessness grants (printed)
-BIKE_PAT = re.compile(r"bike|bicycle|cycle track|active transportation|pedestrian", re.I)
 
 
 def compute():
@@ -40,7 +39,7 @@ def compute():
             g["other_special"][nm] = v
     cip = [r for r in select_cycle(load_cip_rows(RAW)) if r["fy"] == 2025]
     transnet = sum(r["amount"] for r in cip if "transnet" in r["fund_type"].lower()) / 1e6
-    matched = [r for r in cip if BIKE_PAT.search(r["project_name"]) and "motorcycle" not in r["project_name"].lower()]
+    matched = [r for r in cip if is_bike_project(r["project_name"])]
     split = defaultdict(float)
     for r in matched:
         split[r["fund_type"]] += r["amount"] / 1e6

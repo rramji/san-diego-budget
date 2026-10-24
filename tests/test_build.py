@@ -20,8 +20,8 @@ def _build(tmp_path):
 def test_build_all_writes_expected_files(tmp_path):
     out, paths = _build(tmp_path)
     assert sorted(p.name for p in paths) == [
-        "cuts.json", "flows.json", "funnel.json", "headline.json", "series.json",
-        "structural_deficit.json"
+        "claims.json", "cuts.json", "flows.json", "funnel.json", "gap.json", "glossary.json",
+        "headline.json", "series.json", "structural_deficit.json"
     ]
     assert sorted(p.name for p in out.glob("*.json")) == sorted(p.name for p in paths)
     text = (out / "series.json").read_text()
@@ -211,3 +211,114 @@ def test_curated_cuts_shape():
         assert r["amount_m"] is None or r["amount_m"]["value"] > 0
     assert any(r["amount_m"] is None for r in cuts["reductions"])
     assert len(cuts["restorations"]) >= 5
+
+
+def _cip(name, fund_type, amount, fy=2025, cycle="adopted"):
+    return {"fy": fy, "cycle": cycle, "fund_type": fund_type, "fund_number": "x", "dept": "Transportation",
+            "project_number": name[:8], "project_name": name, "account": "a", "amount": amount}
+
+
+def _claims_curated():
+    from pipeline import curated
+    return curated.load(CURATED, "claims")
+
+
+def test_build_claims_bike_chart_has_two_groups():
+    from pipeline.build import build_claims
+    cip = [
+        _cip("Minor Bike Facilities", "TransNet Funds", 250_000),
+        _cip("Minor Bike Facilities", "Bond Financing", 1_000_000),
+        _cip("Park Blvd Bicycle Facility", "Bond Financing", 500_000),
+        _cip("Resurfacing of City Streets", "Bond Financing", 80_000_000),
+        _cip("Slurry Seal Group A", "TransNet Funds", 16_000_000),
+        _cip("Sewer Main Replacements", "Sewer Funds", 9_000_000),
+        _cip("Minor Bike Facilities", "Development Impact Fees", 51),
+        _cip("Minor Bike Facilities", "Bond Financing", 7_000_000, cycle="proposed"),
+        _cip("Minor Bike Facilities", "Bond Financing", 3_000_000, fy=2024),
+    ]
+    series = {"gf_by_fy": {}, "gf_dept_by_fy": {}}
+    claims = {c["id"]: c for c in build_claims(_claims_curated(), cip, series)}
+    bike = claims["bike-lanes"]
+    chart = bike["chart"]
+    assert chart["type"] == "grouped_bar" and chart["fy"] == 2025
+    groups = {g["label"]: {s["label"]: s["amount_m"] for s in g["series"]} for g in chart["groups"]}
+    assert list(groups) == ["Bike & pedestrian projects", "Road repair"]
+    assert groups["Bike & pedestrian projects"]["Bond Financing"] == 1.5
+    assert groups["Bike & pedestrian projects"]["TransNet Funds"] == 0.25
+    assert groups["Road repair"]["Bond Financing"] == 80.0
+    assert groups["Road repair"]["TransNet Funds"] == 16.0
+    assert "Sewer Funds" not in groups["Road repair"]
+    assert "Development Impact Fees" not in groups["Road repair"]  # $51 total: dropped as an empty bar
+    assert groups["Road repair"]["Bond Financing"] == 80.0 and groups["Bike & pedestrian projects"].keys() == groups["Road repair"].keys()
+    assert bike["matched_projects"] == ["Minor Bike Facilities", "Park Blvd Bicycle Facility"]
+
+
+def test_build_claims_counts_bikeway_repair_once_as_bike():
+    from pipeline.build import build_claims
+    cip = [_cip("University Ave Bikeway Pavement Repair", "Bond Financing", 6_500_000),
+           _cip("Resurfacing of City Streets", "Bond Financing", 1_000_000)]
+    out = {c["id"]: c for c in build_claims(_claims_curated(), cip, {"gf_by_fy": {}, "gf_dept_by_fy": {}})}
+    g = {x["label"]: {s["label"]: s["amount_m"] for s in x["series"]} for x in out["bike-lanes"]["chart"]["groups"]}
+    assert g["Bike & pedestrian projects"]["Bond Financing"] == 6.5
+    assert g["Road repair"]["Bond Financing"] == 1.0
+
+
+def test_build_claims_homelessness_line_omits_missing_years():
+    from pipeline.build import build_claims
+    series = {
+        "gf_by_fy": {"2020": {"expense_m": 1000.0}, "2022": {"expense_m": 2000.0}, "2023": {"expense_m": 2000.0}},
+        "gf_dept_by_fy": {"2020": [["Police", 500.0]],
+                          "2022": [["Police", 600.0], ["Homelessness Strategies & Solutions", 20.0]],
+                          "2023": [["Homelessness Strategies & Solutions", 50.0]]},
+    }
+    out = {c["id"]: c for c in build_claims(_claims_curated(), [], series)}
+    chart = out["homelessness"]["chart"]
+    assert chart["type"] == "line"
+    assert chart["points"] == [{"fy": 2022, "amount_m": 20.0, "share_pct": 1.0},
+                               {"fy": 2023, "amount_m": 50.0, "share_pct": 2.5}]
+    assert out["homelessness"]["matched_projects"] is None
+
+
+def test_curated_claims_shape():
+    import re
+    claims = _claims_curated()
+    assert [c["id"] for c in claims] == ["bike-lanes", "pensions", "managers", "trash-fee", "homelessness"]
+    split = re.compile(r"(?<=[.!?])\s+(?=[A-Z\"$(])")
+    for c in claims:
+        assert c["claim"].strip() and c["sources"]
+        assert len(split.split(c["finding"].strip())) <= 4, c["id"]
+        assert len(split.split(c["caveat"].strip())) == 1, c["id"]
+    managers = next(c for c in claims if c["id"] == "managers")
+    assert managers["chart"] is None and "Axios" in managers["finding"]
+    assert any(s["page"] == 46 and "26-11" in s["doc"] for s in managers["sources"])
+
+
+def test_build_claims_rejects_bad_source():
+    import pytest
+    from pipeline.build import build_claims
+    bad = [{"id": "x", "claim": "c", "finding": "f.", "caveat": "c.", "chart": None,
+            "sources": [{"doc": "d", "page": 1, "url": "http://insecure"}]}]
+    with pytest.raises(ValueError, match=r"^claims\[0\]\.sources\[0\]"):
+        build_claims(bad, [], {"gf_by_fy": {}, "gf_dept_by_fy": {}})
+
+
+def test_gap_gets_cuttable_from_funnel(tmp_path):
+    from pipeline import curated
+    out, _ = _build(tmp_path)
+    gap = json.loads((out / "gap.json").read_text())
+    funnel = curated.load(CURATED, "funnel")
+    assert gap["cuttable_m"] == funnel["bar3"]["everything_else_m"]
+    assert "cuttable_m" not in json.loads((CURATED / "gap.json").read_text())
+    for k in ("pre_cut_m", "post_cut_city_m", "post_cut_iba_m", "skipped_reserve_m",
+              "fy2028_projection_m", "population", "households", "sales_tax_1pct_m"):
+        assert gap[k]["value"] > 0 and gap[k]["source"]["url"].startswith("https://"), k
+    assert round(gap["post_cut_city_m"]["value"] + gap["skipped_reserve_m"]["value"], 1) == gap["post_cut_iba_m"]["value"]
+
+
+def test_curated_glossary_terms():
+    import re
+    gl = json.loads((CURATED / "glossary.json").read_text())
+    terms = [g["term"] for g in gl]
+    assert len(terms) == 5 and "General Fund" in terms
+    for g in gl:
+        assert len(re.split(r"(?<=[.!?])\s+", g["plain"].strip())) <= 2, g["term"]

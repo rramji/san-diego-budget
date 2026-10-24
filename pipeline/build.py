@@ -4,10 +4,12 @@ import sys
 from pathlib import Path
 
 from pipeline import curated
+from pipeline.bike_match import is_bike_project, is_road_repair
 from pipeline.csv_loader import (
     gf_by_dept,
     gf_totals_by_fy,
     load_budget_rows,
+    load_cip_rows,
     select_cycle,
 )
 
@@ -133,12 +135,93 @@ def build_cuts(cuts: dict) -> dict:
     return cuts
 
 
+BIKE_GROUP = "Bike & pedestrian projects"
+ROAD_GROUP = "Road repair"
+
+
+def _bike_chart(cip_rows: list[dict]) -> tuple[dict | None, list[str]]:
+    """Adopted CIP for the latest FY with adopted rows, bucketed by fund type.
+
+    A project matching both matchers (e.g. a bikeway repaving) counts once, as bike."""
+    adopted = [r for r in cip_rows if r["cycle"] == "adopted"]
+    if not adopted:
+        return None, []
+    fy = max(r["fy"] for r in adopted)
+    sums = {BIKE_GROUP: {}, ROAD_GROUP: {}}
+    matched = set()
+    for r in adopted:
+        if r["fy"] != fy:
+            continue
+        name = r["project_name"]
+        if is_bike_project(name):
+            group = BIKE_GROUP
+            matched.add(name)
+        elif is_road_repair(name):
+            group = ROAD_GROUP
+        else:
+            continue
+        sums[group][r["fund_type"]] = sums[group].get(r["fund_type"], 0.0) + r["amount"] / 1e6
+    total = {f: sum(g.get(f, 0.0) for g in sums.values()) for g in sums.values() for f in g}
+    # Fund types under $10k across both groups would only add empty bars.
+    funds = sorted((f for f, t in total.items() if t >= 0.01), key=lambda f: -total[f])
+    groups = [{"label": label, "series": [{"label": f, "amount_m": sums[label].get(f, 0.0)} for f in funds]}
+              for label in (BIKE_GROUP, ROAD_GROUP)]
+    return {"type": "grouped_bar", "fy": fy, "groups": groups}, sorted(matched)
+
+
+def _homelessness_chart(series: dict) -> dict:
+    points = []
+    for fy in sorted(series["gf_dept_by_fy"], key=int):
+        amount = sum(a for d, a in series["gf_dept_by_fy"][fy] if "Homelessness" in d)
+        has_dept = any("Homelessness" in d for d, _ in series["gf_dept_by_fy"][fy])
+        total = (series["gf_by_fy"].get(fy) or {}).get("expense_m")
+        if has_dept and total:
+            points.append({"fy": int(fy), "amount_m": amount, "share_pct": amount / total * 100})
+    return {"type": "line", "points": points}
+
+
+def build_claims(curated_claims: list[dict], cip_rows: list[dict], series: dict) -> list[dict]:
+    """Claim-checker cards: curated text plus charts computed from the CSVs."""
+    out = []
+    for i, c in enumerate(curated_claims):
+        for key in ("id", "claim", "finding", "caveat"):
+            if not isinstance(c.get(key), str) or not c[key].strip():
+                raise ValueError(f"claims[{i}].{key}: required non-empty string")
+        if not c.get("sources"):
+            raise ValueError(f"claims[{i}].sources: at least one source required")
+        for k, src in enumerate(c["sources"]):
+            _check_source(src, f"claims[{i}].sources[{k}]")
+        card = {**c, "chart": c.get("chart"), "matched_projects": None}
+        if c["id"] == "bike-lanes":
+            card["chart"], card["matched_projects"] = _bike_chart(cip_rows)
+        elif c["id"] == "homelessness":
+            card["chart"] = _homelessness_chart(series)
+        out.append(card)
+    return out
+
+
+def build_gap(gap: dict, funnel: dict) -> dict:
+    """Gap figures plus cuttable_m, taken from the funnel rather than re-typed."""
+    if "cuttable_m" in gap:
+        raise ValueError("gap.cuttable_m: derived from funnel at build time; remove it from curated gap.json")
+    return {**gap, "cuttable_m": funnel["bar3"]["everything_else_m"]}
+
+
+def build_glossary(entries: list[dict]) -> list[dict]:
+    for i, e in enumerate(entries):
+        for key in ("term", "plain"):
+            if not isinstance(e.get(key), str) or not e[key].strip():
+                raise ValueError(f"glossary[{i}].{key}: required non-empty string")
+    return entries
+
+
 def build_all(raw_dir: Path, curated_dir: Path, out_dir: Path) -> list[Path]:
     """Write every published file. To add a file, append one (name, fn) to steps."""
     raw_dir, curated_dir, out_dir = Path(raw_dir), Path(curated_dir), Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     rows = load_budget_rows(raw_dir)
     series = build_series(rows, _vintage(raw_dir))
+    cip_rows = load_cip_rows(raw_dir)
     steps = [
         ("series", lambda: series),
         ("headline", lambda: curated.load(curated_dir, "headline")),
@@ -147,6 +230,9 @@ def build_all(raw_dir: Path, curated_dir: Path, out_dir: Path) -> list[Path]:
         ("flows", lambda: build_flows(curated.load(curated_dir, "flows"))),
         ("structural_deficit", lambda: build_structural_deficit(
             curated.load(curated_dir, "structural_deficit"), series)),
+        ("gap", lambda: build_gap(curated.load(curated_dir, "gap"), curated.load(curated_dir, "funnel"))),
+        ("claims", lambda: build_claims(curated.load(curated_dir, "claims"), cip_rows, series)),
+        ("glossary", lambda: build_glossary(curated.load(curated_dir, "glossary"))),
     ]
     return [_write(out_dir, name, fn()) for name, fn in steps]
 
