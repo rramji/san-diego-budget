@@ -25,10 +25,12 @@ parentheses; we store 96.7, not −96.7). The build output carries this as
 - `"proposed budget; gross one-time resources"` (FY2012–FY2021): the figure comes from the IBA's review of
   that year's *proposed* budget. It counts the one-time resources used to balance the budget, with no
   deduction for one-time expenditures, because none of these reviews states that offset.
-- `"adopted budget; net of one-time expenditures"` (FY2022–FY2027): from IBA 26-11's retrospective table,
-  one-time resources minus one-time expenditures, excluding suspended reserve contributions. Caveat: the
-  table's FY2027 column is the FY2027 *Proposed* Budget (the Adopted Budget's own residual is $23.1M), but
-  per the controller ruling FY2027 carries the same basis string as FY2022–FY2026.
+- `"adopted budget; net of one-time expenditures"` (FY2022–FY2026): from IBA 26-11's retrospective table,
+  one-time resources minus one-time expenditures, excluding suspended reserve contributions, for each
+  year's *adopted* budget.
+- `"proposed budget; net of one-time expenditures (IBA review of the FY2027 Proposed Budget; the Adopted Budget's own residual is $23.1M)"` (FY2027 only): the same table and the same net method, but the table's FY2027 column
+  covers the FY2027 *Proposed* Budget (11.2). The Adopted Budget's own residual is $23.1M
+  (FY2027 Adopted Budget Vol. I Executive Summary p.5).
 
 FY2012–FY2027 used the same kind of document, the IBA "Review of the FY XXXX Proposed Budget".
 FY2022–FY2027 values come from IBA 26-11's retrospective table, which covers **adopted** budgets for

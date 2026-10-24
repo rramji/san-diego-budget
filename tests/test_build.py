@@ -114,11 +114,19 @@ def test_structural_deficit_requires_basis(tmp_path):
         build_all(FIX, cur, tmp_path / "build")
 
 
+FY2027_BASIS = (
+    "proposed budget; net of one-time expenditures (IBA review of the FY2027 Proposed Budget; "
+    "the Adopted Budget's own residual is $23.1M)"
+)
+
+
 def test_curated_structural_deficit_covers_2012_2027_with_basis():
     from pipeline import curated
     years = curated.load(CURATED, "structural_deficit")
     assert [e["fy"] for e in years] == list(range(2012, 2028))
     for e in years:
-        assert e["basis"] == ("proposed budget; gross one-time resources" if e["fy"] <= 2021
-                              else "adopted budget; net of one-time expenditures")
+        expected = ("proposed budget; gross one-time resources" if e["fy"] <= 2021
+                    else FY2027_BASIS if e["fy"] == 2027
+                    else "adopted budget; net of one-time expenditures")
+        assert e["basis"] == expected
         assert (e["structural_deficit_m"] is None) == (not e["reported"])
