@@ -103,3 +103,16 @@ dt { font: 650 1rem/1.4 var(--font-ui); margin-top: 16px; }
 dd { margin: 2px 0 0; }
 #sources-list { padding-left: 1.2em; }
 main { padding-bottom: 80px; }
+
+/* chart legend, tooltip, markers */
+.legend { list-style: none; margin: 0 0 8px; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 14px; font: 0.8rem/1.3 var(--font-ui); color: var(--muted); }
+.legend li { display: flex; align-items: center; gap: 6px; }
+.legend svg { flex: none; }
+.tip { position: absolute; z-index: 20; width: 220px; pointer-events: none; background: var(--surface); color: var(--text); border: 1px solid var(--rule); border-radius: 6px; box-shadow: 0 4px 16px rgb(0 0 0 / 0.18); padding: 8px 10px; font: 0.78rem/1.4 var(--font-ui); }
+.tip[hidden] { display: none; }
+.marker-list { list-style: none; margin: 10px 0 0; padding: 0; font: 0.8rem/1.4 var(--font-ui); color: var(--muted); }
+.marker-list li { display: flex; gap: 8px; margin: 3px 0; }
+.marker-list .ml { flex: none; width: 1.5em; height: 1.5em; border: 1px solid var(--text); border-radius: 50%; text-align: center; font-weight: 700; font-size: 0.7rem; line-height: 1.4em; color: var(--text); }
+.small { font: 0.85rem/1.4 var(--font-ui); color: var(--muted); }
+.notes dt { font-size: 0.9rem; }
+.notes dd { font: 0.8rem/1.45 var(--font-ui); color: var(--muted); overflow-wrap: anywhere; }

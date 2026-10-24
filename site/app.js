@@ -1,4 +1,6 @@
 import { money } from './format.js';
+import * as deficitBars from './charts/deficit-bars.js';
+import { themeColors, observeWidth } from './charts/util.js';
 
 const FILES = {
   headline: 'headline', series: 'series', structural: 'structural_deficit', funnel: 'funnel',
@@ -159,6 +161,24 @@ function renderGlossary(items) {
   }
 }
 
+function renderChapter1(data) {
+  const prep = deficitBars.prepare(data.structural);
+  for (const sp of document.querySelectorAll('[data-fy-fig]')) {
+    const b = prep.bars.find((x) => x.fy === Number(sp.dataset.fyFig));
+    sp.replaceWith(figureSpan(b.figure, money(b.value_m)));
+  }
+  for (const sp of document.querySelectorAll('[data-marker-fig]')) {
+    const mk = prep.markers.find((x) => x.fy === Number(sp.dataset.markerFig));
+    sp.replaceWith(figureSpan(mk.source, money(mk.source.value)));
+  }
+  const chart = document.getElementById('ch1-chart');
+  const dig = document.getElementById('ch1-dig-chart');
+  deficitBars.renderNotes(document.getElementById('ch1-notes'), prep);
+  mountPopovers(document.getElementById('ch1-notes'));
+  observeWidth(chart, () => { deficitBars.render(chart, prep, themeColors()); mountPopovers(chart); });
+  observeWidth(dig, () => { if (dig.getBoundingClientRect().width > 0) deficitBars.renderDig(dig, prep, themeColors()); });
+}
+
 async function main() {
   mountProgress();
   mountDigDeeper(document);
@@ -166,6 +186,7 @@ async function main() {
   window.__data = data;
   renderHeadline(data.headline);
   renderGlossary(data.glossary);
+  renderChapter1(data);
   mountPopovers(document);
   document.dispatchEvent(new CustomEvent('data-ready', { detail: data }));
 }
