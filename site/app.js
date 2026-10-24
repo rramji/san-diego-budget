@@ -31,6 +31,7 @@ function closePop(returnFocus) {
   if (!openPop) return;
   openPop.remove();
   openBtn.setAttribute('aria-expanded', 'false');
+  openBtn.removeAttribute('aria-controls');
   if (returnFocus) openBtn.focus();
   openPop = openBtn = null;
 }
@@ -41,6 +42,7 @@ function openPopover(btn, el) {
   pop.className = 'popover';
   pop.id = 'popover';
   pop.setAttribute('role', 'dialog');
+  pop.setAttribute('aria-label', 'Source');
   const doc = document.createElement('p');
   doc.className = 'pop-doc';
   doc.textContent = el.dataset.srcDoc;
@@ -58,7 +60,7 @@ function openPopover(btn, el) {
   a.rel = 'noopener';
   a.textContent = 'Open the document';
   pop.append(a);
-  document.body.append(pop);
+  btn.after(pop);
   const r = btn.getBoundingClientRect();
   const w = pop.offsetWidth;
   const left = Math.max(8, Math.min(r.left + window.scrollX, window.scrollX + document.documentElement.clientWidth - w - 8));

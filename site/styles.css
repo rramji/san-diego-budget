@@ -65,12 +65,14 @@ h2 { font-size: clamp(1.4rem, 5vw, 1.75rem); font-weight: 700; }
 
 .figure { font-family: var(--font-ui); font-weight: 650; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .fn {
-  font: 600 0.9rem/1 var(--font-ui);
-  min-width: 24px; min-height: 24px; padding: 0; margin-left: 1px;
-  background: none; border: 0; color: var(--link); cursor: pointer;
-  vertical-align: super; border-radius: 50%;
+  position: relative;
+  width: 1.15em; height: 1.15em; padding: 0; margin-left: 0.3em;
+  font: italic 700 0.8em/1 var(--font-body);
+  background: none; border: 1px solid var(--muted); color: var(--muted);
+  border-radius: 50%; cursor: pointer; vertical-align: 0.1em;
 }
-.fn:hover { background: var(--rule); }
+.fn::after { content: ""; position: absolute; inset: -14px; } /* 44px minimum hit target */
+.fn:hover, .fn[aria-expanded="true"] { background: var(--text); color: var(--bg); border-color: var(--text); }
 .popover {
   position: absolute; z-index: 60; width: min(280px, calc(100vw - 2 * var(--gutter)));
   background: var(--surface); color: var(--text);
