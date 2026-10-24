@@ -1,0 +1,511 @@
+{
+  "fy": 2027,
+  "nodes": [
+    {
+      "id": "prop_tax",
+      "label": "Property tax",
+      "column": 0,
+      "kind": "discretionary"
+    },
+    {
+      "id": "sales_tax",
+      "label": "Sales tax",
+      "column": 0,
+      "kind": "discretionary"
+    },
+    {
+      "id": "tot",
+      "label": "Hotel tax (General Fund share)",
+      "column": 0,
+      "kind": "discretionary"
+    },
+    {
+      "id": "franchise",
+      "label": "Franchise fees",
+      "column": 0,
+      "kind": "discretionary"
+    },
+    {
+      "id": "charges",
+      "label": "Charges for services",
+      "column": 0,
+      "kind": "discretionary"
+    },
+    {
+      "id": "other_gf",
+      "label": "Other General Fund revenue",
+      "column": 0,
+      "kind": "discretionary"
+    },
+    {
+      "id": "water_sewer_rates",
+      "label": "Water & sewer rates",
+      "column": 0,
+      "kind": "utility"
+    },
+    {
+      "id": "other_enterprise_fees",
+      "label": "Other utility & enterprise fees",
+      "column": 0,
+      "kind": "utility"
+    },
+    {
+      "id": "grants",
+      "label": "State & federal grants",
+      "column": 0,
+      "kind": "restricted"
+    },
+    {
+      "id": "gas_transnet",
+      "label": "Gas tax / TransNet",
+      "column": 0,
+      "kind": "restricted"
+    },
+    {
+      "id": "hotel_setasides",
+      "label": "Hotel tax set-asides",
+      "column": 0,
+      "kind": "restricted"
+    },
+    {
+      "id": "other_special",
+      "label": "Other restricted revenue",
+      "column": 0,
+      "kind": "restricted"
+    },
+    {
+      "id": "rule_utility",
+      "label": "Must go back to that utility",
+      "column": 1,
+      "kind": "utility"
+    },
+    {
+      "id": "rule_restricted",
+      "label": "Must go to what the grant or law says",
+      "column": 1,
+      "kind": "restricted"
+    },
+    {
+      "id": "gf_decides",
+      "label": "General Fund: Council decides",
+      "column": 1,
+      "kind": "discretionary"
+    },
+    {
+      "id": "police",
+      "label": "Police",
+      "column": 2,
+      "kind": "discretionary"
+    },
+    {
+      "id": "fire",
+      "label": "Fire-Rescue",
+      "column": 2,
+      "kind": "discretionary"
+    },
+    {
+      "id": "parks",
+      "label": "Parks & Recreation",
+      "column": 2,
+      "kind": "discretionary"
+    },
+    {
+      "id": "library",
+      "label": "Library",
+      "column": 2,
+      "kind": "discretionary"
+    },
+    {
+      "id": "streets",
+      "label": "Transportation",
+      "column": 2,
+      "kind": "discretionary"
+    },
+    {
+      "id": "homeless",
+      "label": "Homelessness Strategies & Solutions",
+      "column": 2,
+      "kind": "discretionary"
+    },
+    {
+      "id": "storm",
+      "label": "Stormwater",
+      "column": 2,
+      "kind": "discretionary"
+    },
+    {
+      "id": "citywide",
+      "label": "Citywide Program Expenditures",
+      "column": 2,
+      "kind": "discretionary"
+    },
+    {
+      "id": "gf_other",
+      "label": "All other",
+      "column": 2,
+      "kind": "discretionary"
+    },
+    {
+      "id": "water_sewer_sys",
+      "label": "Water & sewer systems",
+      "column": 2,
+      "kind": "utility"
+    },
+    {
+      "id": "other_enterprise_svc",
+      "label": "Permits, trash, golf, airports & other enterprise services",
+      "column": 2,
+      "kind": "utility"
+    },
+    {
+      "id": "bike_ped",
+      "label": "Bike & pedestrian projects",
+      "column": 2,
+      "kind": "restricted"
+    },
+    {
+      "id": "roads",
+      "label": "Road repair & transportation",
+      "column": 2,
+      "kind": "restricted"
+    },
+    {
+      "id": "convention_arts",
+      "label": "Convention Center, tourism & arts",
+      "column": 2,
+      "kind": "restricted"
+    },
+    {
+      "id": "other_programs",
+      "label": "Other grant- and law-restricted programs",
+      "column": 2,
+      "kind": "restricted"
+    }
+  ],
+  "links": [
+    {
+      "source": "prop_tax",
+      "target": "gf_decides",
+      "amount_m": 881.0,
+      "rule": "Money from general taxes and fees goes into the General Fund, and the City Council decides each year how to divide it among services.",
+      "ref": {
+        "doc": "FY2027 Adopted Budget Vol. I, General Fund Revenues, Table 2",
+        "page": 57,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1generalfundrevenues.pdf"
+      },
+      "highlight": false
+    },
+    {
+      "source": "sales_tax",
+      "target": "gf_decides",
+      "amount_m": 386.7,
+      "rule": "Money from general taxes and fees goes into the General Fund, and the City Council decides each year how to divide it among services.",
+      "ref": {
+        "doc": "FY2027 Adopted Budget Vol. I, General Fund Revenues, Table 2",
+        "page": 57,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1generalfundrevenues.pdf"
+      },
+      "highlight": false
+    },
+    {
+      "source": "tot",
+      "target": "gf_decides",
+      "amount_m": 169.7,
+      "rule": "Money from general taxes and fees goes into the General Fund, and the City Council decides each year how to divide it among services.",
+      "ref": {
+        "doc": "FY2027 Adopted Budget Vol. I, General Fund Revenues, Table 2",
+        "page": 57,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1generalfundrevenues.pdf"
+      },
+      "highlight": false
+    },
+    {
+      "source": "franchise",
+      "target": "gf_decides",
+      "amount_m": 105.7,
+      "rule": "Money from general taxes and fees goes into the General Fund, and the City Council decides each year how to divide it among services.",
+      "ref": {
+        "doc": "FY2027 Adopted Budget Vol. I, General Fund Revenues, Table 2",
+        "page": 57,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1generalfundrevenues.pdf"
+      },
+      "highlight": false
+    },
+    {
+      "source": "charges",
+      "target": "gf_decides",
+      "amount_m": 374.7,
+      "rule": "Money from general taxes and fees goes into the General Fund, and the City Council decides each year how to divide it among services.",
+      "ref": {
+        "doc": "FY2027 Adopted Budget Vol. I, General Fund Revenues, Table 2",
+        "page": 57,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1generalfundrevenues.pdf"
+      },
+      "highlight": false
+    },
+    {
+      "source": "other_gf",
+      "target": "gf_decides",
+      "amount_m": 338.9,
+      "rule": "Money from general taxes and fees goes into the General Fund, and the City Council decides each year how to divide it among services.",
+      "ref": {
+        "doc": "FY2027 Adopted Budget Vol. I, General Fund Revenues, Table 2 (sum of remaining lines: licenses & permits 57.8, fines 45.9, money & property 96.7, federal & other agencies 11.8, property transfer 12.0, transfers in 111.6, other 3.1)",
+        "page": 57,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1generalfundrevenues.pdf"
+      },
+      "highlight": false
+    },
+    {
+      "source": "water_sewer_rates",
+      "target": "rule_utility",
+      "amount_m": 1515.1,
+      "rule": "Water and sewer bills can only pay for running and fixing the water and sewer systems, not for police or parks.",
+      "ref": {
+        "doc": "FY2027 Adopted Budget Vol. I Executive Summary, enterprise fund total $1,915.1M; Vol. I does not split water vs sewer; allocation approximate",
+        "page": 4,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1executivesummary.pdf"
+      },
+      "highlight": false
+    },
+    {
+      "source": "other_enterprise_fees",
+      "target": "rule_utility",
+      "amount_m": 400.0,
+      "rule": "Fees for permits, trash and recycling, golf and airports are kept in separate funds that can only pay for those services.",
+      "ref": {
+        "doc": "Vol. I Citywide Budget Overview, Enterprise Funds (Water, Sewer, Development Services, Refuse, Recycling, Solid Waste, Golf, Airports); remainder of $1,915.1M after water & sewer; allocation approximate",
+        "page": 24,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1cbo.pdf"
+      },
+      "highlight": false
+    },
+    {
+      "source": "grants",
+      "target": "rule_restricted",
+      "amount_m": 300.0,
+      "rule": "A grant must be spent on the program the state or federal government approved it for.",
+      "ref": {
+        "doc": "FY2027 Adopted Budget Vol. I Executive Summary, fund-type totals; allocation approximate (grant share of $1,207.9M special revenue funds)",
+        "page": 4,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1executivesummary.pdf"
+      },
+      "highlight": false
+    },
+    {
+      "source": "gas_transnet",
+      "target": "rule_restricted",
+      "amount_m": 200.0,
+      "rule": "Gas tax and the TransNet sales tax can only be spent on streets and transportation.",
+      "ref": {
+        "doc": "Vol. I Citywide Budget Overview: Street Repair Program funded by RMRA, Gas Tax, TransNet; amount approximate",
+        "page": 40,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1cbo.pdf"
+      },
+      "highlight": false
+    },
+    {
+      "source": "hotel_setasides",
+      "target": "rule_restricted",
+      "amount_m": 200.0,
+      "rule": "Part of the hotel tax is set aside by law for tourism, the Convention Center and similar uses.",
+      "ref": {
+        "doc": "FY2027 Adopted Budget Vol. I Executive Summary, fund-type totals; allocation approximate (TOT and Convention Center funds)",
+        "page": 4,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1executivesummary.pdf"
+      },
+      "highlight": false
+    },
+    {
+      "source": "other_special",
+      "target": "rule_restricted",
+      "amount_m": 507.9,
+      "rule": "Other special funds are created by law or by the people who pay them and can only be used for their stated purpose.",
+      "ref": {
+        "doc": "FY2027 Adopted Budget Vol. I Executive Summary, fund-type totals; allocation approximate (remainder of $1,207.9M special revenue funds)",
+        "page": 4,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1executivesummary.pdf"
+      },
+      "highlight": false
+    },
+    {
+      "source": "gf_decides",
+      "target": "police",
+      "amount_m": 718.3,
+      "rule": "Council votes on how many General Fund dollars each department gets.",
+      "ref": {
+        "doc": "FY2027 Adopted Budget Vol. I, General Fund Expenditures, Figure 2 (by department; same values as the funnel chart)",
+        "page": 89,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1generalfundexpenditures.pdf"
+      },
+      "highlight": false
+    },
+    {
+      "source": "gf_decides",
+      "target": "fire",
+      "amount_m": 402.3,
+      "rule": "Council votes on how many General Fund dollars each department gets.",
+      "ref": {
+        "doc": "FY2027 Adopted Budget Vol. I, General Fund Expenditures, Figure 2 (by department; same values as the funnel chart)",
+        "page": 89,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1generalfundexpenditures.pdf"
+      },
+      "highlight": false
+    },
+    {
+      "source": "gf_decides",
+      "target": "parks",
+      "amount_m": 195.8,
+      "rule": "Council votes on how many General Fund dollars each department gets.",
+      "ref": {
+        "doc": "FY2027 Adopted Budget Vol. I, General Fund Expenditures, Figure 2 (by department; same values as the funnel chart)",
+        "page": 89,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1generalfundexpenditures.pdf"
+      },
+      "highlight": false
+    },
+    {
+      "source": "gf_decides",
+      "target": "library",
+      "amount_m": 74.3,
+      "rule": "Council votes on how many General Fund dollars each department gets.",
+      "ref": {
+        "doc": "FY2027 Adopted Budget Vol. I, General Fund Expenditures, Figure 2 (by department; same values as the funnel chart)",
+        "page": 89,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1generalfundexpenditures.pdf"
+      },
+      "highlight": false
+    },
+    {
+      "source": "gf_decides",
+      "target": "streets",
+      "amount_m": 133.8,
+      "rule": "Council votes on how many General Fund dollars each department gets.",
+      "ref": {
+        "doc": "FY2027 Adopted Budget Vol. I, General Fund Expenditures, Figure 2 (by department; same values as the funnel chart)",
+        "page": 89,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1generalfundexpenditures.pdf"
+      },
+      "highlight": false
+    },
+    {
+      "source": "gf_decides",
+      "target": "homeless",
+      "amount_m": 62.0,
+      "rule": "Council votes on how many General Fund dollars each department gets.",
+      "ref": {
+        "doc": "FY2027 Adopted Budget Vol. I, General Fund Expenditures, Figure 2 (by department; same values as the funnel chart)",
+        "page": 89,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1generalfundexpenditures.pdf"
+      },
+      "highlight": false
+    },
+    {
+      "source": "gf_decides",
+      "target": "storm",
+      "amount_m": 68.3,
+      "rule": "Council votes on how many General Fund dollars each department gets.",
+      "ref": {
+        "doc": "FY2027 Adopted Budget Vol. I, General Fund Expenditures, Figure 2 (by department; same values as the funnel chart)",
+        "page": 89,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1generalfundexpenditures.pdf"
+      },
+      "highlight": false
+    },
+    {
+      "source": "gf_decides",
+      "target": "citywide",
+      "amount_m": 214.8,
+      "rule": "Council votes on how many General Fund dollars each department gets.",
+      "ref": {
+        "doc": "FY2027 Adopted Budget Vol. I, General Fund Expenditures, Figure 2 (by department; same values as the funnel chart)",
+        "page": 89,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1generalfundexpenditures.pdf"
+      },
+      "highlight": false
+    },
+    {
+      "source": "gf_decides",
+      "target": "gf_other",
+      "amount_m": 387.1,
+      "rule": "Council votes on how many General Fund dollars each department gets.",
+      "ref": {
+        "doc": "FY2027 Adopted Budget Vol. I, General Fund Expenditures, Figure 2 (by department; same values as the funnel chart)",
+        "page": 89,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1generalfundexpenditures.pdf"
+      },
+      "highlight": false
+    },
+    {
+      "source": "rule_utility",
+      "target": "water_sewer_sys",
+      "amount_m": 1515.1,
+      "rule": "Water and sewer bills can only pay for running and fixing the water and sewer systems, not for police or parks.",
+      "ref": {
+        "doc": "Vol. I Executive Summary enterprise total; allocation approximate",
+        "page": 4,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1executivesummary.pdf"
+      },
+      "highlight": false
+    },
+    {
+      "source": "rule_utility",
+      "target": "other_enterprise_svc",
+      "amount_m": 400.0,
+      "rule": "Fees for permits, trash and recycling, golf and airports are kept in separate funds that can only pay for those services.",
+      "ref": {
+        "doc": "Vol. I Citywide Budget Overview, Enterprise Funds; allocation approximate",
+        "page": 24,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1cbo.pdf"
+      },
+      "highlight": false
+    },
+    {
+      "source": "rule_restricted",
+      "target": "bike_ped",
+      "amount_m": 30.0,
+      "rule": "State and federal Active Transportation Program grants and TransNet-style set-asides can only pay for bike and pedestrian projects, so this money could never be used to resurface a road.",
+      "ref": {
+        "doc": "Vol. I Executive Summary, Multi-Modal Team reduction context and Citywide Budget Overview fund-type totals; amount approximate; the Active Transportation Program restriction is a grant-program rule not stated in Vol. I",
+        "page": 40,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1cbo.pdf"
+      },
+      "highlight": true
+    },
+    {
+      "source": "rule_restricted",
+      "target": "roads",
+      "amount_m": 200.0,
+      "rule": "Gas tax and TransNet sales tax can only be spent on streets and transportation.",
+      "ref": {
+        "doc": "Vol. I Citywide Budget Overview, Street Repair Program funding sources; allocation approximate",
+        "page": 40,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1cbo.pdf"
+      },
+      "highlight": false
+    },
+    {
+      "source": "rule_restricted",
+      "target": "convention_arts",
+      "amount_m": 200.0,
+      "rule": "Hotel tax set-asides can only be spent on the uses the law lists, such as tourism and the Convention Center.",
+      "ref": {
+        "doc": "FY2027 Adopted Budget Vol. I Executive Summary, fund-type totals; allocation approximate (TOT and Convention Center funds)",
+        "page": 4,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1executivesummary.pdf"
+      },
+      "highlight": false
+    },
+    {
+      "source": "rule_restricted",
+      "target": "other_programs",
+      "amount_m": 777.9,
+      "rule": "Other grants and special funds can only pay for the program they were created or awarded for.",
+      "ref": {
+        "doc": "FY2027 Adopted Budget Vol. I Executive Summary, fund-type totals; allocation approximate (remainder of $1,207.9M special revenue funds)",
+        "page": 4,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1executivesummary.pdf"
+      },
+      "highlight": false
+    }
+  ]
+}

@@ -20,7 +20,8 @@ def _build(tmp_path):
 def test_build_all_writes_expected_files(tmp_path):
     out, paths = _build(tmp_path)
     assert sorted(p.name for p in paths) == [
-        "funnel.json", "headline.json", "series.json", "structural_deficit.json"
+        "cuts.json", "flows.json", "funnel.json", "headline.json", "series.json",
+        "structural_deficit.json"
     ]
     assert sorted(p.name for p in out.glob("*.json")) == sorted(p.name for p in paths)
     text = (out / "series.json").read_text()
@@ -130,3 +131,82 @@ def test_curated_structural_deficit_covers_2012_2027_with_basis():
                     else "adopted budget; net of one-time expenditures")
         assert e["basis"] == expected
         assert (e["structural_deficit_m"] is None) == (not e["reported"])
+
+
+SRC = {"doc": "d", "page": 1, "url": "https://example.org/x"}
+
+
+def _flows(links=None, nodes=None):
+    nodes = nodes or [{"id": "a", "label": "A", "column": 0, "kind": "utility"},
+                      {"id": "b", "label": "B", "column": 1, "kind": "utility"}]
+    links = links if links is not None else [
+        {"source": "a", "target": "b", "amount_m": 1.0, "rule": "r", "ref": SRC, "highlight": True}]
+    return {"fy": 2027, "nodes": nodes, "links": links}
+
+
+def test_build_flows_rejects_dangling_link():
+    import pytest
+    from pipeline.build import build_flows
+    bad = _flows([{"source": "a", "target": "ghost", "amount_m": 1.0, "rule": "r", "ref": SRC, "highlight": True}])
+    with pytest.raises(ValueError, match="ghost"):
+        build_flows(bad)
+
+
+def test_build_flows_requires_exactly_one_highlight():
+    import pytest
+    from pipeline.build import build_flows
+    link = {"source": "a", "target": "b", "amount_m": 1.0, "rule": "r", "ref": SRC}
+    with pytest.raises(ValueError, match="exactly one highlight"):
+        build_flows(_flows([{**link, "highlight": False}]))
+    with pytest.raises(ValueError, match="exactly one highlight"):
+        build_flows(_flows([{**link, "highlight": True}, {**link, "highlight": True}]))
+    assert build_flows(_flows())["fy"] == 2027
+
+
+def test_build_flows_validates_ref_with_path():
+    import pytest
+    from pipeline.build import build_flows
+    link = {"source": "a", "target": "b", "amount_m": 1.0, "rule": "r", "highlight": True}
+    with pytest.raises(ValueError, match=r"^links\[0\]\.ref"):
+        build_flows(_flows([{**link, "ref": {**SRC, "url": "http://insecure"}}]))
+    with pytest.raises(ValueError, match=r"^links\[0\]\.ref"):
+        build_flows(_flows([link]))
+
+
+def test_curated_flows_column1_nodes_balance():
+    from pipeline import curated
+    from pipeline.build import build_flows
+    flows = build_flows(curated.load(CURATED, "flows"))
+    col1 = [n["id"] for n in flows["nodes"] if n["column"] == 1]
+    assert len(col1) == 3
+    for nid in col1:
+        inflow = sum(l["amount_m"] for l in flows["links"] if l["target"] == nid)
+        outflow = sum(l["amount_m"] for l in flows["links"] if l["source"] == nid)
+        assert abs(inflow - outflow) <= 1.0, (nid, inflow, outflow)
+
+
+def test_curated_flows_gf_matches_funnel_and_headline():
+    from pipeline import curated
+    flows = curated.load(CURATED, "flows")
+    funnel = curated.load(CURATED, "funnel")
+    headline = curated.load(CURATED, "headline")
+    out = {l["target"]: l["amount_m"] for l in flows["links"] if l["source"] == "gf_decides"}
+    label = {n["id"]: n["label"] for n in flows["nodes"]}
+    by_label = {label[k]: v for k, v in out.items()}
+    for d in funnel["bar4"]:
+        assert by_label[d["dept"]] == d["amount_m"]["value"]
+    assert abs(sum(out.values()) - headline["general_fund_m"]["value"]) <= 0.1
+    assert 15 <= len(flows["links"]) <= 28
+    hl = [l for l in flows["links"] if l["highlight"]]
+    assert hl[0]["target"] == "bike_ped" and "Active Transportation Program" in hl[0]["rule"]
+
+
+def test_curated_cuts_shape():
+    from pipeline import curated
+    cuts = curated.load(CURATED, "cuts")
+    assert cuts["fy"] == 2027 and len(cuts["reductions"]) >= 11
+    for r in cuts["reductions"]:
+        assert r["fund"] == "General Fund" and r["reason"].strip()
+        assert r["amount_m"] is None or r["amount_m"]["value"] > 0
+    assert any(r["amount_m"] is None for r in cuts["reductions"])
+    assert len(cuts["restorations"]) >= 5

@@ -92,6 +92,47 @@ def build_structural_deficit(entries: list[dict], series: dict) -> dict:
     return {"convention": DEFICIT_CONVENTION, "years": years, "markers": DEFICIT_MARKERS}
 
 
+def _check_source(src, path: str) -> None:
+    """Validate a bare Source (no value) with the same rules as a Figure's source."""
+    if not isinstance(src, dict):
+        raise ValueError(f"{path}: missing source")
+    curated.validate_figure({"value": 0, "source": src}, path)
+
+
+def build_flows(flows: dict) -> dict:
+    """Validate the money-flow graph: unique node ids, no dangling links, sourced refs, one highlight."""
+    ids = [n["id"] for n in flows["nodes"]]
+    for i in {x for x in ids if ids.count(x) > 1}:
+        raise ValueError(f"nodes: duplicate id {i!r}")
+    known = set(ids)
+    for k, link in enumerate(flows["links"]):
+        path = f"links[{k}]"
+        for end in ("source", "target"):
+            if link[end] not in known:
+                raise ValueError(f"{path}.{end}: unknown node id {link[end]!r}")
+        if not isinstance(link.get("amount_m"), (int, float)) or isinstance(link.get("amount_m"), bool):
+            raise ValueError(f"{path}.amount_m: must be a number")
+        if not isinstance(link.get("rule"), str) or not link["rule"].strip():
+            raise ValueError(f"{path}.rule: required non-empty string")
+        _check_source(link.get("ref"), f"{path}.ref")
+    n = sum(1 for link in flows["links"] if link.get("highlight") is True)
+    if n != 1:
+        raise ValueError(f"links: exactly one highlight required, found {n}")
+    return flows
+
+
+def build_cuts(cuts: dict) -> dict:
+    """Pass-through for cuts.json; reason_source on each reduction must be a valid Source."""
+    for i, r in enumerate(cuts["reductions"]):
+        _check_source(r.get("source"), f"reductions[{i}].source")
+        _check_source(r.get("reason_source"), f"reductions[{i}].reason_source")
+        if not isinstance(r.get("reason"), str) or not r["reason"].strip():
+            raise ValueError(f"reductions[{i}].reason: required non-empty string")
+    for i, r in enumerate(cuts["restorations"]):
+        _check_source(r.get("source"), f"restorations[{i}].source")
+    return cuts
+
+
 def build_all(raw_dir: Path, curated_dir: Path, out_dir: Path) -> list[Path]:
     """Write every published file. To add a file, append one (name, fn) to steps."""
     raw_dir, curated_dir, out_dir = Path(raw_dir), Path(curated_dir), Path(out_dir)
@@ -102,6 +143,8 @@ def build_all(raw_dir: Path, curated_dir: Path, out_dir: Path) -> list[Path]:
         ("series", lambda: series),
         ("headline", lambda: curated.load(curated_dir, "headline")),
         ("funnel", lambda: curated.load(curated_dir, "funnel")),
+        ("cuts", lambda: build_cuts(curated.load(curated_dir, "cuts"))),
+        ("flows", lambda: build_flows(curated.load(curated_dir, "flows"))),
         ("structural_deficit", lambda: build_structural_deficit(
             curated.load(curated_dir, "structural_deficit"), series)),
     ]
