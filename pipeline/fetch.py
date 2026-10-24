@@ -42,6 +42,11 @@ def fetch_all(raw_dir, sources=SOURCES, opener=urllib.request.urlopen):
     return {name: m["sha256"] for name, m in manifest.items()}
 
 
-if __name__ == "__main__":
+def main() -> int:
     for name, digest in fetch_all(Path("data/raw")).items():
         print(f"{name}: {digest}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

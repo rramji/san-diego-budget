@@ -1,0 +1,83 @@
+"""Assemble the published JSON files in data/build/ from raw CSVs and curated figures."""
+import json
+import sys
+from pathlib import Path
+
+from pipeline import curated
+from pipeline.csv_loader import (
+    gf_by_dept,
+    gf_totals_by_fy,
+    load_budget_rows,
+    select_cycle,
+)
+
+
+def _round(obj):
+    if isinstance(obj, float):
+        return round(obj, 3)
+    if isinstance(obj, dict):
+        return {k: _round(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [_round(v) for v in obj]
+    return obj
+
+
+def _write(out_dir: Path, name: str, data) -> Path:
+    path = Path(out_dir) / f"{name}.json"
+    path.write_text(
+        json.dumps(_round(data), indent=None, separators=(",", ":")) + "\n",
+        encoding="utf-8",
+    )
+    return path
+
+
+def _vintage(raw_dir: Path) -> dict:
+    path = Path(raw_dir) / "manifest.json"
+    if not path.exists():
+        return {"fetched_at": None, "sha256": {}}
+    manifest = json.loads(path.read_text(encoding="utf-8"))
+    return {
+        "fetched_at": max((m["fetched_at"] for m in manifest.values()), default=None),
+        "sha256": {name: m["sha256"] for name, m in manifest.items()},
+    }
+
+
+def build_series(rows: list[dict], vintage: dict | None = None) -> dict:
+    rows = select_cycle(rows)
+    totals = gf_totals_by_fy(rows)
+    fys = sorted({r["fy"] for r in rows})
+    return {
+        "gf_by_fy": {str(fy): totals[fy] for fy in fys if fy in totals},
+        "gf_dept_by_fy": {
+            str(fy): [[dept, amt] for dept, amt in gf_by_dept(rows, fy)] for fy in fys
+        },
+        "vintage": vintage or {"fetched_at": None, "sha256": {}},
+    }
+
+
+def build_all(raw_dir: Path, curated_dir: Path, out_dir: Path) -> list[Path]:
+    """Write every published file. To add a file, append one (name, fn) to steps."""
+    raw_dir, curated_dir, out_dir = Path(raw_dir), Path(curated_dir), Path(out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    rows = load_budget_rows(raw_dir)
+    steps = [
+        ("series", lambda: build_series(rows, _vintage(raw_dir))),
+        ("headline", lambda: curated.load(curated_dir, "headline")),
+        ("funnel", lambda: curated.load(curated_dir, "funnel")),
+    ]
+    return [_write(out_dir, name, fn()) for name, fn in steps]
+
+
+def main() -> int:
+    from pipeline import checks
+
+    root = Path(__file__).resolve().parent.parent
+    out_dir = root / "data" / "build"
+    build_all(root / "data" / "raw", root / "data" / "curated", out_dir)
+    failures = checks.run(out_dir)
+    for msg in failures:
+        print(f"CHECK FAILED: {msg}", file=sys.stderr)
+    if failures:
+        return 1
+    print(f"build ok: {out_dir}")
+    return 0

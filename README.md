@@ -2,7 +2,7 @@
 
 A static web explainer of the City of San Diego General Fund structural deficit, built from the city's open budget data (seshat.datasd.org) and budget PDFs.
 
-Fetch the raw CSVs with `python3 -I pipeline/fetch.py` (writes `data/raw/`, which is git-ignored).
+Fetch the raw CSVs with `python3 -I run.py fetch` (writes `data/raw/`, which is git-ignored). Rebuild the published JSON in `data/build/` and run the figure checks with `python3 -I run.py build`.
 
 ## Data vintage
 
