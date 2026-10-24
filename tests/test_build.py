@@ -290,6 +290,10 @@ def test_curated_claims_shape():
         assert len(split.split(c["caveat"].strip())) == 1, c["id"]
     managers = next(c for c in claims if c["id"] == "managers")
     assert managers["chart"] is None and "Axios" in managers["finding"]
+    assert "not accessible" in managers["finding"] and "headline" in managers["finding"]
+    homeless = next(c for c in claims if c["id"] == "homelessness")
+    assert "COVID-19" in homeless["finding"] and "May Revision" in homeless["finding"]
+    assert any(s["page"] == 120 and "21-10" in s["doc"] for s in homeless["sources"])
     assert any(s["page"] == 46 and "26-11" in s["doc"] for s in managers["sources"])
 
 

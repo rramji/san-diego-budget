@@ -65,7 +65,7 @@
   {
     "id": "managers",
     "claim": "City Hall is bloated with managers.",
-    "finding": "The city's budget data does not give a clean count of managers over time, so this claim cannot be checked directly against city figures. The closest city number is the IBA's FY2027 snapshot: 833 of 12,628.5 standard-hour positions (6.6%) are unclassified and unrepresented, a group the IBA says is commonly used as shorthand for management. The IBA also found that these positions made up a larger share of the FY2027 job cuts (37.0% of the net reduction) than of the workforce. A 2024 Axios analysis reported that managers grew 461% in 10 years, but that is a news organization's analysis, not a city figure.",
+    "finding": "The city's budget data does not give a clean count of managers over time, so this claim cannot be checked directly against city figures. The closest city number is the IBA's FY2027 snapshot: 833 of 12,628.5 standard-hour positions (6.6%) are unclassified and unrepresented, a group the IBA says is commonly used as shorthand for management. The IBA also found that these positions made up a larger share of the FY2027 job cuts (37.0% of the net reduction) than of the workforce. An Axios San Diego article of December 12, 2024 ran under the headline \"Amid $200 million annual deficit, San Diego managers have grown 461% in 10 years\"; the article itself was not accessible, so how it defines managers is unverified, and it is a news analysis, not a city figure.",
     "caveat": "Unclassified is a civil-service category rather than a job title (it includes, for example, all 135 City Council office positions), so it is only a rough stand-in for managers.",
     "chart": null,
     "sources": [
@@ -90,7 +90,7 @@
         "url": "https://www.sandiego.gov/sites/default/files/2026-04/iba-report-26-11-review-of-the-fiscal-year-2027-proposed-budget_0.pdf"
       },
       {
-        "doc": "Axios San Diego, 2024-12-12: analysis reporting managers grew 461% in 10 years (news analysis, not a city figure)",
+        "doc": "Axios San Diego, 2024-12-12, headline: \"Amid $200 million annual deficit, San Diego managers have grown 461% in 10 years\" (headline only; article text not accessible 2026-10-24; news analysis, not a city figure)",
         "page": null,
         "url": "https://www.axios.com/local/san-diego/2024/12/12/budget-deficit-san-diego-middle-managers"
       }
@@ -143,7 +143,7 @@
   {
     "id": "homelessness",
     "claim": "Homelessness spending is swallowing the city budget.",
-    "finding": "In the city's adopted budget data, the Homelessness Strategies & Solutions department's General Fund budget was $49.1 million in FY2021, fell to $18.1 million in FY2022, and rose to $53.2 million in FY2026, about 2.5% of General Fund spending. The FY2027 adopted budget gives the department $62.0 million, while also cutting $4.9 million from homelessness programs, including shelter beds and a safe parking site. The IBA notes that much of the department's budget is repaid from hotel-tax revenue set aside for homelessness (Measure C), and that citywide homelessness services in the FY2027 Proposed Budget total $72.9 million across several departments.",
+    "finding": "In the city's adopted budget data, the Homelessness Strategies & Solutions department's General Fund budget was $49.1 million in FY2021, $18.1 million in FY2022 and $53.2 million in FY2026, about 2.5% of General Fund spending; the IBA says the FY2022 drop came from removing one-time federal COVID-19 relief that ran through the General Fund, and that no program cuts were proposed that year. The FY2027 adopted budget gives the department $62.0 million. The FY2027 Proposed Budget included $4.9 million in homelessness program reductions, including a $3.75 million target with no details; the May Revision reinstated that placeholder and replaced it with specific cuts, such as $2.9 million at the 16th and Newton shelter. The IBA notes that much of the department's budget is repaid from hotel-tax revenue set aside for homelessness (Measure C), and that citywide homelessness services in the FY2027 Proposed Budget total $72.9 million across several departments.",
     "caveat": "This counts only the department's General Fund budget, so it leaves out state, federal and county grants and Housing Commission spending, and it shows money budgeted, not results.",
     "chart": null,
     "sources": [
@@ -158,14 +158,24 @@
         "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1generalfundexpenditures.pdf"
       },
       {
+        "doc": "IBA Report 21-10, Review of the FY 2022 Proposed Budget, Department Review: Homelessness Strategies (drop from FY 2021 is the removal of one-time COVID-19 relief funding, incl. $30.0M Coronavirus Relief Funds for Operation Shelter to Home and $9.7M rental relief run through the General Fund; no programmatic reductions proposed)",
+        "page": 120,
+        "url": "https://www.sandiego.gov/sites/default/files/12-10_iba_review_of_fiscal_year_2022_proposed_budget.pdf"
+      },
+      {
         "doc": "IBA Report 26-11, General Fund Major Budget Mitigations table (Reductions for the Homelessness Services, $4,924,233)",
         "page": 34,
         "url": "https://www.sandiego.gov/sites/default/files/2026-04/iba-report-26-11-review-of-the-fiscal-year-2027-proposed-budget_0.pdf"
       },
       {
-        "doc": "FY2027 Adopted Budget Vol. I Executive Summary, Critical Reductions: Homelessness Shelters",
+        "doc": "IBA Report 26-15, Attachment 1 (own page numbering): General Fund Expenditure Adjustments in the May Revision (Reinstate General Homelessness Support $3,753,909; Reduction of the 16th & Newton Shelter $2,903,909)",
         "page": 8,
-        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1executivesummary.pdf"
+        "url": "https://www.sandiego.gov/sites/default/files/2026-05/26-15-recommended-city-council-modifications-to-the-mayors-proposed-fy-2027-budget-and-review-of-the-may-revision.pdf"
+      },
+      {
+        "doc": "IBA Report 26-15, Attachment 1 (own page numbering): Homelessness Updates (Proposed Budget assumed a $3.8M reduction target without specific details; May Revision includes specific reductions)",
+        "page": 22,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-05/26-15-recommended-city-council-modifications-to-the-mayors-proposed-fy-2027-budget-and-review-of-the-may-revision.pdf"
       },
       {
         "doc": "IBA Report 26-11, Key Citywide Issues: Homelessness and Housing ($72.9 million citywide homelessness services)",
