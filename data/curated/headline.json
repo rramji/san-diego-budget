@@ -1,0 +1,75 @@
+{
+  "fy": 2027,
+  "total_budget_m": {
+    "value": 6486.9,
+    "source": {
+      "doc": "FY2027 Adopted Budget Vol. I, Executive Summary",
+      "page": 4,
+      "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1executivesummary.pdf"
+    }
+  },
+  "general_fund_m": {
+    "value": 2256.7,
+    "source": {
+      "doc": "FY2027 Adopted Budget Vol. I, Executive Summary",
+      "page": 4,
+      "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1executivesummary.pdf"
+    }
+  },
+  "enterprise_m": {
+    "value": 1915.1,
+    "source": {
+      "doc": "FY2027 Adopted Budget Vol. I, Executive Summary",
+      "page": 4,
+      "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1executivesummary.pdf"
+    }
+  },
+  "special_revenue_m": {
+    "value": 1207.9,
+    "source": {
+      "doc": "FY2027 Adopted Budget Vol. I, Executive Summary",
+      "page": 4,
+      "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1executivesummary.pdf"
+    }
+  },
+  "internal_service_m": {
+    "value": 225.7,
+    "source": {
+      "doc": "FY2027 Adopted Budget Vol. I, Executive Summary",
+      "page": 4,
+      "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1executivesummary.pdf"
+    }
+  },
+  "capital_project_m": {
+    "value": 23.5,
+    "source": {
+      "doc": "FY2027 Adopted Budget Vol. I, Executive Summary",
+      "page": 4,
+      "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1executivesummary.pdf"
+    }
+  },
+  "cip_m": {
+    "value": 858.1,
+    "source": {
+      "doc": "FY2027 Adopted Budget Vol. I, Executive Summary",
+      "page": 4,
+      "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1executivesummary.pdf"
+    }
+  },
+  "gf_fte": {
+    "value": 8127.74,
+    "source": {
+      "doc": "FY2027 Adopted Budget Vol. I, Executive Summary",
+      "page": 5,
+      "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1executivesummary.pdf"
+    }
+  },
+  "gf_fte_change": {
+    "value": -133.66,
+    "source": {
+      "doc": "FY2027 Adopted Budget Vol. I, Executive Summary",
+      "page": 5,
+      "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1executivesummary.pdf"
+    }
+  }
+}
