@@ -184,3 +184,53 @@ test('claim chart prepare keeps the zero series and does not zero-fill the line'
   const line = claimChartPrepare(claims.find((c) => c.id === 'homelessness').chart);
   assert.deepEqual(line.points.map((p) => p.fy), [2021, 2022, 2023, 2024, 2025, 2026]);
 });
+
+test('deficit bars stack the skipped reserve deposit on top of the excluding-reserves value', () => {
+  const p = prepare(data);
+  const by = Object.fromEntries(p.bars.map((b) => [b.fy, b]));
+  assert.deepEqual([2022, 2023, 2024, 2025, 2026, 2027].map((fy) => by[fy].top_m), [107.4, 62.6, 99.5, 203.8, 103.6, 91.3]);
+  assert.deepEqual([2022, 2023, 2024, 2025, 2026, 2027].map((fy) => by[fy].solid_m), [96.7, 38.3, 99.5, 181.4, 48.0, 11.2]);
+  assert.equal(by[2025].reserve_m, 22.4);
+  assert.equal(by[2024].reserve_m, 0);
+  assert.equal(by[2024].top_figure, null);
+  assert.equal(by[2025].top_figure.value, 203.8);
+  assert.equal(by[2025].top_figure.source.page, 78);
+  assert.match(by[2025].top_figure.source.doc, /^derived: .*including reserves/);
+  assert.equal(p.stats.max_top_m, 203.8);
+  assert.equal(p.stats.peak_top_m, 203.8);
+  assert.ok(Math.abs(p.stats.peak_share - 181.4 / 2160.943) < 1e-9);
+});
+
+test('FY2012 one-time money is split into 21.0 solid plus 14.1 skipped reserve, not added', () => {
+  const b = prepare(data).bars.find((x) => x.fy === 2012);
+  assert.equal(b.value_m, 35.1);
+  assert.equal(b.solid_m, 21.0);
+  assert.equal(b.reserve_m, 14.1);
+  assert.equal(b.top_m, 35.1);
+  for (const fy of [2015, 2016, 2017, 2021]) {
+    const u = prepare(data).bars.find((x) => x.fy === fy);
+    assert.equal(u.top_m, null);
+    assert.equal(u.reserve_m, 0);
+  }
+});
+
+import { kindEntries } from '../site/charts/sankey.js';
+test('sankey key names every rule, including borrowed money and its bond source', () => {
+  const flows = JSON.parse(readFileSync(new URL('../data/build/flows.json', import.meta.url), 'utf8'));
+  const entries = kindEntries(sankeyPrepare(flows));
+  assert.deepEqual(entries.map((e) => e.kind).sort(), ['borrowed', 'discretionary', 'restricted', 'utility']);
+  const b = entries.find((e) => e.kind === 'borrowed');
+  assert.match(b.text, /^Borrowed money/);
+  assert.ok(b.text.includes('Bonds (borrowed for capital projects)'));
+  assert.ok(b.text.includes('Borrowed money: capital projects the Council picks'));
+});
+
+test('homelessness line carries FY2027 adopted amount as a separate sourced point', () => {
+  const claims = JSON.parse(readFileSync(new URL('../data/build/claims.json', import.meta.url), 'utf8'));
+  const line = claimChartPrepare(claims.find((c) => c.id === 'homelessness').chart);
+  assert.equal(line.next.fy, 2027);
+  assert.equal(line.next.amount_m, 62.0);
+  assert.equal(line.next.figure.source.page, 89);
+  assert.ok(!line.points.some((p) => p.fy === 2027));
+  assert.match(line.summary, /FY2027 adopted budget, not yet in the open data: \$62\.0M/);
+});

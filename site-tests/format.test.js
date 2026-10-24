@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { money, pct, perPerson, cents } from '../site/format.js';
+import { money, pct, perPerson, cents, monthly } from '../site/format.js';
 
 test('money', () => {
   assert.equal(money(118), '$118M');
@@ -32,4 +32,12 @@ test('perPerson', () => {
 });
 test('cents', () => {
   assert.equal(cents(118, 386.7), 'about 0.3¢ on each dollar');
+  assert.equal(cents(23.1, 386.7), 'about 0.06¢ on each dollar');
+  assert.equal(cents(103.2, 386.7), 'about 0.3¢ on each dollar');
+});
+test('monthly shows cents under $10', () => {
+  assert.equal(monthly((23.1e6 / 549999) / 12), '$3.50 a month');
+  assert.equal(monthly(17.88), '$18 a month');
+  assert.equal(monthly(9.996), '$10 a month');
+  assert.equal(monthly(9.994), '$9.99 a month');
 });

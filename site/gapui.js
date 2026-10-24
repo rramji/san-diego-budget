@@ -1,4 +1,4 @@
-import { money, pct, perPerson, cents } from './format.js';
+import { money, pct, perPerson, cents, monthly } from './format.js';
 import { compute } from './gapcalc.js';
 import { figureSpan, srcData, mountPopovers } from './sources.js';
 
@@ -38,7 +38,7 @@ function column(f, gap) {
     ['Spread across residents', derived('the gap divided by the city population (California Department of Finance, Jan. 1, 2026)', s.population), pp],
     ['Spread across households', derived('the gap divided by the number of households (California Department of Finance, Jan. 1, 2026)', s.households), hh],
     ['As a sales tax increase', derived("the gap divided by what the city's 1% share of sales tax raises", s.sales_tax), cents(f.amount_m, gap.sales_tax_1pct_m.value)],
-    ['As a flat monthly fee', derived('the per-household yearly amount divided by 12', s.households), `$${Math.round(f.monthlyFeePerHousehold)} a month per household`],
+    ['As a flat monthly fee', derived('the per-household yearly amount divided by 12', s.households), `${monthly(f.monthlyFeePerHousehold)} per household`],
   );
   const dl = document.createElement('dl');
   dl.className = 'gap-rows';

@@ -54,7 +54,9 @@ export function render(el, data, colors, onSelect, opts = {}) {
   const captions = opts.captions || [];
   const W = Math.max(280, Math.round(el.getBoundingClientRect().width || el.parentElement.clientWidth));
   const vertical = W < 600;
-  const kindColor = { utility: colors.locked, restricted: colors.restricted, discretionary: colors.discretionary };
+  const kindColor = { utility: colors.locked, restricted: colors.restricted, discretionary: colors.discretionary, borrowed: colors.locked };
+  // Borrowed money shares the "locked" colour, so its ribbons are striped to stay distinct from utility fees.
+  const kindDash = { borrowed: '5 3' };
   const NODE_W = 14;
   const MIN_THICK = 3;
 
@@ -106,7 +108,7 @@ export function render(el, data, colors, onSelect, opts = {}) {
   const hl = links.find((l) => l.highlight);
   const nSrc = nodes.filter((n) => n.column === 0).length;
   const nUse = nodes.filter((n) => n.column === 2).length;
-  svg.attr('aria-label', `Flow diagram: money from ${nSrc} sources flows through three kinds of rules into ${nUse} uses.${hl ? ` The highlighted flow is ${linkLabel(hl)}, ${money(hl.value)}.` : ''} Select a flow to read its rule and source below.`);
+  svg.attr('aria-label', `Flow diagram: money from ${nSrc} sources flows through ${nodes.filter((n) => n.column === 1).length} kinds of rules into ${nUse} uses. Borrowed money (bonds) is drawn striped.${hl ? ` The highlighted flow is ${linkLabel(hl)}, ${money(hl.value)}.` : ''} Select a flow to read its rule and source below.`);
 
   const g = svg.append('g').attr('transform', `translate(${m.left},${m.top})`);
 
@@ -123,7 +125,8 @@ export function render(el, data, colors, onSelect, opts = {}) {
     if (l.highlight) gr.append('path').attr('class', 'ribbon-hl').attr('d', d).attr('fill', 'none').attr('stroke', colors.gap).attr('stroke-width', l.width + 5).attr('stroke-opacity', 0.9);
     gr.append('path').attr('class', 'ribbon-sel').attr('d', d).attr('fill', 'none').attr('stroke', colors.text).attr('stroke-width', l.width + 3).attr('stroke-opacity', 0);
     gr.append('path').attr('class', 'ribbon-vis').attr('d', d).attr('fill', 'none')
-      .attr('stroke', kindColor[l.source.kind]).attr('stroke-width', l.width).attr('stroke-opacity', 0.45);
+      .attr('stroke', kindColor[l.source.kind]).attr('stroke-width', l.width).attr('stroke-opacity', 0.45)
+      .attr('stroke-dasharray', kindDash[l.source.kind] || null);
     // wider invisible target for touch
     gr.append('path').attr('d', d).attr('fill', 'none').attr('stroke', 'transparent').attr('stroke-width', Math.max(l.width, 16)).style('cursor', 'pointer');
     const choose = () => { select(l); if (onSelect) onSelect(l); };
@@ -202,9 +205,11 @@ export function render(el, data, colors, onSelect, opts = {}) {
         .attr('y', 16).attr('text-anchor', col === 0 ? 'end' : col === 2 ? 'start' : 'middle')
         .attr('x', col === 0 ? m.left + n.x0 + NODE_W : col === 2 ? m.left + n.x0 : m.left + n.x0 + NODE_W / 2);
     });
-  } else {
-    const key = document.createElement('div');
-    key.className = 'sankey-key';
+  }
+  // HTML key in both layouts: one entry per rule (column 1), coloured by kind; borrowed money also names its source.
+  const key = document.createElement('div');
+  key.className = 'sankey-key';
+  if (vertical) {
     const ol = document.createElement('ol');
     ol.className = 'legend';
     ['Top', 'Middle', 'Bottom'].forEach((pos, col) => {
@@ -213,24 +218,47 @@ export function render(el, data, colors, onSelect, opts = {}) {
       li.textContent = `${pos}: ${captions[col]}`;
       ol.append(li);
     });
-    const lg = document.createElement('ul');
-    lg.className = 'legend';
-    for (const n of nodes.filter((x) => x.column === 1)) {
-      const li = document.createElement('li');
-      const sw = document.createElement('span');
-      sw.className = 'swatch';
-      sw.style.background = kindColor[n.kind];
-      li.append(sw, n.label);
-      lg.append(li);
-    }
-    key.append(ol, lg);
-    el.append(key);
+    key.append(ol);
   }
+  key.append(kindLegend(data, kindColor));
+  el.append(key);
 
   el.append(wrapEl);
   const initial = (opts.selected && links.find((l) => linkKey(l) === opts.selected)) || hl;
   if (initial) { select(initial); if (onSelect) onSelect(initial, { silent: true }); }
   return { select, vertical };
+}
+
+export const KIND_NAMES = {
+  discretionary: 'General-purpose money', utility: 'Utility and enterprise fees', restricted: 'Grant- or law-restricted money', borrowed: 'Borrowed money',
+};
+
+// Legend entries: one per rule node, with the kind's name and, for borrowed money, the source node(s) feeding it.
+export function kindEntries(data) {
+  const byId = Object.fromEntries(data.nodes.map((n) => [n.id, n]));
+  return data.nodes.filter((n) => n.column === 1).map((rule) => {
+    const srcs = data.links.filter((l) => (l.target.id ?? l.target) === rule.id).map((l) => byId[l.source.id ?? l.source]);
+    const text = rule.kind === 'borrowed'
+      ? `${KIND_NAMES.borrowed} (striped): ${srcs.map((n) => n.label).join(', ')} → ${rule.label}`
+      : `${KIND_NAMES[rule.kind]}: ${rule.label}`;
+    return { kind: rule.kind, text };
+  });
+}
+
+function kindLegend(data, kindColor) {
+  const lg = document.createElement('ul');
+  lg.className = 'legend';
+  for (const e of kindEntries(data)) {
+    const li = document.createElement('li');
+    const sw = document.createElement('span');
+    sw.className = 'swatch';
+    sw.style.background = e.kind === 'borrowed'
+      ? `repeating-linear-gradient(90deg, ${kindColor[e.kind]} 0 5px, transparent 5px 8px)`
+      : kindColor[e.kind];
+    li.append(sw, e.text);
+    lg.append(li);
+  }
+  return lg;
 }
 
 // Group links under the rule node they touch (every link touches exactly one), highlighted flow first.
@@ -244,4 +272,4 @@ export function groupFlows(data) {
   }));
 }
 
-export default { prepare, render, linkKey, linkLabel, groupFlows };
+export default { prepare, render, linkKey, linkLabel, groupFlows, kindEntries };

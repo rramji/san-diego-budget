@@ -23,8 +23,15 @@ export function perPerson(m, population) {
 }
 
 // A 1% sales tax raises onePctM, so m raises (m / onePctM) of one percentage point = cents per dollar.
+// Under 0.1¢ one decimal would round a real amount to "0.1¢" or "0.0¢", so two decimals are shown.
 export function cents(m, onePctM) {
-  return `about ${(m / onePctM).toFixed(1)}¢ on each dollar`;
+  const c = m / onePctM;
+  return `about ${c.toFixed(c < 0.1 ? 2 : 1)}¢ on each dollar`;
 }
 
-export default { money, pct, perPerson, cents };
+// A monthly dollar amount: cents under $10 ("$3.50 a month"), whole dollars from $10.
+export function monthly(dollars) {
+  return Math.round(dollars * 100) < 1000 ? `$${dollars.toFixed(2)} a month` : `$${Math.round(dollars)} a month`;
+}
+
+export default { money, pct, perPerson, cents, monthly };

@@ -97,6 +97,7 @@ details.dig[open] > summary::before { content: "\2212"; }
 
 #load-error { margin-top: 16px; padding: 12px var(--gutter); border-left: 4px solid var(--gap); background: var(--surface); font-family: var(--font-ui); }
 #load-error[hidden] { display: none; }
+.render-error { margin: 8px 0; padding: 8px 12px; border-left: 4px solid var(--gap); background: var(--surface); font: 0.9rem/1.4 var(--font-ui); }
 
 dl { margin: 0; }
 dt { font: 650 1rem/1.4 var(--font-ui); margin-top: 16px; }
@@ -122,6 +123,7 @@ main { padding-bottom: 80px; }
 .marker-list { list-style: none; margin: 10px 0 0; padding: 0; font: 0.8rem/1.4 var(--font-ui); color: var(--muted); }
 .marker-list li { display: flex; gap: 8px; margin: 3px 0; }
 .marker-list .ml { flex: none; width: 1.5em; height: 1.5em; border: 1px solid var(--text); border-radius: 50%; text-align: center; font-weight: 700; font-size: 0.7rem; line-height: 1.4em; color: var(--text); }
+.marker-list .figure { white-space: normal; }
 .small { font: 0.85rem/1.4 var(--font-ui); color: var(--muted); }
 .notes dt { font-size: 0.9rem; }
 .notes dd { font: 0.8rem/1.45 var(--font-ui); color: var(--muted); overflow-wrap: anywhere; }

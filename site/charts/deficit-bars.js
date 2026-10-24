@@ -3,6 +3,10 @@
 import { money } from '../format.js';
 
 const val = (f) => (f ? f.value : null);
+const r1 = (x) => Math.round(x * 10) / 10;
+const r3 = (x) => Math.round(x * 1000) / 1000;
+// Short hatched stub for years the IBA did not report: a marker of absence, not a value.
+export const STUB_SHARE = 0.15;
 const firstSentence = (s) => {
   const m = /^.*?[.!?](?=\s|$)/.exec(s || '');
   return (m ? m[0] : s || '').trim();
@@ -28,10 +32,31 @@ export function prepare(input) {
         stack = { up, down: exp != null ? { label: 'One-time expenditures (offset)', amount_m: exp } : null };
       }
     }
+    // Solid segment = the IBA's figure without the skipped reserve deposit; lighter segment on top = the deposit.
+    // FY2012's figure already contains its suspended reserve (includes_suspended_reserve), so it is split, not added.
+    const value = reported ? val(r.structural_deficit_m) : null;
+    const reserveTop = reported && reserve != null && reserve > 0 ? reserve : 0;
+    const solid = value == null ? null : (r.includes_suspended_reserve ? r1(value - reserveTop) : value);
+    const top = value == null ? null : r3(solid + reserveTop);
+    const fig = reported ? r.structural_deficit_m : null;
+    const topFigure = reserveTop && fig ? {
+      value: top,
+      source: {
+        doc: r.includes_suspended_reserve
+          ? `derived: the IBA's $${value}M of one-time money, which includes $${reserveTop}M of skipped reserve contributions (${fig.source.doc})`
+          : `derived: $${value}M excluding reserves plus the $${reserveTop}M skipped reserve deposit; IBA Report 26-11, table 'General Fund Structural Deficit Over Time', row 'Revised Structural Deficit (including reserves)'`,
+        page: fig.source.page ?? null,
+        url: fig.source.url,
+      },
+    } : null;
     return {
       fy: r.fy,
       reported,
-      value_m: reported ? val(r.structural_deficit_m) : null,
+      value_m: value,
+      solid_m: solid,
+      reserve_m: reserveTop,
+      top_m: top,
+      top_figure: topFigure,
       components: r.components || null,
       stack,
       gross: /gross/.test(r.basis),
@@ -51,6 +76,8 @@ export function prepare(input) {
   const stats = {
     mean_m: vals.length ? vals.reduce((a, b) => a + b.value_m, 0) / vals.length : null,
     max_m: peak ? peak.value_m : null,
+    max_top_m: vals.length ? Math.max(...vals.map((b) => b.top_m)) : null,
+    peak_top_m: peak ? peak.top_m : null,
     peak_fy: peak ? peak.fy : null,
     unreported: bars.filter((b) => !b.reported).length,
     peak_share: peak ? peak.share : null,
@@ -93,11 +120,12 @@ export function render(el, data, colors) {
   legend.className = 'legend';
   legendItem(legend, '<svg width="14" height="14" aria-hidden="true"><rect width="14" height="14" fill="var(--gap)"/></svg>', 'Net structural deficit (adopted budgets, FY2022\u201326)');
   legendItem(legend, '<svg width="14" height="14" aria-hidden="true"><rect x=".5" y=".5" width="13" height="13" fill="var(--gap)" fill-opacity=".38" stroke="var(--gap)"/></svg>', 'One-time money used (proposed budgets, FY2012\u201321)');
-  legendItem(legend, '<svg width="14" height="14" aria-hidden="true"><rect x=".5" y=".5" width="13" height="13" fill="url(#hatch)" stroke="var(--muted)" stroke-dasharray="2 2"/></svg>', 'Not reported');
+  legendItem(legend, '<svg width="14" height="14" aria-hidden="true"><rect x=".5" y=".5" width="13" height="13" fill="var(--gap)" fill-opacity=".2" stroke="var(--gap)"/></svg>', 'Skipped reserve deposit (faint top segment)');
+  legendItem(legend, '<svg width="14" height="14" aria-hidden="true"><rect x=".5" y="7.5" width="13" height="6" fill="url(#hatch)" stroke="var(--muted)" stroke-dasharray="2 2"/></svg>', 'n/r: not reported (short hatched mark, not a value)');
   const note27 = document.createElement('li');
   note27.className = 'legend-note';
   note27.innerHTML = '<svg width="14" height="14" aria-hidden="true" style="vertical-align:-2px;margin-right:6px"><rect x="1" y="1" width="12" height="12" fill="var(--gap)" stroke="var(--text)" stroke-width="1.5" stroke-dasharray="3 2"/></svg>';
-  note27.append("FY2027 (dashed): what the IBA found left in the proposed budget after the proposed cuts; the city's budget office puts the adopted budget's own figure at ");
+  note27.append("FY2027 (dashed): what the Council's independent budget analyst (the IBA) found left in the proposed budget after the proposed cuts; the city's budget office (the Mayor's Department of Finance) puts the adopted budget's own figure at ");
   if (data.fy27_adopted) { const f = document.createElement('span'); srcAttrs(f, data.fy27_adopted); f.textContent = `$${data.fy27_adopted.value}M`; note27.append(f); }
   note27.append('.');
   legend.append(note27);
@@ -106,7 +134,7 @@ export function render(el, data, colors) {
   const svg = d3.select(el).append('svg')
     .attr('width', W).attr('height', H).attr('viewBox', `0 0 ${W} ${H}`)
     .attr('role', 'img')
-    .attr('aria-label', `Bar chart of the General Fund structural deficit, FY2012 to FY2027. The largest was ${money(data.stats.max_m)} in FY${data.stats.peak_fy}. ${data.stats.unreported} years were not reported and are shown hatched.`)
+    .attr('aria-label', `Bar chart of the General Fund structural deficit, FY2012 to FY2027. The largest was about ${money(data.stats.max_m)} in FY${data.stats.peak_fy}, or ${money(data.stats.peak_top_m)} counting the skipped reserve deposit, drawn as a faint segment on top of each bar. ${data.stats.unreported} years were not reported and are marked n/r with a short hatched stub.`)
     .style('display', 'block').style('max-width', '100%').style('overflow', 'visible');
 
   const defs = svg.append('defs');
@@ -117,7 +145,7 @@ export function render(el, data, colors) {
 
   const fys = d3.range(2011, 2029);
   const x = d3.scaleBand().domain(fys).range([0, iw]).paddingInner(0.18).paddingOuter(0.05);
-  const y = d3.scaleLinear().domain([0, Math.ceil(data.stats.max_m / 50) * 50]).range([ih, 0]);
+  const y = d3.scaleLinear().domain([0, Math.ceil(data.stats.max_top_m / 50) * 50]).range([ih, 0]);
   const g = svg.append('g').attr('transform', `translate(${m.left},${m.top})`);
   const cx = (fy) => x(fy) + x.bandwidth() / 2;
 
@@ -150,10 +178,11 @@ export function render(el, data, colors) {
   const showTip = (b, ev) => {
     tip.replaceChildren();
     const h = document.createElement('strong');
-    h.textContent = `FY${b.fy}: ${b.reported ? money(b.value_m) : 'not reported'}`;
+    h.textContent = `FY${b.fy}: ${b.reported ? money(b.solid_m) : 'not reported'}`;
     const p1 = document.createElement('div'); p1.textContent = b.basis.replace(/^./, (c) => c.toUpperCase()).split(';').slice(0, 2).join(';');
-    const p2 = document.createElement('div'); p2.textContent = b.includes_suspended_reserve ? `${b.summary} (Includes a suspended reserve contribution.)` : b.summary;
+    const p2 = document.createElement('div'); p2.textContent = b.reported ? b.summary : 'The IBA did not report a figure for this year; the short hatched mark is not a value.';
     tip.append(h, p1);
+    if (b.reserve_m) { const pr = document.createElement('div'); pr.textContent = `${money(b.top_m)} counting the ${money(b.reserve_m)} skipped reserve deposit (faint top segment)`; tip.append(pr); }
     if (b.share != null) { const ps = document.createElement('div'); ps.textContent = `${(b.share * 100).toFixed(1)}% of General Fund spending`; tip.append(ps); }
     tip.append(p2);
     tip.hidden = false;
@@ -168,19 +197,29 @@ export function render(el, data, colors) {
     const x0 = x(b.fy);
     const gb = g.append('g');
     const title = b.reported
-      ? `FY${b.fy}: ${money(b.value_m)}${b.share != null ? `, ${(b.share * 100).toFixed(1)}% of General Fund spending` : ''}. ${b.basis}. ${b.summary}${b.includes_suspended_reserve ? ' Includes a suspended reserve contribution.' : ''}`
+      ? `FY${b.fy}: ${money(b.solid_m)}${b.reserve_m ? `, or ${money(b.top_m)} counting the ${money(b.reserve_m)} skipped reserve deposit` : ''}${b.share != null ? `; ${(b.share * 100).toFixed(1)}% of General Fund spending` : ''}. ${b.basis}. ${b.summary}`
       : `FY${b.fy}: not reported`;
     if (!b.reported) {
-      gb.append('rect').attr('x', x0).attr('y', 0).attr('width', bw).attr('height', ih)
+      const sh = Math.round(ih * STUB_SHARE);
+      gb.append('rect').attr('x', x0).attr('y', ih - sh).attr('width', bw).attr('height', sh)
         .attr('fill', 'url(#hatch)').attr('stroke', colors.muted).attr('stroke-dasharray', '2 2');
+      gb.append('text').attr('x', x0 + bw / 2).attr('y', ih - sh - 4).attr('text-anchor', 'middle')
+        .attr('fill', colors.muted).style('font', '10px var(--font-ui)').text('n/r');
     } else {
-      const h = ih - y(b.value_m);
+      const h = ih - y(b.solid_m);
+      const hr = b.reserve_m ? y(b.solid_m) - y(b.top_m) : 0;
       if (h > 0) {
-        gb.append('path').attr('d', topRound(x0, y(b.value_m), bw, h)).attr('fill', colors.gap)
+        const base = hr > 0 ? gb.append('rect').attr('x', x0).attr('y', y(b.solid_m)).attr('width', bw).attr('height', h)
+          : gb.append('path').attr('d', topRound(x0, y(b.solid_m), bw, h));
+        base.attr('fill', colors.gap)
           .attr('fill-opacity', b.gross ? 0.38 : 1).attr('stroke', b.gross ? colors.gap : b.proposed_net ? colors.text : 'none')
           .attr('stroke-width', b.proposed_net ? 1.5 : 1).attr('stroke-dasharray', b.proposed_net ? '3 2' : null);
       } else {
         gb.append('rect').attr('x', x0).attr('y', ih - 2).attr('width', bw).attr('height', 2).attr('fill', colors.gap);
+      }
+      if (hr > 0) {
+        gb.append('path').attr('class', 'reserve').attr('d', topRound(x0 + 0.5, y(b.top_m), bw - 1, hr - 1))
+          .attr('fill', colors.gap).attr('fill-opacity', 0.2).attr('stroke', colors.gap).attr('stroke-width', 1);
       }
     }
     // full-height hit area (bigger than the mark) carrying the accessible title
@@ -195,9 +234,9 @@ export function render(el, data, colors) {
   // value labels: all bars when there is room, else peak and latest only
   const roomy = bw >= 30;
   g.selectAll('.vl').data(data.bars.filter((b) => b.reported && (roomy || b.fy === data.stats.peak_fy || b.fy === 2027)))
-    .join('text').attr('x', (b) => cx(b.fy)).attr('y', (b) => y(b.value_m) - 5).attr('text-anchor', 'middle')
+    .join('text').attr('x', (b) => cx(b.fy)).attr('y', (b) => y(b.top_m) - 5).attr('text-anchor', 'middle')
     .attr('fill', colors.text).style('font', '600 11px var(--font-ui)').style('font-variant-numeric', 'tabular-nums')
-    .text((b) => (b.value_m === 0 ? '$0' : money(b.value_m)));
+    .text((b) => (b.top_m === 0 ? '$0' : money(b.top_m)));
 
   // markers
   const letters = 'ABCD';
@@ -228,9 +267,14 @@ export function render(el, data, colors) {
     const cap = document.createElement('p');
     cap.className = 'chart-cap';
     const pk = data.bars.find((b) => b.fy === data.stats.peak_fy);
-    cap.append(`The FY${pk.fy} gap (`);
+    cap.append(`The FY${pk.fy} gap was about `);
     const a = document.createElement('span'); srcAttrs(a, pk.figure); a.textContent = money(pk.value_m); cap.append(a);
-    cap.append(`) was about ${Math.round(data.stats.peak_share * 100)}% of that year's General Fund spending (`);
+    if (pk.top_figure) {
+      cap.append(', or ');
+      const t = document.createElement('span'); srcAttrs(t, pk.top_figure); t.textContent = money(pk.top_m); cap.append(t);
+      cap.append(' counting the skipped reserve deposit');
+    }
+    cap.append(`. Without the deposit, it was about ${Math.round(data.stats.peak_share * 100)}% of that year's General Fund spending (`);
     const b2 = document.createElement('span');
     srcAttrs(b2, { source: { doc: `City of San Diego open data, Operating Budget: General Fund adopted expenditure, FY${pk.fy}`, page: null, url: 'https://seshat.datasd.org/operating_budget/budget_operating_datasd.csv' } });
     b2.textContent = money(data.stats.peak_expense_m);

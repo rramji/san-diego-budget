@@ -79,6 +79,11 @@ function renderChapter1(data) {
     const b = prep.bars.find((x) => x.fy === Number(sp.dataset.fyFig));
     sp.replaceWith(figureSpan(b.figure, money(b.value_m)));
   }
+  // Bar top including the skipped reserve deposit (a derived figure, sourced to the IBA's "including reserves" row).
+  for (const sp of document.querySelectorAll('[data-fy-top]')) {
+    const b = prep.bars.find((x) => x.fy === Number(sp.dataset.fyTop));
+    sp.replaceWith(figureSpan(b.top_figure, money(b.top_m)));
+  }
   for (const sp of document.querySelectorAll('[data-marker-fig]')) {
     const mk = prep.markers.find((x) => x.fy === Number(sp.dataset.markerFig));
     sp.replaceWith(figureSpan(mk.source, money(mk.source.value)));
@@ -193,20 +198,36 @@ function renderChapter4(data) {
   mountClaims(document.getElementById('ch4-claims'), data.claims);
 }
 
+// One part failing to render must not take the later chapters with it: log it and say so in that part's mount.
+export function guarded(name, mountId, fn) {
+  try {
+    fn();
+  } catch (err) {
+    console.error(`${name} failed to render`, err);
+    const mount = mountId && document.getElementById(mountId);
+    if (mount) {
+      const p = document.createElement('p');
+      p.className = 'render-error';
+      p.textContent = 'This part of the page could not be drawn. Reload the page to try again; the rest of the page is unaffected.';
+      mount.replaceChildren(p);
+    }
+  }
+}
+
 async function main() {
   mountProgress();
   mountDigDeeper(document);
   const data = await loadData();
   if (new URLSearchParams(location.search).has('debug')) window.__data = data;
-  renderHeadline(data.headline);
-  renderGlossary(document.getElementById('glossary-list'), data.glossary);
-  renderChapter1(data);
-  renderChapter2(data);
-  renderChapter3(data);
-  renderChapter4(data);
-  mountPopovers(document);
-  renderSources(document.getElementById('sources-list'), data);
-  wireGlossaryLinks(document);
+  guarded('headline', null, () => renderHeadline(data.headline));
+  guarded('glossary', 'glossary-list', () => renderGlossary(document.getElementById('glossary-list'), data.glossary));
+  guarded('chapter 1', 'ch1-chart', () => renderChapter1(data));
+  guarded('chapter 2', 'ch2-funnel', () => renderChapter2(data));
+  guarded('chapter 3', 'ch3-calc', () => renderChapter3(data));
+  guarded('chapter 4', 'ch4-claims', () => renderChapter4(data));
+  guarded('popovers', null, () => mountPopovers(document));
+  guarded('sources', 'sources-list', () => renderSources(document.getElementById('sources-list'), data));
+  guarded('glossary links', null, () => wireGlossaryLinks(document));
   document.dispatchEvent(new CustomEvent('data-ready', { detail: data }));
 }
 

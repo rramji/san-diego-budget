@@ -1,4 +1,4 @@
-// Chapter 2 dig-deeper tables: FY2027 reductions and what Council restored.
+// Chapter 2 dig-deeper tables: FY2027 reductions and what was recommended or added back.
 // Source spans use the shared .figure + data-src-* convention; app.js mounts the popover buttons.
 import { money } from './format.js';
 import { srcData } from './sources.js';
@@ -43,6 +43,9 @@ function tableBlock(title, intro, heads, rows) {
   return frag;
 }
 
+// The source link names where the row came from ("May Revision", "IBA-recommended Council modification"), not a fixed label.
+export const statusLabel = (status) => (status || 'Source').split(' (')[0].trim();
+
 export function renderCuts(el, cuts) {
   const amount = (a) => (a ? srcSpan(a.source, money(a.value)) : 'not stated');
   const red = cuts.reductions.map((r) => [
@@ -52,13 +55,13 @@ export function renderCuts(el, cuts) {
     r.reason,
     [srcSpan(r.source, 'Cut'), ' ', srcSpan(r.reason_source, 'Reason')],
   ]);
-  const res = cuts.restorations.map((r) => [r.item, r.status, amount(r.amount_m), srcSpan(r.source, 'Source')]);
+  const res = cuts.restorations.map((r) => [r.item, r.status, amount(r.amount_m), srcSpan(r.source, statusLabel(r.status))]);
   el.replaceChildren(
     tableBlock('What the budget cut',
-      'These are the reductions listed under "Critical Reductions" in the adopted budget. The reasons come from the department reviews by the Independent Budget Analyst (IBA), the Council\'s own budget office.',
-      ['Item', 'Department', 'Amount', 'Reason', 'Source'], red),
-    tableBlock('What was added back',
-      'Items that the Mayor\'s revised proposal (the May Revision) or the IBA\'s recommended Council changes put back, and one the Mayor commented on.',
+      'These are the reductions listed under "Critical Reductions" in the adopted budget. The amounts are the proposed-budget figures from the review by the Council\'s independent budget analyst (the IBA), and some were later partly added back (see the next table). The reasons come from the IBA\'s department reviews.',
+      ['Item', 'Department', 'Amount proposed', 'Reason', 'Source'], red),
+    tableBlock('Recommended or added back',
+      'Items that the Mayor\'s revised proposal (the May Revision) put back or that the IBA recommended the Council change, and one the Mayor commented on. Each row says which.',
       ['Item', 'Where it came from', 'Amount', 'Source'], res),
   );
 }

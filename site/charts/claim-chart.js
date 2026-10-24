@@ -1,5 +1,7 @@
 // Chapter 4 claim charts: grouped bars and a single-axis line. prepare() is pure; render() uses the global d3.
 const fmtM = (x) => `$${Number(x.toFixed(x >= 10 ? 1 : 2))}M`;
+// The budget book prints one decimal ($62.0M); keep it.
+const fmt1 = (x) => `$${x.toFixed(1)}M`;
 const shortLabel = (l) => l.replace(/\/.*$/, '').replace(/ (Financing|Funds?)$/, '');
 const SVGNS = 'http://www.w3.org/2000/svg';
 
@@ -18,10 +20,13 @@ export function prepare(chart) {
   if (chart.type === 'line') {
     const points = chart.points.map((p) => ({ ...p }));
     const first = points[0], last = points[points.length - 1];
-    const max = Math.max(...points.map((p) => p.amount_m));
+    // The next adopted year is printed in the budget book but not yet in the open data: a separate, labelled point.
+    const next = chart.adopted_next ? { fy: chart.adopted_next.fy, amount_m: chart.adopted_next.amount_m.value, figure: chart.adopted_next.amount_m } : null;
+    const max = Math.max(...points.map((p) => p.amount_m), next ? next.amount_m : 0);
     const summary = `Line chart of the Homelessness Strategies & Solutions General Fund budget in millions of dollars, FY${first.fy} to FY${last.fy}: ` +
-      points.map((p) => `FY${p.fy} ${fmtM(p.amount_m)}`).join(', ') + '.';
-    return { type: chart.type, points, max, summary };
+      points.map((p) => `FY${p.fy} ${fmtM(p.amount_m)}`).join(', ') + '.' +
+      (next ? ` FY${next.fy} adopted budget, not yet in the open data: ${fmt1(next.amount_m)}.` : '');
+    return { type: chart.type, points, next, max, summary };
   }
   throw new Error(`unknown claim chart type: ${chart.type}`);
 }
@@ -71,6 +76,12 @@ function tableFor(data, source) {
       const tr = document.createElement('tr');
       const rh = document.createElement('th'); rh.scope = 'row'; rh.textContent = `FY${p.fy}`;
       tr.append(rh, td(cell(p.amount_m)), td(`${Number(p.share_pct.toFixed(1))}%`));
+      t.append(tr);
+    }
+    if (data.next) {
+      const tr = document.createElement('tr');
+      const rh = document.createElement('th'); rh.scope = 'row'; rh.textContent = `FY${data.next.fy} (adopted budget book)`;
+      tr.append(rh, td(figSpan(data.next.figure.source, fmt1(data.next.amount_m))), td('not in the open data yet'));
       t.append(tr);
     }
   }
@@ -169,9 +180,11 @@ export function render(el, chart, colors, source = null) {
       legend.append(li);
     });
   } else {
-    const xs = d3.scalePoint().domain(data.points.map((p) => p.fy)).range([22, iw - 22]);
-    font(g.append('g').selectAll('text').data(data.points).join('text')
-      .attr('x', (p) => xs(p.fy)).attr('y', ih + 18).attr('text-anchor', 'middle').text((p) => `FY${p.fy}`));
+    const allFy = data.points.map((p) => p.fy).concat(data.next ? [data.next.fy] : []);
+    const xs = d3.scalePoint().domain(allFy).range([22, iw - 22]);
+    const narrowX = xs.step() < 44;
+    font(g.append('g').selectAll('text').data(allFy).join('text')
+      .attr('x', (fy) => xs(fy)).attr('y', ih + 18).attr('text-anchor', 'middle').text((fy) => (narrowX ? `'${String(fy).slice(2)}` : `FY${fy}`)));
     const line = d3.line().x((p) => xs(p.fy)).y((p) => y(p.amount_m));
     const path = g.append('path').attr('d', line(data.points)).attr('fill', 'none').attr('stroke', colors.discretionary).attr('stroke-width', 2);
     if (!reduced) {
@@ -188,16 +201,48 @@ export function render(el, chart, colors, source = null) {
       g.append('circle').attr('cx', cx).attr('cy', cy).attr('r', 14).attr('fill', 'transparent')
         .on('pointerenter', at).on('pointermove', at).on('pointerleave', () => { tip.hidden = true; }).on('click', at);
     });
+    if (data.next) {
+      const lp = data.points[data.points.length - 1];
+      const nx = xs(data.next.fy), ny = y(data.next.amount_m);
+      g.append('line').attr('x1', xs(lp.fy)).attr('y1', y(lp.amount_m)).attr('x2', nx).attr('y2', ny)
+        .attr('stroke', colors.discretionary).attr('stroke-width', 1.5).attr('stroke-dasharray', '4 3');
+      const nd = g.append('circle').attr('cx', nx).attr('cy', ny).attr('r', 4.5).attr('fill', colors.bg || 'transparent')
+        .attr('stroke', colors.discretionary).attr('stroke-width', 2);
+      const nl = [`FY${data.next.fy}: ${fmt1(data.next.amount_m)}`, 'Adopted budget book; not yet in the open data'];
+      nd.append('title').text(nl.join('; '));
+      g.append('text').attr('x', nx).attr('y', ny - 10).attr('text-anchor', 'end').attr('fill', colors.text)
+        .style('font', '600 11px var(--font-ui)').text(`FY${String(data.next.fy).slice(2)} adopted ${fmt1(data.next.amount_m)}`);
+      const at = () => showTip(nl, nx + m.l, ny + m.t);
+      g.append('circle').attr('cx', nx).attr('cy', ny).attr('r', 14).attr('fill', 'transparent')
+        .on('pointerenter', at).on('pointermove', at).on('pointerleave', () => { tip.hidden = true; }).on('click', at);
+    }
     const li = document.createElement('li');
-    li.textContent = 'Homelessness Strategies & Solutions, General Fund budget, $ millions';
+    li.textContent = 'Homelessness Strategies & Solutions, General Fund budget, $ millions (open data)';
     legend.append(li);
+    if (data.next) {
+      const l2 = document.createElement('li');
+      const sw = document.createElementNS(SVGNS, 'svg');
+      sw.setAttribute('width', 14); sw.setAttribute('height', 14); sw.setAttribute('aria-hidden', 'true');
+      const c = document.createElementNS(SVGNS, 'circle');
+      c.setAttribute('cx', 7); c.setAttribute('cy', 7); c.setAttribute('r', 4.5); c.setAttribute('fill', 'none');
+      c.setAttribute('stroke', colors.discretionary); c.setAttribute('stroke-width', 2);
+      sw.append(c);
+      l2.append(sw, `Hollow dot: FY${data.next.fy} adopted budget, not yet in the open data`);
+      legend.append(l2);
+    }
   }
 
   const cap = document.createElement('p');
   cap.className = 'chart-cap';
-  cap.textContent = data.type === 'grouped_bar'
-    ? `FY${data.fy} adopted capital budget by funding source, in millions of dollars. Hover or tap a bar for its value.`
-    : "Hover or tap a dot to see that year's share of General Fund spending.";
+  if (data.type === 'grouped_bar') {
+    cap.textContent = `FY${data.fy} adopted capital budget by funding source, in millions of dollars. Hover or tap a bar for its value.`;
+  } else {
+    cap.append("Hover or tap a dot to see that year's share of General Fund spending.");
+    if (data.next) {
+      cap.append(` The city's open data stops at FY${data.points[data.points.length - 1].fy}; the FY${data.next.fy} adopted budget gives the department `,
+        figSpan(data.next.figure.source, fmt1(data.next.amount_m)), ' (hollow dot).');
+    }
+  }
   el.append(tip);
   const out = [legend, cap];
   out.push(tableFor(data, source));
