@@ -5,6 +5,8 @@ import { renderCuts } from './cuts.js';
 export { renderCuts };
 import { mountGapToggle, gapMoney } from './gapui.js';
 export { mountGapToggle };
+import { mountClaims, claimCardModel } from './claims.js';
+export { mountClaims, claimCardModel };
 import * as sankey from './charts/sankey.js';
 import { themeColors, observeWidth } from './charts/util.js';
 
@@ -290,6 +292,10 @@ function renderChapter3(data) {
   mountGapToggle(document.getElementById('ch3-calc'), g);
 }
 
+function renderChapter4(data) {
+  mountClaims(document.getElementById('ch4-claims'), data.claims);
+}
+
 async function main() {
   mountProgress();
   mountDigDeeper(document);
@@ -300,6 +306,7 @@ async function main() {
   renderChapter1(data);
   renderChapter2(data);
   renderChapter3(data);
+  renderChapter4(data);
   mountPopovers(document);
   document.dispatchEvent(new CustomEvent('data-ready', { detail: data }));
 }

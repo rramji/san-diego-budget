@@ -155,3 +155,32 @@ test('groupFlows puts every link under exactly one rule node, highlighted flow f
   assert.equal(g.links[0].targetLabel, 'Bike & pedestrian projects');
   assert.ok(groups.every((x) => x.links.every((l) => l.rule && l.ref)));
 });
+
+// ---- Chapter 4 claim cards ----
+import { claimCardModel } from '../site/claims.js';
+import { prepare as claimChartPrepare } from '../site/charts/claim-chart.js';
+
+test('test_claim_card_model_null_chart', () => {
+  const claims = JSON.parse(readFileSync(new URL('../data/build/claims.json', import.meta.url), 'utf8'));
+  assert.equal(claims.length, 5);
+  for (const c of claims) {
+    const m = claimCardModel(c);
+    assert.equal(m.hasChart, c.chart !== null);
+    assert.equal(m.caveatText, `What this doesn't tell you: ${c.caveat}`);
+    assert.ok(m.chipLabel.split(' ').length <= 4);
+    assert.equal(m.sources.length, c.sources.length);
+  }
+  const managers = claimCardModel(claims.find((c) => c.id === 'managers'));
+  assert.equal(managers.hasChart, false);
+  assert.equal(managers.chipLabel, 'Too many managers');
+});
+
+test('claim chart prepare keeps the zero series and does not zero-fill the line', () => {
+  const claims = JSON.parse(readFileSync(new URL('../data/build/claims.json', import.meta.url), 'utf8'));
+  const bike = claimChartPrepare(claims.find((c) => c.id === 'bike-lanes').chart);
+  assert.equal(bike.groups.length, 2);
+  assert.deepEqual(bike.seriesLabels, ['Bond Financing', 'TransNet Funds', 'Trench Cut/Excavation Fee Fund']);
+  assert.ok(bike.groups[0].series.some((s) => s.amount_m === 0));
+  const line = claimChartPrepare(claims.find((c) => c.id === 'homelessness').chart);
+  assert.deepEqual(line.points.map((p) => p.fy), [2021, 2022, 2023, 2024, 2025, 2026]);
+});
