@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>San Diego's budget gap, explained</title>
+<meta name="description" content="A plain-English look at the City of San Diego's General Fund structural deficit, with every number traced to a document and page.">
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="progress" role="progressbar" aria-label="Reading progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
+
+<header class="masthead">
+  <h1>San Diego's budget gap, explained</h1>
+  <p class="dek" id="dek">The city plans to spend <span id="dek-total">about $6.5 billion</span> this year, but only <span id="dek-gf">about $2.3 billion</span> of it is the part Council actually votes on (the General Fund). That part does not add up on its own, and the shortfall has a history.</p>
+  <nav class="toc" aria-label="Chapters">
+    <a href="#ch1">How long</a>
+    <a href="#ch2">Where the money is</a>
+    <a href="#ch3">What it would cost you</a>
+    <a href="#ch4">Check a claim</a>
+  </nav>
+</header>
+
+<div id="load-error" role="alert" hidden></div>
+
+<main>
+  <section id="ch1" class="chapter" aria-labelledby="ch1-h">
+    <h2 id="ch1-h">How long has this been going on?</h2>
+    <p class="lead"><!-- COPY -->Placeholder: a short plain-English lead on the history of the gap.</p>
+    <figure class="chart" id="ch1-chart"></figure>
+    <details class="dig"><summary>Dig deeper</summary>
+      <div class="dig-body" id="ch1-dig"><!-- COPY --><p>Placeholder for the breakdown of what filled the gap each year.</p></div>
+    </details>
+  </section>
+
+  <section id="ch2" class="chapter" aria-labelledby="ch2-h">
+    <h2 id="ch2-h">Where is the money, and what can actually be cut?</h2>
+    <p class="lead"><!-- COPY -->Placeholder: a short plain-English lead on what the city spends and what is locked in.</p>
+    <figure class="chart" id="ch2-funnel"></figure>
+    <details class="dig"><summary>Dig deeper</summary>
+      <div class="dig-body">
+        <!-- COPY --><p>Placeholder for how restricted money flows to what it pays for.</p>
+        <figure class="chart" id="ch2-sankey"></figure>
+        <figure class="chart" id="ch2-cuts"></figure>
+      </div>
+    </details>
+  </section>
+
+  <section id="ch3" class="chapter" aria-labelledby="ch3-h">
+    <h2 id="ch3-h">What would closing the gap cost you?</h2>
+    <p class="lead"><!-- COPY -->Placeholder: a short plain-English lead on translating the gap into everyday terms.</p>
+    <figure class="chart" id="ch3-calc"></figure>
+    <details class="dig"><summary>Dig deeper</summary>
+      <div class="dig-body" id="ch3-dig"><!-- COPY --><p>Placeholder for why the gap has more than one size.</p></div>
+    </details>
+  </section>
+
+  <section id="ch4" class="chapter" aria-labelledby="ch4-h">
+    <h2 id="ch4-h">Check a claim</h2>
+    <p class="lead"><!-- COPY -->Placeholder: a short plain-English lead on checking common claims against the record.</p>
+    <figure class="chart" id="ch4-claims"></figure>
+  </section>
+
+  <section id="sources" class="chapter" aria-labelledby="sources-h">
+    <h2 id="sources-h">Sources</h2>
+    <!-- COPY --><p>Placeholder: every document used, listed once.</p>
+    <ul id="sources-list"></ul>
+  </section>
+
+  <section id="glossary" class="chapter" aria-labelledby="glossary-h">
+    <h2 id="glossary-h">Plain-English glossary</h2>
+    <dl id="glossary-list"></dl>
+  </section>
+</main>
+
+<script src="lib/d3.v7.min.js"></script>
+<script src="lib/d3-sankey.min.js"></script>
+<script type="module" src="app.js"></script>
+</body>
+</html>
