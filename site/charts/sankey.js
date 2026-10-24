@@ -62,7 +62,7 @@ export function render(el, data, colors, onSelect, opts = {}) {
   // layout x (column axis) is drawn downward, layout y (within a column) is drawn rightward.
   let H, extent, m;
   if (vertical) {
-    m = { top: 138, right: 4, bottom: 128, left: 4 };
+    m = { top: 140, right: 4, bottom: 150, left: 4 };
     extent = [[0, 0], [430, W - m.left - m.right]];
     H = m.top + 430 + m.bottom;
   } else {
@@ -101,7 +101,7 @@ export function render(el, data, colors, onSelect, opts = {}) {
   wrapEl.className = 'sankey';
   const svg = d3.select(wrapEl).append('svg')
     .attr('width', W).attr('height', H).attr('viewBox', `0 0 ${W} ${H}`)
-    .attr('role', 'img')
+    .attr('role', 'group')
     .style('display', 'block').style('max-width', '100%').style('overflow', 'visible');
   const hl = links.find((l) => l.highlight);
   const nSrc = nodes.filter((n) => n.column === 0).length;
@@ -141,11 +141,6 @@ export function render(el, data, colors, onSelect, opts = {}) {
       gr.select('.ribbon-vis').attr('stroke-opacity', on ? 0.8 : 0.45);
       gr.attr('aria-pressed', on ? 'true' : 'false');
     }
-    gr_raise(l);
-  }
-  function gr_raise(l) {
-    const hit = groups.find(([k]) => k === linkKey(l));
-    if (hit) hit[1].raise();
   }
 
   // nodes
@@ -168,18 +163,7 @@ export function render(el, data, colors, onSelect, opts = {}) {
   for (const col of [0, 1, 2]) {
     const cn = nodes.filter((n) => n.column === col);
     if (vertical) {
-      if (col === 1) {
-        cn.forEach((n, i) => {
-          const b = nodeBox(n);
-          const txt = n.label;
-          const room = W - m.left - m.right;
-          const w = txt.length * CHAR;
-          const endAlign = b.x + w > room;
-          const t = label(g).attr('y', b.y - 5 - (i % 3) * 13).attr('x', endAlign ? b.x + b.w : b.x).attr('text-anchor', endAlign ? 'end' : 'start');
-          t.text(trunc(txt, endAlign ? b.x + b.w : room - b.x));
-        });
-        continue;
-      }
+      if (col === 1) continue; // identified by the colour key above the chart and the flow list
       const keep = pickLabels(cn, (n) => (n.y0 + n.y1) / 2, prio, FONT + 3);
       for (const n of keep) {
         const b = nodeBox(n);
@@ -208,30 +192,56 @@ export function render(el, data, colors, onSelect, opts = {}) {
     }
   }
 
-  // column headings
-  const colX = (col) => {
-    const n = nodes.find((x) => x.column === col);
-    return vertical ? 0 : n.x0 + NODE_W / 2;
-  };
-  captions.slice(0, 3).forEach((cap, col) => {
-    if (!cap) return;
-    const n = nodes.find((x) => x.column === col);
-    const t = svg.append('text').attr('fill', colors.muted).style('font', `600 ${FONT + 1}px var(--font-ui)`).text(cap);
-    for (const [k, v] of Object.entries(halo)) t.style(k, v);
-    if (vertical) {
-      // col 0 above its rotated labels; col 1 below its nodes; col 2 above its nodes
-      const y = col === 0 ? 14 : col === 1 ? m.top + n.x0 + NODE_W + 15 : m.top + n.x0 - 8;
-      t.attr('x', m.left).attr('y', y);
-    } else {
-      t.attr('y', 16).attr('x', m.left + colX(col)).attr('text-anchor', col === 0 ? 'end' : col === 2 ? 'start' : 'middle');
-      if (col === 0) t.attr('x', m.left + n.x0 + NODE_W); else if (col === 2) t.attr('x', m.left + n.x0);
+  // column headings: drawn in the svg only in the horizontal layout. The vertical layout uses an HTML key instead,
+  // so no text is drawn over ribbons.
+  if (!vertical) {
+    captions.slice(0, 3).forEach((cap, col) => {
+      if (!cap) return;
+      const n = nodes.find((x) => x.column === col);
+      svg.append('text').attr('fill', colors.muted).style('font', `600 ${FONT + 1}px var(--font-ui)`).text(cap)
+        .attr('y', 16).attr('text-anchor', col === 0 ? 'end' : col === 2 ? 'start' : 'middle')
+        .attr('x', col === 0 ? m.left + n.x0 + NODE_W : col === 2 ? m.left + n.x0 : m.left + n.x0 + NODE_W / 2);
+    });
+  } else {
+    const key = document.createElement('div');
+    key.className = 'sankey-key';
+    const ol = document.createElement('ol');
+    ol.className = 'legend';
+    ['Top', 'Middle', 'Bottom'].forEach((pos, col) => {
+      if (!captions[col]) return;
+      const li = document.createElement('li');
+      li.textContent = `${pos}: ${captions[col]}`;
+      ol.append(li);
+    });
+    const lg = document.createElement('ul');
+    lg.className = 'legend';
+    for (const n of nodes.filter((x) => x.column === 1)) {
+      const li = document.createElement('li');
+      const sw = document.createElement('span');
+      sw.className = 'swatch';
+      sw.style.background = kindColor[n.kind];
+      li.append(sw, n.label);
+      lg.append(li);
     }
-  });
+    key.append(ol, lg);
+    el.append(key);
+  }
 
   el.append(wrapEl);
   const initial = (opts.selected && links.find((l) => linkKey(l) === opts.selected)) || hl;
-  if (initial) { select(initial); if (onSelect) onSelect(initial); }
+  if (initial) { select(initial); if (onSelect) onSelect(initial, { silent: true }); }
   return { select, vertical };
 }
 
-export default { prepare, render, linkKey, linkLabel };
+// Group links under the rule node they touch (every link touches exactly one), highlighted flow first.
+export function groupFlows(data) {
+  const byId = Object.fromEntries(data.nodes.map((n) => [n.id, n]));
+  return data.nodes.filter((n) => n.column === 1).map((rule) => ({
+    rule,
+    links: data.links.filter((l) => l.source === rule.id || l.target === rule.id)
+      .sort((a, b) => (Number(b.highlight) - Number(a.highlight)) || (b.value - a.value))
+      .map((l) => ({ ...l, sourceLabel: byId[l.source].label, targetLabel: byId[l.target].label })),
+  }));
+}
+
+export default { prepare, render, linkKey, linkLabel, groupFlows };

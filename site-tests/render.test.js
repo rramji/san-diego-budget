@@ -142,3 +142,16 @@ test('test_sankey_prepare_preserves_highlight_and_rule', () => {
   assert.equal(typeof flows.links[0].source, 'string');
   assert.equal(flows.links[0].amount_m, p.links[0].value);
 });
+
+import { groupFlows } from '../site/charts/sankey.js';
+test('groupFlows puts every link under exactly one rule node, highlighted flow first', () => {
+  const flows = JSON.parse(readFileSync(new URL('../data/build/flows.json', import.meta.url), 'utf8'));
+  const prep = sankeyPrepare(flows);
+  const groups = groupFlows(prep);
+  assert.equal(groups.length, 3);
+  assert.equal(groups.reduce((a, g) => a + g.links.length, 0), 27);
+  const g = groups.find((x) => x.rule.id === 'rule_restricted');
+  assert.equal(g.links[0].highlight, true);
+  assert.equal(g.links[0].targetLabel, 'Bike & pedestrian projects');
+  assert.ok(groups.every((x) => x.links.every((l) => l.rule && l.ref)));
+});

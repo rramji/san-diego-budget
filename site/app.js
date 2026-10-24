@@ -204,39 +204,78 @@ function srcData(el, src) {
   el.dataset.srcUrl = src.url;
 }
 
-function showFlow(panel, link) {
-  const rows = document.createDocumentFragment();
-  const h = document.createElement('p');
-  h.className = 'flow-title';
-  h.textContent = sankey.linkLabel(link);
+function flowAmount(link) {
   const amt = document.createElement('span');
   amt.className = 'figure';
   srcData(amt, link.ref);
   amt.textContent = money(link.value);
-  h.append(' ', amt);
+  return amt;
+}
+
+// The panel is not a live region until the reader selects a flow, so pre-selection and re-renders stay silent.
+function showFlow(panel, link, silent) {
+  const key = sankey.linkKey(link);
+  if (silent && panel.dataset.key === key) return;
+  panel.dataset.key = key;
+  if (!silent) panel.setAttribute('aria-live', 'polite');
+  const h = document.createElement('p');
+  h.className = 'flow-title';
+  h.append(sankey.linkLabel(link), ' ', flowAmount(link));
   const rule = document.createElement('p');
   rule.className = 'flow-rule';
   rule.textContent = link.rule;
   const yr = document.createElement('p');
   yr.className = 'flow-year';
   yr.textContent = `Source: ${link.ref.doc}.`;
-  rows.append(h, rule, yr);
-  panel.replaceChildren(rows);
+  panel.replaceChildren(h, rule, yr);
   mountPopovers(panel);
+}
+
+function buildFlowList(prep) {
+  const det = document.createElement('details');
+  det.className = 'flowlist';
+  const sum = document.createElement('summary');
+  sum.textContent = 'All flows as text';
+  det.append(sum);
+  for (const grp of sankey.groupFlows(prep)) {
+    const h = document.createElement('h4');
+    h.textContent = grp.rule.label;
+    const ul = document.createElement('ul');
+    for (const l of grp.links) {
+      const li = document.createElement('li');
+      if (l.highlight) li.className = 'is-highlight';
+      const t = document.createElement('p');
+      t.className = 'flow-title';
+      t.append(`${l.sourceLabel} \u2192 ${l.targetLabel}: `, flowAmount(l));
+      if (l.highlight) t.append(' (highlighted flow)');
+      const r = document.createElement('p');
+      r.className = 'flow-rule';
+      r.textContent = l.rule;
+      li.append(t, r);
+      ul.append(li);
+    }
+    det.append(h, ul);
+  }
+  return det;
 }
 
 function renderSankey(flows) {
   const el = document.getElementById('ch2-sankey');
   const panel = document.createElement('div');
   panel.className = 'flow-panel';
-  panel.setAttribute('aria-live', 'polite');
-  el.after(panel);
   const prep = sankey.prepare(flows);
+  const list = buildFlowList(prep);
+  el.after(list);
+  mountPopovers(list);
   const captions = [0, 1, 2].map((n) => el.getAttribute(`data-col-${n}`));
   let selected = null;
   observeWidth(el, (w) => {
     if (w <= 0) return; // <details> still closed; draws on first open
-    sankey.render(el, prep, themeColors(), (l) => { selected = sankey.linkKey(l); showFlow(panel, l); }, { captions, selected });
+    const narrow = w < 600;
+    if (narrow) el.before(panel); else el.after(panel); // narrow: selection sits above the chart, in view
+    list.classList.toggle('narrow', narrow);
+    if (narrow) list.open = true;
+    sankey.render(el, prep, themeColors(), (l, o) => { selected = sankey.linkKey(l); showFlow(panel, l, !!(o && o.silent)); }, { captions, selected });
   });
 }
 
