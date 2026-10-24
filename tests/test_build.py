@@ -91,7 +91,10 @@ def test_structural_deficit_merges_gf_expenditure(tmp_path):
     assert years[2027]["gf_expenditure_adopted_m"] is None
     markers = {m["fy"]: m for m in built["markers"]}
     assert sorted(markers) == [2011, 2025, 2026, 2028]
-    assert markers[2025]["label"] == "Nov 2024: one-cent sales tax (Measure E) fails"
+    assert markers[2025]["label"] == "Nov 2024: sales tax measure fails"
+    for fy in (2011, 2025, 2026):
+        src = markers[fy]["source"]["source"]
+        assert src["url"].startswith("https://") and src["page"] in (3, 77)
     assert markers[2028]["source"]["value"] == 30
     assert "kpbs.org" in markers[2028]["source"]["source"]["url"]
 

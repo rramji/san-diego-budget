@@ -143,7 +143,7 @@
   {
     "id": "homelessness",
     "claim": "Homelessness spending is swallowing the city budget.",
-    "finding": "In the city's adopted budget data, the Homelessness Strategies & Solutions department's General Fund budget was $49.1 million in FY2021, $18.1 million in FY2022 and $53.2 million in FY2026, about 2.5% of General Fund spending; the IBA says the FY2022 drop came from removing one-time federal COVID-19 relief that ran through the General Fund, and that no program cuts were proposed that year. The FY2027 adopted budget gives the department $62.0 million. The FY2027 Proposed Budget included $4.9 million in homelessness program reductions, including a $3.75 million target with no details; the May Revision reinstated that placeholder and replaced it with specific cuts, such as $2.9 million at the 16th and Newton shelter, and the adopted budget's list of critical reductions still includes homelessness shelters (closing shelter sites, fewer City-funded beds and closing a safe parking site), without a dollar figure. The IBA notes that much of the department's budget is repaid from hotel-tax revenue set aside for homelessness (Measure C), and that citywide homelessness services in the FY2027 Proposed Budget total $72.9 million across several departments.",
+    "finding": "The city's data shows the homelessness department's General Fund budget at $49.1 million in FY2021, $18.1 million in FY2022 and $53.2 million in FY2026. The IBA says the FY2022 drop came from removing one-time federal COVID-19 relief, not from program cuts. The FY2027 adopted budget gives the department $62.0 million, after the May Revision swapped a $3.75 million placeholder cut for specific cuts. The IBA notes that much of the department's budget is repaid from hotel-tax money set aside for homelessness (Measure C).",
     "caveat": "This counts only the department's General Fund budget, so it leaves out state, federal and county grants and Housing Commission spending, and it shows money budgeted, not results.",
     "chart": null,
     "sources": [
@@ -158,19 +158,9 @@
         "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1generalfundexpenditures.pdf"
       },
       {
-        "doc": "FY2027 Adopted Budget Vol. I, Executive Summary, Critical Reductions: Homelessness Shelters (closure of shelter sites, decrease in City-funded beds, closure of a safe parking site)",
-        "page": 8,
-        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1executivesummary.pdf"
-      },
-      {
         "doc": "IBA Report 21-10, Review of the FY 2022 Proposed Budget, Department Review: Homelessness Strategies (drop from FY 2021 is the removal of one-time COVID-19 relief funding, incl. $30.0M Coronavirus Relief Funds for Operation Shelter to Home and $9.7M rental relief run through the General Fund; no programmatic reductions proposed)",
         "page": 120,
         "url": "https://www.sandiego.gov/sites/default/files/12-10_iba_review_of_fiscal_year_2022_proposed_budget.pdf"
-      },
-      {
-        "doc": "IBA Report 26-11, General Fund Major Budget Mitigations table (Reductions for the Homelessness Services, $4,924,233)",
-        "page": 34,
-        "url": "https://www.sandiego.gov/sites/default/files/2026-04/iba-report-26-11-review-of-the-fiscal-year-2027-proposed-budget_0.pdf"
       },
       {
         "doc": "IBA Report 26-15, Attachment 1 (own page numbering): General Fund Expenditure Adjustments in the May Revision (Reinstate General Homelessness Support $3,753,909; Reduction of the 16th & Newton Shelter $2,903,909)",
@@ -181,11 +171,6 @@
         "doc": "IBA Report 26-15, Attachment 1 (own page numbering): Homelessness Updates (Proposed Budget assumed a $3.8M reduction target without specific details; May Revision includes specific reductions)",
         "page": 22,
         "url": "https://www.sandiego.gov/sites/default/files/2026-05/26-15-recommended-city-council-modifications-to-the-mayors-proposed-fy-2027-budget-and-review-of-the-may-revision.pdf"
-      },
-      {
-        "doc": "IBA Report 26-11, Key Citywide Issues: Homelessness and Housing ($72.9 million citywide homelessness services)",
-        "page": 67,
-        "url": "https://www.sandiego.gov/sites/default/files/2026-04/iba-report-26-11-review-of-the-fiscal-year-2027-proposed-budget_0.pdf"
       },
       {
         "doc": "IBA Report 26-11, Department Review: Homelessness Strategies and Solutions (TOT and Measure C funding; other funding sources)",

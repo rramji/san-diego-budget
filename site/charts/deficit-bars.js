@@ -97,7 +97,7 @@ export function render(el, data, colors) {
   const note27 = document.createElement('li');
   note27.className = 'legend-note';
   note27.innerHTML = '<svg width="14" height="14" aria-hidden="true" style="vertical-align:-2px;margin-right:6px"><rect x="1" y="1" width="12" height="12" fill="var(--gap)" stroke="var(--text)" stroke-width="1.5" stroke-dasharray="3 2"/></svg>';
-  note27.append("FY2027 (dashed): from the IBA's review of the proposed budget; the city's budget office puts the adopted budget's own figure at ");
+  note27.append("FY2027 (dashed): what the IBA found left in the proposed budget after the proposed cuts; the city's budget office puts the adopted budget's own figure at ");
   if (data.fy27_adopted) { const f = document.createElement('span'); srcAttrs(f, data.fy27_adopted); f.textContent = `$${data.fy27_adopted.value}M`; note27.append(f); }
   note27.append('.');
   legend.append(note27);
@@ -219,7 +219,7 @@ export function render(el, data, colors) {
     li.append(lab);
     const t = document.createElement('span');
     t.textContent = `${mk.label} (FY${mk.fy})`;
-    if (mk.source) srcAttrs(t, mk.source);
+    if (mk.source) { srcAttrs(t, mk.source); if (mk.source.value == null) t.className = 'cite'; }
     li.append(t);
     ol.append(li);
   });

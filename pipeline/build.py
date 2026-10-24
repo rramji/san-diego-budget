@@ -62,10 +62,17 @@ KPBS_2026_06_09 = (
     "https://www.kpbs.org/news/politics/2026/06/09/"
     "san-diego-city-council-looks-to-close-15-3-million-gap-going-into-tuesdays-budget-vote"
 )
+_IBA_26_11 = "https://www.sandiego.gov/sites/default/files/2026-04/iba-report-26-11-review-of-the-fiscal-year-2027-proposed-budget_0.pdf"
 DEFICIT_MARKERS = [
-    {"fy": 2011, "label": "Nov 2010: half-cent sales tax (Prop D) fails"},
-    {"fy": 2025, "label": "Nov 2024: one-cent sales tax (Measure E) fails"},
-    {"fy": 2026, "label": "Trash fee adopted with FY2026 budget"},
+    {"fy": 2011, "label": "Nov 2010: temporary sales tax measure fails", "source": {"source": {
+        "doc": "IBA Report 26-11, Key Citywide Issues: Structural Budget Deficit (2010 temporary five-year sales tax measure failed to pass)",
+        "page": 77, "url": _IBA_26_11}}},
+    {"fy": 2025, "label": "Nov 2024: sales tax measure fails", "source": {"source": {
+        "doc": "IBA Report 26-11, Key Citywide Issues: Structural Budget Deficit (2024 sales tax measure failed to pass)",
+        "page": 77, "url": _IBA_26_11}}},
+    {"fy": 2026, "label": "Trash fee adopted with FY2026 budget", "source": {"source": {
+        "doc": "IBA Report 26-11, Overview (FY 2026 adoption of a trash fee; footnote 4)",
+        "page": 3, "url": _IBA_26_11}}},
     {
         "fy": 2028,
         "label": "IBA projects ~$30M gap",
@@ -93,6 +100,8 @@ def build_structural_deficit(entries: list[dict], series: dict) -> dict:
     for e in sorted(entries, key=lambda e: e["fy"]):
         fy_totals = gf.get(str(e["fy"])) or gf.get(e["fy"])
         years.append({**e, "gf_expenditure_adopted_m": fy_totals["expense_m"] if fy_totals else None})
+    for i, m in enumerate(DEFICIT_MARKERS):
+        _check_source((m.get("source") or {}).get("source"), f"markers[{i}].source")
     return {"convention": DEFICIT_CONVENTION, "years": years, "markers": DEFICIT_MARKERS}
 
 

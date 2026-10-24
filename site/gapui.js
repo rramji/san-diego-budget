@@ -109,8 +109,8 @@ export function mountGapToggle(el, gap) {
         cite(IBA, "The city's Reserve Policy sets a savings target for its rainy-day fund"),
         '. The FY2027 budget delayed almost all of the deposit needed to reach it (',
         figureSpan(gap.skipped_reserve_m, gapMoney(gap.skipped_reserve_m.value)), '). ',
-        cite(EXEC, 'Nothing was borrowed: the deposit was put off'),
-        ', so the city still has to catch up later. ',
+        cite(EXEC, 'The budget describes this as delaying the deposit'),
+        '. Nothing was borrowed, but the savings stay below target until the city catches up. ',
         cite(IBA, 'That is why the IBA counts the skipped deposit as one-time money the budget is living on'), '.',
       );
     }
