@@ -1,6 +1,9 @@
 import { money } from './format.js';
 import * as deficitBars from './charts/deficit-bars.js';
 import * as funnel from './charts/funnel.js';
+import { renderCuts } from './cuts.js';
+export { renderCuts };
+import * as sankey from './charts/sankey.js';
 import { themeColors, observeWidth } from './charts/util.js';
 
 const FILES = {
@@ -190,6 +193,51 @@ function renderChapter2(data) {
   const prep = funnel.prepare(data.headline, data.funnel);
   const captions = [1, 2, 3, 4].map((n) => el.getAttribute(`data-caption-${n}`));
   observeWidth(el, () => { funnel.render(el, prep, themeColors(), captions); mountPopovers(el); });
+  renderSankey(data.flows);
+  renderCuts(document.getElementById('ch2-cuts'), data.cuts);
+}
+
+// ---- Dig deeper: money-flow Sankey + selected-flow panel -------------------------------------
+function srcData(el, src) {
+  el.dataset.srcDoc = src.doc;
+  el.dataset.srcPage = src.page ?? '';
+  el.dataset.srcUrl = src.url;
+}
+
+function showFlow(panel, link) {
+  const rows = document.createDocumentFragment();
+  const h = document.createElement('p');
+  h.className = 'flow-title';
+  h.textContent = sankey.linkLabel(link);
+  const amt = document.createElement('span');
+  amt.className = 'figure';
+  srcData(amt, link.ref);
+  amt.textContent = money(link.value);
+  h.append(' ', amt);
+  const rule = document.createElement('p');
+  rule.className = 'flow-rule';
+  rule.textContent = link.rule;
+  const yr = document.createElement('p');
+  yr.className = 'flow-year';
+  yr.textContent = `Source: ${link.ref.doc}.`;
+  rows.append(h, rule, yr);
+  panel.replaceChildren(rows);
+  mountPopovers(panel);
+}
+
+function renderSankey(flows) {
+  const el = document.getElementById('ch2-sankey');
+  const panel = document.createElement('div');
+  panel.className = 'flow-panel';
+  panel.setAttribute('aria-live', 'polite');
+  el.after(panel);
+  const prep = sankey.prepare(flows);
+  const captions = [0, 1, 2].map((n) => el.getAttribute(`data-col-${n}`));
+  let selected = null;
+  observeWidth(el, (w) => {
+    if (w <= 0) return; // <details> still closed; draws on first open
+    sankey.render(el, prep, themeColors(), (l) => { selected = sankey.linkKey(l); showFlow(panel, l); }, { captions, selected });
+  });
 }
 
 async function main() {

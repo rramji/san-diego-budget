@@ -115,3 +115,30 @@ test('funnel on real data: segments sum to the General Fund and gap ratio is abo
   assert.ok(Math.abs(sum(p.bars[2]) - 2256.7) < 0.05);
   assert.ok(Math.abs(p.gapRatio - 0.0661) < 0.0005);
 });
+
+// ---- Chapter 2 dig-deeper: sankey ----
+import { prepare as sankeyPrepare } from '../site/charts/sankey.js';
+
+test('test_sankey_prepare_preserves_highlight_and_rule', () => {
+  const flows = JSON.parse(readFileSync(new URL('../data/build/flows.json', import.meta.url), 'utf8'));
+  const p = sankeyPrepare(flows);
+  assert.equal(p.nodes.length, 30);
+  assert.equal(p.links.length, 27);
+  assert.deepEqual(Object.keys(p.nodes[0]).sort(), ['column', 'id', 'kind', 'label']);
+  const hl = p.links.filter((l) => l.highlight);
+  assert.equal(hl.length, 1);
+  assert.equal(hl[0].source, 'rule_restricted');
+  assert.equal(hl[0].target, 'bike_ped');
+  assert.equal(hl[0].value, 6.77);
+  for (const [i, l] of p.links.entries()) {
+    assert.equal(l.rule, flows.links[i].rule);
+    assert.deepEqual(l.ref, flows.links[i].ref);
+    assert.equal(l.value, flows.links[i].amount_m);
+    assert.equal(typeof l.source, 'string');
+  }
+  const ids = new Set(p.nodes.map((n) => n.id));
+  assert.ok(p.links.every((l) => ids.has(l.source) && ids.has(l.target)));
+  // prepare must not mutate its input
+  assert.equal(typeof flows.links[0].source, 'string');
+  assert.equal(flows.links[0].amount_m, p.links[0].value);
+});
