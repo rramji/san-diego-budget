@@ -122,14 +122,14 @@ import { prepare as sankeyPrepare } from '../site/charts/sankey.js';
 test('test_sankey_prepare_preserves_highlight_and_rule', () => {
   const flows = JSON.parse(readFileSync(new URL('../data/build/flows.json', import.meta.url), 'utf8'));
   const p = sankeyPrepare(flows);
-  assert.equal(p.nodes.length, 30);
-  assert.equal(p.links.length, 27);
+  assert.equal(p.nodes.length, 32);
+  assert.equal(p.links.length, 30);
   assert.deepEqual(Object.keys(p.nodes[0]).sort(), ['column', 'id', 'kind', 'label']);
   const hl = p.links.filter((l) => l.highlight);
   assert.equal(hl.length, 1);
-  assert.equal(hl[0].source, 'rule_restricted');
+  assert.equal(hl[0].source, 'rule_capital');
   assert.equal(hl[0].target, 'bike_ped');
-  assert.equal(hl[0].value, 6.77);
+  assert.equal(hl[0].value, 6.5);
   for (const [i, l] of p.links.entries()) {
     assert.equal(l.rule, flows.links[i].rule);
     assert.deepEqual(l.ref, flows.links[i].ref);
@@ -148,9 +148,9 @@ test('groupFlows puts every link under exactly one rule node, highlighted flow f
   const flows = JSON.parse(readFileSync(new URL('../data/build/flows.json', import.meta.url), 'utf8'));
   const prep = sankeyPrepare(flows);
   const groups = groupFlows(prep);
-  assert.equal(groups.length, 3);
-  assert.equal(groups.reduce((a, g) => a + g.links.length, 0), 27);
-  const g = groups.find((x) => x.rule.id === 'rule_restricted');
+  assert.equal(groups.length, 4);
+  assert.equal(groups.reduce((a, g) => a + g.links.length, 0), 30);
+  const g = groups.find((x) => x.rule.id === 'rule_capital');
   assert.equal(g.links[0].highlight, true);
   assert.equal(g.links[0].targetLabel, 'Bike & pedestrian projects');
   assert.ok(groups.every((x) => x.links.every((l) => l.rule && l.ref)));

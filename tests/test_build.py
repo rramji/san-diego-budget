@@ -65,6 +65,78 @@ def _fig(value):
     return {"value": value, "source": {"doc": "IBA test doc", "page": 1, "url": "https://example.org/x.pdf"}}
 
 
+def _deficit_entry(fy, **kw):
+    e = {"fy": fy, "reported": True, "structural_deficit_m": _fig(10.0), "one_time_resources_m": None,
+         "one_time_expenditures_m": None, "suspended_reserve_m": None, "includes_suspended_reserve": False,
+         "components": None, "resources_include_reserve": False,
+         "basis": "adopted budget; net of one-time expenditures", "note": "t"}
+    e.update(kw)
+    return e
+
+
+def _deficit_years(override=None):
+    override = override or {}
+    return [override.get(fy) or _deficit_entry(fy) for fy in range(2012, 2028)]
+
+
+def _sd_raises(entries, match):
+    import pytest
+    from pipeline.build import build_structural_deficit
+    with pytest.raises(ValueError, match=match):
+        build_structural_deficit(entries, {"gf_by_fy": {}})
+
+
+def test_structural_deficit_accepts_full_valid_years():
+    from pipeline.build import build_structural_deficit
+    out = build_structural_deficit(_deficit_years(), {"gf_by_fy": {}})
+    assert [e["fy"] for e in out["years"]] == list(range(2012, 2028))
+
+
+def test_structural_deficit_rejects_duplicate_year():
+    years = _deficit_years()
+    years[5] = _deficit_entry(2016)
+    _sd_raises(years, r"duplicate fy \[2016\]")
+
+
+def test_structural_deficit_rejects_missing_or_extra_year():
+    _sd_raises(_deficit_years()[:-1], r"exactly FY2012-FY2027 \(missing \[2027\]")
+    _sd_raises(_deficit_years() + [_deficit_entry(2028)], r"unexpected \[2028\]")
+
+
+def test_structural_deficit_reported_requires_figure():
+    _sd_raises(_deficit_years({2019: _deficit_entry(2019, structural_deficit_m=None)}),
+               r"^\[7\]\.structural_deficit_m: required when reported")
+
+
+def test_structural_deficit_unreported_must_have_no_figures_or_components():
+    bad_fig = _deficit_entry(2016, reported=False, structural_deficit_m=None, suspended_reserve_m=_fig(1.0))
+    _sd_raises(_deficit_years({2016: bad_fig}), r"^\[4\]\.suspended_reserve_m: must be null")
+    bad_val = _deficit_entry(2016, reported=False)
+    _sd_raises(_deficit_years({2016: bad_val}), r"^\[4\]\.structural_deficit_m: must be null")
+    bad_comp = _deficit_entry(2016, reported=False, structural_deficit_m=None, components=[{"label": "x", "amount_m": 1}])
+    _sd_raises(_deficit_years({2016: bad_comp}), r"^\[4\]\.components: must be null")
+
+
+def test_structural_deficit_reported_and_resources_flag_must_be_boolean():
+    _sd_raises(_deficit_years({2020: _deficit_entry(2020, reported="yes")}), r"^\[8\]\.reported: required boolean")
+    _sd_raises(_deficit_years({2020: _deficit_entry(2020, resources_include_reserve=None)}),
+               r"^\[8\]\.resources_include_reserve: required boolean")
+
+
+def test_curated_structural_deficit_pins_transcribed_values():
+    from pipeline import curated
+    years = {e["fy"]: e for e in curated.load(CURATED, "structural_deficit")}
+    assert {fy: years[fy]["structural_deficit_m"]["value"] for fy in range(2022, 2028)} == {
+        2022: 96.7, 2023: 38.3, 2024: 99.5, 2025: 181.4, 2026: 48.0, 2027: 11.2}
+    assert {fy: years[fy]["suspended_reserve_m"]["value"] for fy in range(2022, 2028)} == {
+        2022: 10.7, 2023: 24.3, 2024: 0, 2025: 22.4, 2026: 55.6, 2027: 80.1}
+    reported = [fy for fy, e in years.items() if e["reported"]]
+    unreported = [fy for fy, e in years.items() if not e["reported"]]
+    assert len(reported) == 12 and unreported == [2015, 2016, 2017, 2021]
+    assert years[2012]["includes_suspended_reserve"] is True
+    assert (years[2012]["structural_deficit_m"]["value"], years[2012]["suspended_reserve_m"]["value"]) == (35.1, 14.1)
+
+
 def test_structural_deficit_merges_gf_expenditure(tmp_path):
     cur = tmp_path / "curated"
     shutil.copytree(CURATED, cur)
@@ -72,12 +144,13 @@ def test_structural_deficit_merges_gf_expenditure(tmp_path):
             "suspended_reserve_m": None, "includes_suspended_reserve": False, "components": None,
             "resources_include_reserve": False,
             "basis": "proposed budget; gross one-time resources"}
-    entries = [
-        {"fy": 2013, "reported": False, "structural_deficit_m": None, **base,
-         "note": "IBA report 12-16 not located online"},
-        {"fy": 2023, "reported": True, "structural_deficit_m": _fig(38.3), **base, "note": "t"},
-        {"fy": 2027, "reported": True, "structural_deficit_m": _fig(11.2), **base, "note": "t"},
-    ]
+    special = {
+        2013: {"fy": 2013, "reported": False, "structural_deficit_m": None, **base,
+               "note": "IBA report 12-16 not located online"},
+        2023: {"fy": 2023, "reported": True, "structural_deficit_m": _fig(38.3), **base, "note": "t"},
+        2027: {"fy": 2027, "reported": True, "structural_deficit_m": _fig(11.2), **base, "note": "t"},
+    }
+    entries = [special.get(fy) or _deficit_entry(fy) for fy in range(2012, 2028)]
     (cur / "structural_deficit.json").write_text(json.dumps(entries))
     out = tmp_path / "build"
     build_all(FIX, cur, out)
@@ -91,7 +164,9 @@ def test_structural_deficit_merges_gf_expenditure(tmp_path):
     assert years[2027]["gf_expenditure_adopted_m"] is None
     markers = {m["fy"]: m for m in built["markers"]}
     assert sorted(markers) == [2011, 2025, 2026, 2028]
-    assert markers[2025]["label"] == "Nov 2024: sales tax measure fails"
+    assert markers[2011]["label"] == "2010: temporary sales tax measure fails"
+    assert markers[2025]["label"] == "2024: sales tax measure fails"
+    assert markers[2028]["label"].endswith("per KPBS")
     for fy in (2011, 2025, 2026):
         src = markers[fy]["source"]["source"]
         assert src["url"].startswith("https://") and src["page"] in (3, 77)
@@ -201,7 +276,7 @@ def test_curated_flows_column1_nodes_balance():
     from pipeline.build import build_flows
     flows = build_flows(curated.load(CURATED, "flows"))
     col1 = [n["id"] for n in flows["nodes"] if n["column"] == 1]
-    assert len(col1) == 3
+    assert len(col1) == 4
     for nid in col1:
         inflow = sum(l["amount_m"] for l in flows["links"] if l["target"] == nid)
         outflow = sum(l["amount_m"] for l in flows["links"] if l["source"] == nid)
@@ -219,10 +294,33 @@ def test_curated_flows_gf_matches_funnel_and_headline():
     for d in funnel["bar4"]:
         assert by_label[d["dept"]] == d["amount_m"]["value"]
     assert abs(sum(out.values()) - headline["general_fund_m"]["value"]) <= 0.1
-    assert 15 <= len(flows["links"]) <= 28
+    assert 15 <= len(flows["links"]) <= 30
     hl = [l for l in flows["links"] if l["highlight"]]
-    assert hl[0]["target"] == "bike_ped" and all(k in hl[0]["rule"] for k in ("bond proceeds", "TransNet", "day-to-day services"))
+    assert (hl[0]["source"], hl[0]["target"]) == ("rule_capital", "bike_ped") and hl[0]["amount_m"] == 6.5
+    assert all(k in hl[0]["rule"] for k in ("borrowed money", "capital projects the city chooses", "day-to-day services"))
     assert "Active Transportation Program" not in hl[0]["rule"] and "never" not in hl[0]["rule"]
+
+
+def test_curated_flows_bonds_split_bike_and_roads():
+    from pipeline import curated
+    flows = curated.load(CURATED, "flows")
+    kind = {n["id"]: n["kind"] for n in flows["nodes"]}
+    assert kind["bonds"] == "borrowed" and kind["rule_capital"] == "borrowed"
+    amt = {(l["source"], l["target"]): l["amount_m"] for l in flows["links"]}
+    assert amt[("rule_capital", "bike_ped")] == 6.5 and amt[("rule_capital", "roads")] == 79.497
+    assert amt[("rule_restricted", "bike_ped")] == 0.273 and amt[("rule_restricted", "roads")] == 18.588
+    assert amt[("bonds", "rule_capital")] == round(6.5 + 79.497, 3)
+    rules = {(l["source"], l["target"]): l["rule"] for l in flows["links"]}
+    assert "capital projects the city chooses" in rules[("bonds", "rule_capital")]
+
+
+def test_build_flows_rejects_unknown_kind():
+    import pytest
+    from pipeline.build import build_flows
+    nodes = [{"id": "a", "label": "A", "column": 0, "kind": "grant"},
+             {"id": "b", "label": "B", "column": 1, "kind": "utility"}]
+    with pytest.raises(ValueError, match=r"^nodes\[0\]\.kind"):
+        build_flows(_flows(nodes=nodes))
 
 
 def test_curated_cuts_shape():
@@ -299,6 +397,7 @@ def test_build_claims_homelessness_line_omits_missing_years():
     assert chart["type"] == "line"
     assert chart["points"] == [{"fy": 2022, "amount_m": 20.0, "share_pct": 1.0},
                                {"fy": 2023, "amount_m": 50.0, "share_pct": 2.5}]
+    assert chart["adopted_next"] is None
     assert out["homelessness"]["matched_projects"] is None
 
 
@@ -349,3 +448,72 @@ def test_curated_glossary_terms():
     assert len(terms) == 5 and "General Fund" in terms
     for g in gl:
         assert len(re.split(r"(?<=[.!?])\s+", g["plain"].strip())) <= 2, g["term"]
+
+
+def test_build_claims_homelessness_carries_next_adopted_year_from_funnel():
+    from pipeline import curated
+    from pipeline.build import build_claims
+    series = {"gf_by_fy": {"2026": {"expense_m": 2000.0}},
+              "gf_dept_by_fy": {"2026": [["Homelessness Strategies & Solutions", 50.0]]}}
+    funnel = curated.load(CURATED, "funnel")
+    chart = {c["id"]: c for c in build_claims(_claims_curated(), [], series, funnel)}["homelessness"]["chart"]
+    nxt = chart["adopted_next"]
+    assert nxt["fy"] == 2027 and nxt["amount_m"]["value"] == 62.0 and nxt["amount_m"]["source"]["page"] == 89
+
+
+def test_curated_homelessness_states_gf_share_and_tot():
+    h = next(c for c in _claims_curated() if c["id"] == "homelessness")
+    assert "2.5% of General Fund spending" in h["finding"]
+    assert "hotel-tax (TOT) revenue, including Measure C funds" in h["finding"]
+
+
+def test_curated_trash_fee_settlement_is_conditional():
+    t = next(c for c in _claims_curated() if c["id"] == "trash-fee")
+    assert "tentatively approved" in t["finding"] and "would lower" in t["finding"] and "if it is finally approved" in t["finding"]
+    assert " lowers the fee" not in t["finding"]
+    news = next(s for s in t["sources"] if "10News" in s["doc"])
+    assert "early May 2026, before the May 20 tentative approval" in news["doc"]
+
+
+def _break_flows(cur):
+    flows = json.loads((cur / "flows.json").read_text())
+    flows["links"][0]["target"] = "ghost"
+    (cur / "flows.json").write_text(json.dumps(flows))
+
+
+def test_build_all_failure_leaves_out_dir_untouched(tmp_path):
+    import pytest
+    out, _ = _build(tmp_path)
+    before = {p.name: p.read_bytes() for p in out.iterdir()}
+    _break_flows(tmp_path / "curated")
+    with pytest.raises(ValueError, match="ghost"):
+        build_all(FIX, tmp_path / "curated", out)
+    assert {p.name: p.read_bytes() for p in out.iterdir()} == before
+    assert sorted(p.name for p in tmp_path.iterdir()) == ["build", "curated"]  # no temp dirs left
+
+
+def test_build_all_check_failure_leaves_out_dir_untouched(tmp_path):
+    import pytest
+    from pipeline.build import BuildCheckError
+    out = tmp_path / "build"
+    out.mkdir()
+    (out / "series.json").write_text("old")
+    cur = tmp_path / "curated"
+    shutil.copytree(CURATED, cur)
+    with pytest.raises(BuildCheckError) as err:
+        build_all(FIX, cur, out, check=True)  # fixture CSVs have no FY2026 and no manifest
+    assert err.value.failures
+    assert [p.name for p in out.iterdir()] == ["series.json"] and (out / "series.json").read_text() == "old"
+    assert sorted(p.name for p in tmp_path.iterdir()) == ["build", "curated"]
+
+
+def test_build_all_replaces_out_dir_on_success(tmp_path):
+    out = tmp_path / "build"
+    out.mkdir()
+    (out / "stale.json").write_text("{}")
+    cur = tmp_path / "curated"
+    shutil.copytree(CURATED, cur)
+    paths = build_all(FIX, cur, out)
+    assert not (out / "stale.json").exists()
+    assert all(p.parent == out and p.exists() for p in paths)
+    assert sorted(p.name for p in tmp_path.iterdir()) == ["build", "curated"]

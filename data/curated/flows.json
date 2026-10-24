@@ -74,6 +74,12 @@
       "kind": "restricted"
     },
     {
+      "id": "bonds",
+      "label": "Bonds (borrowed for capital projects)",
+      "column": 0,
+      "kind": "borrowed"
+    },
+    {
       "id": "rule_utility",
       "label": "Must go back to that utility",
       "column": 1,
@@ -90,6 +96,12 @@
       "label": "General Fund: Council decides",
       "column": 1,
       "kind": "discretionary"
+    },
+    {
+      "id": "rule_capital",
+      "label": "Borrowed money: capital projects the Council picks",
+      "column": 1,
+      "kind": "borrowed"
     },
     {
       "id": "police",
@@ -462,24 +474,24 @@
     {
       "source": "rule_restricted",
       "target": "bike_ped",
-      "amount_m": 6.77,
-      "rule": "In the city's own capital budget these projects were paid for with bond proceeds, TransNet (a voter-approved regional sales tax that can only fund transportation) and developer impact fees; bond proceeds can only fund capital projects, so none of this money could have paid for day-to-day services like police, parks or libraries.",
+      "amount_m": 0.273,
+      "rule": "TransNet (a voter-approved regional sales tax that can only fund transportation) paid for a small part of these projects.",
       "ref": {
-        "doc": "FY2025 adopted CIP budget, City of San Diego open data (cip_budget.csv), projects: Minor Bike Facilities; University Ave Bikeway Pavement Repair; fund types: Development Impact Fees $0.00M, TransNet Funds $0.27M, Bond Financing $6.50M. Other restricted flows are FY2026 operating or FY2027 grants; the data does not tie any grant to these projects",
+        "doc": "FY2025 adopted CIP budget, City of San Diego open data (cip_budget.csv), bike and pedestrian projects (Minor Bike Facilities; University Ave Bikeway Pavement Repair), non-bond fund types: TransNet Funds $0.273M, Development Impact Fees $0.000M. The data does not tie any grant to these projects",
         "page": null,
         "url": "https://data.sandiego.gov/datasets/cip-fy-budget/"
       },
-      "highlight": true
+      "highlight": false
     },
     {
       "source": "rule_restricted",
       "target": "roads",
-      "amount_m": 100.9,
-      "rule": "Gas tax and TransNet sales tax can only be spent on streets and transportation.",
+      "amount_m": 18.588,
+      "rule": "TransNet sales tax and fees charged for digging up streets (trench-cut fees) can only be spent on streets and transportation.",
       "ref": {
-        "doc": "FY2026 adopted operating budget, City of San Diego open data CSV (budget_operating_datasd.csv), funds: Gas Tax Fund, Road Maintenance and Rehabilitation Fund (FY2026) plus FY2025 adopted CIP TransNet Funds $25.2M (cip_budget.csv)",
+        "doc": "FY2025 adopted CIP budget, City of San Diego open data (cip_budget.csv), road repair projects (names matching pipeline/bike_match.py is_road_repair, e.g. Resurfacing of City Streets), non-bond fund types: TransNet Funds $16.118M, Trench Cut/Excavation Fee Fund $2.470M",
         "page": null,
-        "url": "https://data.sandiego.gov/datasets/operating-budget/"
+        "url": "https://data.sandiego.gov/datasets/cip-fy-budget/"
       },
       "highlight": false
     },
@@ -498,12 +510,48 @@
     {
       "source": "rule_restricted",
       "target": "other_programs",
-      "amount_m": 749.3,
+      "amount_m": 838.1,
       "rule": "Other grants and special funds can only pay for the program they were created or awarded for.",
       "ref": {
-        "doc": "Remainder of restricted inflow (grants and other special revenue funds, FY2026/FY2027 as listed on the inflow links) after the bike, roads and hotel-tax uses",
+        "doc": "Remainder of restricted inflow (grants and other special revenue funds, FY2026/FY2027 as listed on the inflow links) after the bike, road-repair and hotel-tax uses; it includes the FY2026 Gas Tax and Road Maintenance and Rehabilitation operating funds, which pay for street work outside the capital projects drawn here",
         "page": null,
         "url": "https://data.sandiego.gov/datasets/operating-budget/"
+      },
+      "highlight": false
+    },
+    {
+      "source": "bonds",
+      "target": "rule_capital",
+      "amount_m": 85.997,
+      "rule": "Bond proceeds are borrowed money. They can only pay for capital projects the city chooses (building or rebuilding things such as streets and bikeways), not for day-to-day services.",
+      "ref": {
+        "doc": "FY2025 adopted CIP budget, City of San Diego open data (cip_budget.csv), Bond Financing on the bike and pedestrian projects ($6.50M) and road repair projects ($79.50M) shown here only; bonds for other capital projects are not drawn",
+        "page": null,
+        "url": "https://data.sandiego.gov/datasets/cip-fy-budget/"
+      },
+      "highlight": false
+    },
+    {
+      "source": "rule_capital",
+      "target": "bike_ped",
+      "amount_m": 6.5,
+      "rule": "The Council directed borrowed money to this project. It could have gone to roads or other capital projects the city chooses, but not to day-to-day services like police, parks or libraries.",
+      "ref": {
+        "doc": "FY2025 adopted CIP budget, City of San Diego open data (cip_budget.csv), bike and pedestrian projects (Minor Bike Facilities; University Ave Bikeway Pavement Repair), Bond Financing $6.50M",
+        "page": null,
+        "url": "https://data.sandiego.gov/datasets/cip-fy-budget/"
+      },
+      "highlight": true
+    },
+    {
+      "source": "rule_capital",
+      "target": "roads",
+      "amount_m": 79.497,
+      "rule": "The Council directed borrowed money to repaving city streets. Like all bond money, it could only go to capital projects the city chooses, not to day-to-day services.",
+      "ref": {
+        "doc": "FY2025 adopted CIP budget, City of San Diego open data (cip_budget.csv), road repair projects (names matching pipeline/bike_match.py is_road_repair, e.g. Resurfacing of City Streets), Bond Financing $79.497M",
+        "page": null,
+        "url": "https://data.sandiego.gov/datasets/cip-fy-budget/"
       },
       "highlight": false
     }

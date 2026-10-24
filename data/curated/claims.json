@@ -99,7 +99,7 @@
   {
     "id": "trash-fee",
     "claim": "The trash fee is a cash grab to pay for other city spending.",
-    "finding": "The IBA says trash fee money pays only for trash collection, but because the General Fund used to pay for collection, the fee freed the General Fund from most of that cost; the FY2026 budget counted on moving $73.8 million of collection costs out of the General Fund. FY2026 was the first year in city history that some residents paid for trash collection directly, under service rules changed by Measure B in 2022. A settlement the City Council tentatively approved in May 2026 lowers the fee for FY2028 and FY2029, which the IBA estimates cuts trash-fund revenue by $40.9 million in FY2028 and costs the General Fund about $10.8 million that year after other savings. In a 10News report on the fee lawsuit, the Mayor's office said a full repeal \"would blow an estimated $150 million hole in the City's budget.\"",
+    "finding": "The IBA says trash fee money pays only for trash collection, but because the General Fund used to pay for collection, the fee freed the General Fund from most of that cost; the FY2026 budget counted on moving $73.8 million of collection costs out of the General Fund. FY2026 was the first year in city history that some residents paid for trash collection directly, under service rules changed by Measure B in 2022. On May 20, 2026 the City Council tentatively approved a lawsuit settlement that would lower the fee for FY2028 and FY2029; if it is finally approved, the IBA estimates it would cut trash-fund revenue by $40.9 million in FY2028 and cost the General Fund about $10.8 million that year after other savings. Earlier in May, before that tentative approval, 10News reported that the Council had rejected a proposed settlement, and quoted the Mayor's office saying a full repeal \"would blow an estimated $150 million hole in the City's budget.\"",
     "caveat": "The IBA says the General Fund's eventual cost could change with labor contracts, pension assumptions, fuel, fleet and disposal costs.",
     "chart": null,
     "sources": [
@@ -134,7 +134,7 @@
         "url": "https://www.sandiego.gov/sites/default/files/2026-05/26-15-recommended-city-council-modifications-to-the-mayors-proposed-fy-2027-budget-and-review-of-the-may-revision.pdf"
       },
       {
-        "doc": "10News (KGTV), 'Attorney: San Diego City Council rejects proposed trash fee lawsuit settlement' (no publication date shown on the page), quoting the Mayor's office",
+        "doc": "10News (KGTV), 'Attorney: San Diego City Council rejects proposed trash fee lawsuit settlement' (early May 2026, before the May 20 tentative approval; the article refers to a trial starting Tuesday, May 11; no publication date shown on the page), quoting the Mayor's office",
         "page": null,
         "url": "https://www.10news.com/news/local-news/san-diego-news/attorney-san-diego-city-council-rejects-proposed-trash-fee-lawsuit-settlement"
       }
@@ -143,7 +143,7 @@
   {
     "id": "homelessness",
     "claim": "Homelessness spending is swallowing the city budget.",
-    "finding": "The city's data shows the homelessness department's General Fund budget at $49.1 million in FY2021, $18.1 million in FY2022 and $53.2 million in FY2026. The IBA says the FY2022 drop came from removing one-time federal COVID-19 relief, not from program cuts. The FY2027 adopted budget gives the department $62.0 million, after the May Revision swapped a $3.75 million placeholder cut for specific cuts. The IBA notes that much of the department's budget is repaid from hotel-tax money set aside for homelessness (Measure C).",
+    "finding": "The city's data shows the homelessness department's General Fund budget at $49.1 million in FY2021, $18.1 million in FY2022 and $53.2 million in FY2026, about 2.5% of General Fund spending that year. The IBA says the FY2022 drop came from removing one-time federal COVID-19 relief, not from program cuts. The FY2027 adopted budget gives the department $62.0 million, after the May Revision swapped a $3.75 million placeholder cut for specific cuts. The IBA notes that much of the department's budget is repaid from hotel-tax (TOT) revenue, including Measure C funds.",
     "caveat": "This counts only the department's General Fund budget, so it leaves out state, federal and county grants and Housing Commission spending, and it shows money budgeted, not results.",
     "chart": null,
     "sources": [

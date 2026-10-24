@@ -1,6 +1,9 @@
 """Assemble the published JSON files in data/build/ from raw CSVs and curated figures."""
 import json
+import os
+import shutil
 import sys
+import tempfile
 from pathlib import Path
 
 from pipeline import curated
@@ -64,10 +67,10 @@ KPBS_2026_06_09 = (
 )
 _IBA_26_11 = "https://www.sandiego.gov/sites/default/files/2026-04/iba-report-26-11-review-of-the-fiscal-year-2027-proposed-budget_0.pdf"
 DEFICIT_MARKERS = [
-    {"fy": 2011, "label": "Nov 2010: temporary sales tax measure fails", "source": {"source": {
+    {"fy": 2011, "label": "2010: temporary sales tax measure fails", "source": {"source": {
         "doc": "IBA Report 26-11, Key Citywide Issues: Structural Budget Deficit (2010 temporary five-year sales tax measure failed to pass)",
         "page": 77, "url": _IBA_26_11}}},
-    {"fy": 2025, "label": "Nov 2024: sales tax measure fails", "source": {"source": {
+    {"fy": 2025, "label": "2024: sales tax measure fails", "source": {"source": {
         "doc": "IBA Report 26-11, Key Citywide Issues: Structural Budget Deficit (2024 sales tax measure failed to pass)",
         "page": 77, "url": _IBA_26_11}}},
     {"fy": 2026, "label": "Trash fee adopted with FY2026 budget", "source": {"source": {
@@ -75,7 +78,7 @@ DEFICIT_MARKERS = [
         "page": 3, "url": _IBA_26_11}}},
     {
         "fy": 2028,
-        "label": "IBA projects ~$30M gap",
+        "label": "IBA projects ~$30M gap, per KPBS",
         "source": {
             "value": 30,
             "source": {
@@ -88,15 +91,45 @@ DEFICIT_MARKERS = [
 ]
 
 
+DEFICIT_YEARS = list(range(2012, 2028))
+_DEFICIT_M_FIELDS = ("structural_deficit_m", "one_time_resources_m", "one_time_expenditures_m", "suspended_reserve_m")
+
+
+def _check_deficit_entry(i: int, e: dict) -> None:
+    if not isinstance(e.get("basis"), str) or not e["basis"].strip():
+        raise ValueError(f"[{i}].basis: required non-empty string")
+    if not isinstance(e.get("resources_include_reserve"), bool):
+        raise ValueError(f"[{i}].resources_include_reserve: required boolean")
+    if not isinstance(e.get("reported"), bool):
+        raise ValueError(f"[{i}].reported: required boolean")
+    if e["reported"]:
+        if e.get("structural_deficit_m") is None:
+            raise ValueError(f"[{i}].structural_deficit_m: required when reported is true (FY{e.get('fy')})")
+    else:
+        for k in _DEFICIT_M_FIELDS:
+            if e.get(k) is not None:
+                raise ValueError(f"[{i}].{k}: must be null when reported is false (FY{e.get('fy')})")
+        if e.get("components") is not None:
+            raise ValueError(f"[{i}].components: must be null when reported is false (FY{e.get('fy')})")
+
+
 def build_structural_deficit(entries: list[dict], series: dict) -> dict:
-    """Curated per-FY structural deficit entries, each with that FY's adopted GF expense merged in."""
+    """Curated per-FY structural deficit entries, each with that FY's adopted GF expense merged in.
+
+    Invariants: exactly one entry per FY2012-FY2027; a reported year has a figure; an unreported
+    year has no figures and no components (never interpolate a year the IBA did not report)."""
     gf = series["gf_by_fy"]
     years = []
     for i, e in enumerate(entries):
-        if not isinstance(e.get("basis"), str) or not e["basis"].strip():
-            raise ValueError(f"[{i}].basis: required non-empty string")
-        if not isinstance(e.get("resources_include_reserve"), bool):
-            raise ValueError(f"[{i}].resources_include_reserve: required boolean")
+        _check_deficit_entry(i, e)
+    fys = [e.get("fy") for e in entries]
+    dupes = sorted({fy for fy in fys if fys.count(fy) > 1})
+    if dupes:
+        raise ValueError(f"years: duplicate fy {dupes}")
+    if sorted(fys) != DEFICIT_YEARS:
+        missing = sorted(set(DEFICIT_YEARS) - set(fys))
+        extra = sorted(set(fys) - set(DEFICIT_YEARS), key=str)
+        raise ValueError(f"years: must cover exactly FY2012-FY2027 (missing {missing}, unexpected {extra})")
     for e in sorted(entries, key=lambda e: e["fy"]):
         fy_totals = gf.get(str(e["fy"])) or gf.get(e["fy"])
         years.append({**e, "gf_expenditure_adopted_m": fy_totals["expense_m"] if fy_totals else None})
@@ -112,12 +145,18 @@ def _check_source(src, path: str) -> None:
     curated.validate_figure({"value": 0, "source": src}, path)
 
 
+FLOW_KINDS = {"discretionary", "utility", "restricted", "borrowed"}
+
+
 def build_flows(flows: dict) -> dict:
     """Validate the money-flow graph: unique node ids, no dangling links, sourced refs, one highlight."""
     ids = [n["id"] for n in flows["nodes"]]
     for i in {x for x in ids if ids.count(x) > 1}:
         raise ValueError(f"nodes: duplicate id {i!r}")
     known = set(ids)
+    for k, n in enumerate(flows["nodes"]):
+        if n.get("kind") not in FLOW_KINDS:
+            raise ValueError(f"nodes[{k}].kind: must be one of {sorted(FLOW_KINDS)}, got {n.get('kind')!r}")
     for k, link in enumerate(flows["links"]):
         path = f"links[{k}]"
         for end in ("source", "target"):
@@ -180,7 +219,7 @@ def _bike_chart(cip_rows: list[dict]) -> tuple[dict | None, list[str]]:
     return {"type": "grouped_bar", "fy": fy, "groups": groups}, sorted(matched)
 
 
-def _homelessness_chart(series: dict) -> dict:
+def _homelessness_chart(series: dict, funnel: dict | None = None) -> dict:
     points = []
     for fy in sorted(series["gf_dept_by_fy"], key=int):
         amount = sum(a for d, a in series["gf_dept_by_fy"][fy] if "Homelessness" in d)
@@ -188,10 +227,16 @@ def _homelessness_chart(series: dict) -> dict:
         total = (series["gf_by_fy"].get(fy) or {}).get("expense_m")
         if has_dept and total:
             points.append({"fy": int(fy), "amount_m": amount, "share_pct": amount / total * 100})
-    return {"type": "line", "points": points}
+    chart = {"type": "line", "points": points, "adopted_next": None}
+    # The adopted budget's next year is not in the CSV yet; carry the printed figure (funnel bar4) as a labelled point.
+    if funnel:
+        dept = next((b for b in funnel.get("bar4", []) if "Homelessness" in b["dept"]), None)
+        if dept and (not points or funnel["fy"] > points[-1]["fy"]):
+            chart["adopted_next"] = {"fy": funnel["fy"], "amount_m": dept["amount_m"]}
+    return chart
 
 
-def build_claims(curated_claims: list[dict], cip_rows: list[dict], series: dict) -> list[dict]:
+def build_claims(curated_claims: list[dict], cip_rows: list[dict], series: dict, funnel: dict | None = None) -> list[dict]:
     """Claim-checker cards: curated text plus charts computed from the CSVs."""
     out = []
     for i, c in enumerate(curated_claims):
@@ -206,7 +251,7 @@ def build_claims(curated_claims: list[dict], cip_rows: list[dict], series: dict)
         if c["id"] == "bike-lanes":
             card["chart"], card["matched_projects"] = _bike_chart(cip_rows)
         elif c["id"] == "homelessness":
-            card["chart"] = _homelessness_chart(series)
+            card["chart"] = _homelessness_chart(series, funnel)
         out.append(card)
     return out
 
@@ -226,10 +271,54 @@ def build_glossary(entries: list[dict]) -> list[dict]:
     return entries
 
 
-def build_all(raw_dir: Path, curated_dir: Path, out_dir: Path) -> list[Path]:
-    """Write every published file. To add a file, append one (name, fn) to steps."""
+class BuildCheckError(RuntimeError):
+    """checks.run reported failures on the freshly built files; out_dir was left untouched."""
+
+    def __init__(self, failures: list[str]):
+        super().__init__("; ".join(failures))
+        self.failures = failures
+
+
+def build_all(raw_dir: Path, curated_dir: Path, out_dir: Path, check: bool = False) -> list[Path]:
+    """Write every published file. To add a file, append one (name, fn) to steps.
+
+    Files are written to a temporary directory next to out_dir. Only when every step succeeds
+    (and, with check=True, checks.run reports nothing) is out_dir replaced; otherwise out_dir is
+    untouched and the temporary directory is removed."""
     raw_dir, curated_dir, out_dir = Path(raw_dir), Path(curated_dir), Path(out_dir)
-    out_dir.mkdir(parents=True, exist_ok=True)
+    out_dir.parent.mkdir(parents=True, exist_ok=True)
+    tmp = Path(tempfile.mkdtemp(prefix=f".{out_dir.name}.tmp-", dir=out_dir.parent))
+    try:
+        names = _build_into(raw_dir, curated_dir, tmp)
+        if check:
+            from pipeline import checks
+            failures = checks.run(tmp)
+            if failures:
+                raise BuildCheckError(failures)
+        _swap(tmp, out_dir)
+    except BaseException:
+        shutil.rmtree(tmp, ignore_errors=True)
+        raise
+    return [out_dir / n for n in names]
+
+
+def _swap(new: Path, out_dir: Path) -> None:
+    """Replace out_dir with new: two renames on the same filesystem, the old copy removed last."""
+    if out_dir.exists():
+        old = Path(tempfile.mkdtemp(prefix=f".{out_dir.name}.old-", dir=out_dir.parent))
+        os.rmdir(old)
+        os.rename(out_dir, old)
+        try:
+            os.rename(new, out_dir)
+        except BaseException:
+            os.rename(old, out_dir)
+            raise
+        shutil.rmtree(old, ignore_errors=True)
+    else:
+        os.rename(new, out_dir)
+
+
+def _build_into(raw_dir: Path, curated_dir: Path, out_dir: Path) -> list[str]:
     rows = load_budget_rows(raw_dir)
     series = build_series(rows, _vintage(raw_dir))
     cip_rows = load_cip_rows(raw_dir)
@@ -242,22 +331,26 @@ def build_all(raw_dir: Path, curated_dir: Path, out_dir: Path) -> list[Path]:
         ("structural_deficit", lambda: build_structural_deficit(
             curated.load(curated_dir, "structural_deficit"), series)),
         ("gap", lambda: build_gap(curated.load(curated_dir, "gap"), curated.load(curated_dir, "funnel"))),
-        ("claims", lambda: build_claims(curated.load(curated_dir, "claims"), cip_rows, series)),
+        ("claims", lambda: build_claims(curated.load(curated_dir, "claims"), cip_rows, series,
+                                         curated.load(curated_dir, "funnel"))),
         ("glossary", lambda: build_glossary(curated.load(curated_dir, "glossary"))),
     ]
-    return [_write(out_dir, name, fn()) for name, fn in steps]
+    return [_write(out_dir, name, fn()).name for name, fn in steps]
 
 
 def main() -> int:
-    from pipeline import checks
-
     root = Path(__file__).resolve().parent.parent
     out_dir = root / "data" / "build"
-    build_all(root / "data" / "raw", root / "data" / "curated", out_dir)
-    failures = checks.run(out_dir)
-    for msg in failures:
-        print(f"CHECK FAILED: {msg}", file=sys.stderr)
-    if failures:
+    try:
+        build_all(root / "data" / "raw", root / "data" / "curated", out_dir, check=True)
+    except BuildCheckError as e:
+        for msg in e.failures:
+            print(f"CHECK FAILED: {msg}", file=sys.stderr)
+        print(f"build failed; {out_dir} left unchanged", file=sys.stderr)
+        return 1
+    except (ValueError, KeyError, OSError) as e:
+        print(f"BUILD FAILED: {e}", file=sys.stderr)
+        print(f"build failed; {out_dir} left unchanged", file=sys.stderr)
         return 1
     print(f"build ok: {out_dir}")
     return 0
