@@ -258,72 +258,72 @@
     {
       "source": "water_sewer_rates",
       "target": "rule_utility",
-      "amount_m": 1515.1,
+      "amount_m": 1291.2,
       "rule": "Water and sewer bills can only pay for running and fixing the water and sewer systems, not for police or parks.",
       "ref": {
-        "doc": "FY2027 Adopted Budget Vol. I Executive Summary, enterprise fund total $1,915.1M; Vol. I does not split water vs sewer; allocation approximate",
-        "page": 4,
-        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1executivesummary.pdf"
+        "doc": "FY2026 adopted operating budget, City of San Diego open data CSV (budget_operating_datasd.csv), funds: Metropolitan Sewer Utility Fund, Municipal Sewer Revenue Fund, Water Utility Operating Fund (FY2026; GF side of the graph is FY2027)",
+        "page": null,
+        "url": "https://data.sandiego.gov/datasets/operating-budget/"
       },
       "highlight": false
     },
     {
       "source": "other_enterprise_fees",
       "target": "rule_utility",
-      "amount_m": 400.0,
+      "amount_m": 411.1,
       "rule": "Fees for permits, trash and recycling, golf and airports are kept in separate funds that can only pay for those services.",
       "ref": {
-        "doc": "Vol. I Citywide Budget Overview, Enterprise Funds (Water, Sewer, Development Services, Refuse, Recycling, Solid Waste, Golf, Airports); remainder of $1,915.1M after water & sewer; allocation approximate",
-        "page": 24,
-        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1cbo.pdf"
+        "doc": "FY2026 adopted operating budget, City of San Diego open data CSV (budget_operating_datasd.csv), funds: Airports Fund, Development Services Fund, Golf Course Fund, Recycling Fund, Refuse Disposal Fund, Solid Waste Management Fund (FY2026)",
+        "page": null,
+        "url": "https://data.sandiego.gov/datasets/operating-budget/"
       },
       "highlight": false
     },
     {
       "source": "grants",
       "target": "rule_restricted",
-      "amount_m": 300.0,
+      "amount_m": 25.1,
       "rule": "A grant must be spent on the program the state or federal government approved it for.",
       "ref": {
-        "doc": "FY2027 Adopted Budget Vol. I Executive Summary, fund-type totals; allocation approximate (grant share of $1,207.9M special revenue funds)",
-        "page": 4,
-        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1executivesummary.pdf"
+        "doc": "FY2027 Adopted Budget Vol. I Citywide Budget Overview: $25.1M homelessness grant funding (the only grant total printed; other grants not itemized)",
+        "page": 44,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1cbo.pdf"
       },
       "highlight": false
     },
     {
       "source": "gas_transnet",
       "target": "rule_restricted",
-      "amount_m": 200.0,
+      "amount_m": 100.9,
       "rule": "Gas tax and the TransNet sales tax can only be spent on streets and transportation.",
       "ref": {
-        "doc": "Vol. I Citywide Budget Overview: Street Repair Program funded by RMRA, Gas Tax, TransNet; amount approximate",
-        "page": 40,
-        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1cbo.pdf"
+        "doc": "FY2026 adopted operating budget, City of San Diego open data CSV (budget_operating_datasd.csv), funds: Gas Tax Fund, Road Maintenance and Rehabilitation Fund (FY2026) plus FY2025 adopted CIP TransNet Funds $25.2M (cip_budget.csv)",
+        "page": null,
+        "url": "https://data.sandiego.gov/datasets/operating-budget/"
       },
       "highlight": false
     },
     {
       "source": "hotel_setasides",
       "target": "rule_restricted",
-      "amount_m": 200.0,
+      "amount_m": 194.0,
       "rule": "Part of the hotel tax is set aside by law for tourism, the Convention Center and similar uses.",
       "ref": {
-        "doc": "FY2027 Adopted Budget Vol. I Executive Summary, fund-type totals; allocation approximate (TOT and Convention Center funds)",
-        "page": 4,
-        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1executivesummary.pdf"
+        "doc": "FY2026 adopted operating budget, City of San Diego open data CSV (budget_operating_datasd.csv), funds: Convention Center Expansion Administration Fund, New Convention Facility Fund, PETCO Park Fund, Transient Occupancy Tax Fund (FY2026)",
+        "page": null,
+        "url": "https://data.sandiego.gov/datasets/operating-budget/"
       },
       "highlight": false
     },
     {
       "source": "other_special",
       "target": "rule_restricted",
-      "amount_m": 507.9,
+      "amount_m": 730.9,
       "rule": "Other special funds are created by law or by the people who pay them and can only be used for their stated purpose.",
       "ref": {
-        "doc": "FY2027 Adopted Budget Vol. I Executive Summary, fund-type totals; allocation approximate (remainder of $1,207.9M special revenue funds)",
-        "page": 4,
-        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1executivesummary.pdf"
+        "doc": "FY2026 adopted operating budget, City of San Diego open data CSV (budget_operating_datasd.csv), funds: all other Special Revenue Funds (FY2026; list in docs/research/flows-sources.md)",
+        "page": null,
+        "url": "https://data.sandiego.gov/datasets/operating-budget/"
       },
       "highlight": false
     },
@@ -438,72 +438,72 @@
     {
       "source": "rule_utility",
       "target": "water_sewer_sys",
-      "amount_m": 1515.1,
+      "amount_m": 1291.2,
       "rule": "Water and sewer bills can only pay for running and fixing the water and sewer systems, not for police or parks.",
       "ref": {
-        "doc": "Vol. I Executive Summary enterprise total; allocation approximate",
-        "page": 4,
-        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1executivesummary.pdf"
+        "doc": "FY2026 adopted operating budget, City of San Diego open data CSV (budget_operating_datasd.csv), funds: Metropolitan Sewer Utility Fund, Municipal Sewer Revenue Fund, Water Utility Operating Fund (FY2026; GF side of the graph is FY2027)",
+        "page": null,
+        "url": "https://data.sandiego.gov/datasets/operating-budget/"
       },
       "highlight": false
     },
     {
       "source": "rule_utility",
       "target": "other_enterprise_svc",
-      "amount_m": 400.0,
+      "amount_m": 411.1,
       "rule": "Fees for permits, trash and recycling, golf and airports are kept in separate funds that can only pay for those services.",
       "ref": {
-        "doc": "Vol. I Citywide Budget Overview, Enterprise Funds; allocation approximate",
-        "page": 24,
-        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1cbo.pdf"
+        "doc": "FY2026 adopted operating budget, City of San Diego open data CSV (budget_operating_datasd.csv), funds: Airports Fund, Development Services Fund, Golf Course Fund, Recycling Fund, Refuse Disposal Fund, Solid Waste Management Fund (FY2026)",
+        "page": null,
+        "url": "https://data.sandiego.gov/datasets/operating-budget/"
       },
       "highlight": false
     },
     {
       "source": "rule_restricted",
       "target": "bike_ped",
-      "amount_m": 30.0,
+      "amount_m": 6.77,
       "rule": "State and federal Active Transportation Program grants and TransNet-style set-asides can only pay for bike and pedestrian projects, so this money could never be used to resurface a road.",
       "ref": {
-        "doc": "Vol. I Executive Summary, Multi-Modal Team reduction context and Citywide Budget Overview fund-type totals; amount approximate; the Active Transportation Program restriction is a grant-program rule not stated in Vol. I",
-        "page": 40,
-        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1cbo.pdf"
+        "doc": "FY2025 adopted CIP budget, City of San Diego open data (cip_budget.csv), projects: Minor Bike Facilities; University Ave Bikeway Pavement Repair; fund types: Development Impact Fees $0.00M, TransNet Funds $0.27M, Bond Financing $6.50M. Other restricted flows are FY2026 operating or FY2027 grants; the Active Transportation Program restriction is a grant-program rule not stated in the data",
+        "page": null,
+        "url": "https://data.sandiego.gov/datasets/cip-fy-budget/"
       },
       "highlight": true
     },
     {
       "source": "rule_restricted",
       "target": "roads",
-      "amount_m": 200.0,
+      "amount_m": 100.9,
       "rule": "Gas tax and TransNet sales tax can only be spent on streets and transportation.",
       "ref": {
-        "doc": "Vol. I Citywide Budget Overview, Street Repair Program funding sources; allocation approximate",
-        "page": 40,
-        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1cbo.pdf"
+        "doc": "FY2026 adopted operating budget, City of San Diego open data CSV (budget_operating_datasd.csv), funds: Gas Tax Fund, Road Maintenance and Rehabilitation Fund (FY2026) plus FY2025 adopted CIP TransNet Funds $25.2M (cip_budget.csv)",
+        "page": null,
+        "url": "https://data.sandiego.gov/datasets/operating-budget/"
       },
       "highlight": false
     },
     {
       "source": "rule_restricted",
       "target": "convention_arts",
-      "amount_m": 200.0,
+      "amount_m": 194.0,
       "rule": "Hotel tax set-asides can only be spent on the uses the law lists, such as tourism and the Convention Center.",
       "ref": {
-        "doc": "FY2027 Adopted Budget Vol. I Executive Summary, fund-type totals; allocation approximate (TOT and Convention Center funds)",
-        "page": 4,
-        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1executivesummary.pdf"
+        "doc": "FY2026 adopted operating budget, City of San Diego open data CSV (budget_operating_datasd.csv), funds: Convention Center Expansion Administration Fund, New Convention Facility Fund, PETCO Park Fund, Transient Occupancy Tax Fund (FY2026)",
+        "page": null,
+        "url": "https://data.sandiego.gov/datasets/operating-budget/"
       },
       "highlight": false
     },
     {
       "source": "rule_restricted",
       "target": "other_programs",
-      "amount_m": 777.9,
+      "amount_m": 749.3,
       "rule": "Other grants and special funds can only pay for the program they were created or awarded for.",
       "ref": {
-        "doc": "FY2027 Adopted Budget Vol. I Executive Summary, fund-type totals; allocation approximate (remainder of $1,207.9M special revenue funds)",
-        "page": 4,
-        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1executivesummary.pdf"
+        "doc": "Remainder of restricted inflow (grants and other special revenue funds, FY2026/FY2027 as listed on the inflow links) after the bike, roads and hotel-tax uses",
+        "page": null,
+        "url": "https://data.sandiego.gov/datasets/operating-budget/"
       },
       "highlight": false
     }
