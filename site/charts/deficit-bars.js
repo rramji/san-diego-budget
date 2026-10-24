@@ -32,7 +32,7 @@ export function prepare(input) {
         stack = { up, down: exp != null ? { label: 'One-time expenditures (offset)', amount_m: exp } : null };
       }
     }
-    // Solid segment = the IBA's figure without the skipped reserve deposit; lighter segment on top = the deposit.
+    // Solid segment = the IBA's figure without the skipped reserve deposit; faint segment on top = the deposit.
     // FY2012's figure already contains its suspended reserve (includes_suspended_reserve), so it is split, not added.
     const value = reported ? val(r.structural_deficit_m) : null;
     const reserveTop = reported && reserve != null && reserve > 0 ? reserve : 0;

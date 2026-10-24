@@ -1,6 +1,6 @@
 # Claim-checker, gap and glossary sources (Task 7)
 
-Cached source text: `.superpowers/sdd/2026-10-24-sd-budget-explainer/pdfs/` (printed page = the footer number that follows the page's text in the `pdftotext -layout` output).
+Sources are the public URLs given in each figure's `source.url`. Page numbers are the printed page numbers (in `pdftotext -layout` output, the footer number that follows the page's text). A local cache of the PDFs is optional and not part of the repository.
 
 ## Bike-project matcher (`pipeline/bike_match.py`)
 
@@ -21,7 +21,7 @@ Bike & pedestrian, $6.77M total:
 Road repair, $98.08M total:
 - Resurfacing of City Streets: Bond Financing $79.50M, TransNet Funds $16.12M, Trench Cut/Excavation Fee Fund $2.47M
 
-Chart omits fund types under $10k across both groups (DIF $51). `data/curated/flows.json` link `rule_restricted -> bike_ped` ($6.77M) already matches; not changed.
+Chart omits fund types under $10k across both groups (DIF $51). `data/curated/flows.json` splits the same $6.77M: `rule_capital -> bike_ped` $6.50M (Bond Financing) and `rule_restricted -> bike_ped` $0.273M (TransNet).
 
 The city CIP CSV leaves out SANDAG-built regional bikeways and most grant-funded projects:
 - SANDAG Bikeways and Complete Streets (Bike Early Action Program; 2% of TransNet to bike/ped/neighborhood safety): https://www.sandag.org/projects-and-programs/bikeways-and-complete-streets . The URL `https://sandag.org/projects-and-programs/bikeways-and-walkways/regional-bikeways-and-walkways` returned a 404 page on 2026-10-24, so it is not cited.
