@@ -68,7 +68,8 @@ def test_structural_deficit_merges_gf_expenditure(tmp_path):
     cur = tmp_path / "curated"
     shutil.copytree(CURATED, cur)
     base = {"one_time_resources_m": None, "one_time_expenditures_m": None,
-            "suspended_reserve_m": None, "includes_suspended_reserve": False, "components": None}
+            "suspended_reserve_m": None, "includes_suspended_reserve": False, "components": None,
+            "basis": "proposed budget; gross one-time resources"}
     entries = [
         {"fy": 2013, "reported": False, "structural_deficit_m": None, **base,
          "note": "IBA report 12-16 not located online"},
@@ -87,7 +88,8 @@ def test_structural_deficit_merges_gf_expenditure(tmp_path):
     assert years[2013]["gf_expenditure_adopted_m"] is None  # FY absent from fixture series
     assert years[2027]["gf_expenditure_adopted_m"] is None
     markers = {m["fy"]: m for m in built["markers"]}
-    assert sorted(markers) == [2010, 2024, 2025, 2028]
+    assert sorted(markers) == [2011, 2025, 2026, 2028]
+    assert markers[2025]["label"] == "Nov 2024: one-cent sales tax (Measure E) fails"
     assert markers[2028]["source"]["value"] == 30
     assert "kpbs.org" in markers[2028]["source"]["source"]["url"]
 
@@ -96,7 +98,27 @@ def test_structural_deficit_rejects_unsourced_figure(tmp_path):
     cur = tmp_path / "curated"
     shutil.copytree(CURATED, cur)
     (cur / "structural_deficit.json").write_text(json.dumps(
-        [{"fy": 2020, "reported": True, "structural_deficit_m": {"value": 5}, "note": ""}]))
+        [{"fy": 2020, "reported": True, "structural_deficit_m": {"value": 5}, "basis": "x", "note": ""}]))
     import pytest
     with pytest.raises(ValueError, match=r"^\[0\]\.structural_deficit_m"):
         build_all(FIX, cur, tmp_path / "build")
+
+
+def test_structural_deficit_requires_basis(tmp_path):
+    cur = tmp_path / "curated"
+    shutil.copytree(CURATED, cur)
+    (cur / "structural_deficit.json").write_text(json.dumps(
+        [{"fy": 2016, "reported": False, "structural_deficit_m": None, "note": ""}]))
+    import pytest
+    with pytest.raises(ValueError, match=r"^\[0\]\.basis"):
+        build_all(FIX, cur, tmp_path / "build")
+
+
+def test_curated_structural_deficit_covers_2012_2027_with_basis():
+    from pipeline import curated
+    years = curated.load(CURATED, "structural_deficit")
+    assert [e["fy"] for e in years] == list(range(2012, 2028))
+    for e in years:
+        assert e["basis"] == ("proposed budget; gross one-time resources" if e["fy"] <= 2021
+                              else "adopted budget; net of one-time expenditures")
+        assert (e["structural_deficit_m"] is None) == (not e["reported"])

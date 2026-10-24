@@ -61,9 +61,9 @@ KPBS_2026_06_09 = (
     "san-diego-city-council-looks-to-close-15-3-million-gap-going-into-tuesdays-budget-vote"
 )
 DEFICIT_MARKERS = [
-    {"fy": 2010, "label": "Sales tax measure fails"},
-    {"fy": 2024, "label": "Sales tax measure fails"},
-    {"fy": 2025, "label": "Trash fee adopted"},
+    {"fy": 2011, "label": "Nov 2010: half-cent sales tax (Prop D) fails"},
+    {"fy": 2025, "label": "Nov 2024: one-cent sales tax (Measure E) fails"},
+    {"fy": 2026, "label": "Trash fee adopted with FY2026 budget"},
     {
         "fy": 2028,
         "label": "IBA projects ~$30M gap",
@@ -83,6 +83,9 @@ def build_structural_deficit(entries: list[dict], series: dict) -> dict:
     """Curated per-FY structural deficit entries, each with that FY's adopted GF expense merged in."""
     gf = series["gf_by_fy"]
     years = []
+    for i, e in enumerate(entries):
+        if not isinstance(e.get("basis"), str) or not e["basis"].strip():
+            raise ValueError(f"[{i}].basis: required non-empty string")
     for e in sorted(entries, key=lambda e: e["fy"]):
         fy_totals = gf.get(str(e["fy"])) or gf.get(e["fy"])
         years.append({**e, "gf_expenditure_adopted_m": fy_totals["expense_m"] if fy_totals else None})

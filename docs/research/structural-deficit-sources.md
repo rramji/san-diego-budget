@@ -16,8 +16,19 @@ parentheses; we store 96.7, not −96.7). The build output carries this as
    budget and no structural figure; `structural_deficit_m` = that total (net of one-time
    expenditures only if the review states them; none of these reviews do).
 3. *Zero*: the review states no one-time reliance; value 0 with the sentence quoted.
-4. *Not reported*: no stated total. Itemized line items are listed in `note`, but we never sum them
-   into a number the document does not print.
+4. *Derived sum*: the review itemizes one-time balancing resources but prints no total (FY2018–FY2020).
+   `structural_deficit_m` = `one_time_resources_m` = the sum of the listed items, with `source.doc`
+   starting "derived: sum of one-time resources itemized in IBA ...". Not net of one-time expenditures.
+5. *Not reported*: no statement, or only a partial list (FY2016, FY2017, FY2021).
+
+**Basis** (required `basis` field on every entry):
+- `"proposed budget; gross one-time resources"` (FY2012–FY2021): the figure comes from the IBA's review of
+  that year's *proposed* budget. It counts the one-time resources used to balance the budget, with no
+  deduction for one-time expenditures, because none of these reviews states that offset.
+- `"adopted budget; net of one-time expenditures"` (FY2022–FY2027): from IBA 26-11's retrospective table,
+  one-time resources minus one-time expenditures, excluding suspended reserve contributions. Caveat: the
+  table's FY2027 column is the FY2027 *Proposed* Budget (the Adopted Budget's own residual is $23.1M), but
+  per the controller ruling FY2027 carries the same basis string as FY2022–FY2026.
 
 FY2012–FY2027 used the same kind of document, the IBA "Review of the FY XXXX Proposed Budget".
 FY2022–FY2027 values come from IBA 26-11's retrospective table, which covers **adopted** budgets for
@@ -31,9 +42,9 @@ FY2022–FY2026 and the **proposed** budget for FY2027. Earlier years cover the 
 | 2015 | 0 (judgment call) | Zero | IBA 14-15, p.1 — https://www.sandiego.gov/sites/default/files/14_15_140428.pdf | "With negligible use of one-time resources and sound revenue assumptions, this proposed budget and its corresponding service levels are likely more sustainable than those proposed over the past eight years." |
 | 2016 | not reported | — | IBA 15-16 — https://www.sandiego.gov/sites/default/files/15_16_150427.pdf | No statement of one-time reliance or structural balance in the review. |
 | 2017 | not reported | — | IBA 16-05 — https://www.sandiego.gov/sites/default/files/16_05_review_of_the_fiscal_year_2017_proposed_budget_complete_report.pdf | No statement of one-time reliance or structural balance in the review. |
-| 2018 | not reported | — | IBA 17-16, pp.2–3 — https://www.sandiego.gov/sites/default/files/17_16_review_of_the_fiscal_year_2018_proposed_budget_complete_report.pdf | Chart "General Fund Mitigation Actions: $81.0 Million" itemizes one-time resources ($16.0M Pension Payment Stabilization Reserve, $15.5M Risk Management reserves, $8.3M Excess Equity, $8.3M Chargers lease termination fee, $4.0M Capital Outlay Fund) with no stated total or one-time-expenditure net. |
-| 2019 | not reported | — | IBA 18-08, pp.2–3 — https://www.sandiego.gov/sites/default/files/iba_report_18-08_review_of_fy19_proposed_budget_complete_rpt.pdf | "Use of Excess Equity (One-Time) - $12.3 Million"; "Fund Balances, Transfers, and Reimbursements (One-time) - $14.4 Million"; "Workers Compensation and Long Term Disability Excess Reserve Balances (One-Time) - $5.6 Million". No total stated. |
-| 2020 | not reported | — | IBA 19-06, p.3 — https://www.sandiego.gov/sites/default/files/19_06_review_of_fy2020_proposed_budget.pdf | "38% of balancing actions are ongoing resources while 62% are one-time" (of $72.4M); items listed (Excess Equity $30.7M, LTD reserve $4.8M, Infrastructure Fund $4.0M, Public Liability reserve $2.6M, Capital Outlay $2.5M), no dollar total. |
+| 2018 | 52.1 | Derived sum | IBA 17-16, p.2 (text pp.2–3) — https://www.sandiego.gov/sites/default/files/17_16_review_of_the_fiscal_year_2018_proposed_budget_complete_report.pdf | Chart "General Fund Mitigation Actions: $81.0 Million" itemizes one-time resources ($16.0M Pension Payment Stabilization Reserve, $15.5M Risk Management reserves, $8.3M Excess Equity, $8.3M Chargers lease termination fee, $4.0M Capital Outlay Fund); 16.0+15.5+8.3+8.3+4.0 = 52.1. No stated total or one-time-expenditure net. |
+| 2019 | 32.3 | Derived sum | IBA 18-08, p.2 (continues p.3) — https://www.sandiego.gov/sites/default/files/iba_report_18-08_review_of_fy19_proposed_budget_complete_rpt.pdf | "Use of Excess Equity (One-Time) - $12.3 Million"; "Fund Balances, Transfers, and Reimbursements (One-time) - $14.4 Million"; "Workers Compensation and Long Term Disability Excess Reserve Balances (One-Time) - $5.6 Million". No total stated; 12.3+14.4+5.6 = 32.3. |
+| 2020 | 44.6 | Derived sum | IBA 19-06, p.3 — https://www.sandiego.gov/sites/default/files/19_06_review_of_fy2020_proposed_budget.pdf | "38% of balancing actions are ongoing resources while 62% are one-time" (of $72.4M); items listed (Excess Equity $30.7M, LTD reserve $4.8M, Infrastructure Fund $4.0M, Public Liability reserve $2.6M, Capital Outlay $2.5M), no dollar total; 30.7+4.8+4.0+2.6+2.5 = 44.6 (61.6% of 72.4, consistent with "62%"). |
 | 2021 | not reported | — | IBA 20-06, p.8 — https://www.sandiego.gov/sites/default/files/iba_report_20-06_review_of_fy21_proposed_budget.pdf | "Such one-time resources include $7.9 million in Pension Payment Stabilization Reserve funds and $16.9 million in anticipated stadium sale proceeds" — a partial list, no total. |
 | 2022 | 96.7 | Table | IBA 26-11, p.78 | One-Time Resources 169.7; One-Time Expenditures 73.0; Suspended reserve 10.7; Revised Structural Deficit (excluding reserves) (96.7) |
 | 2023 | 38.3 | Table | IBA 26-11, p.78 | 203.4; 165.1; 24.3; (38.3) |
@@ -61,11 +72,12 @@ https://www.kpbs.org/news/politics/2026/06/09/san-diego-city-council-looks-to-cl
 
 ## Locating IBA 12-16 (FY2013)
 
-Not at `12_16.pdf`. Listed on https://www.sandiego.gov/iba/reports/abr?page=10 as "Report No. 12-16"
+Cached as `pdfs/iba-12-16-fy2013-proposed.pdf`/`.txt`. Not at `12_16.pdf`. Listed on https://www.sandiego.gov/iba/reports/abr?page=10 as "Report No. 12-16"
 linking to `/sites/default/files/rpt1216120427.pdf`.
 
 ## Components
 
-Only FY2012 itemizes its one-time resources completely (14.1 + 10.9 + 4.0 + 6.1 = 35.1). The IBA 26-11 table
+FY2012 (14.1 + 10.9 + 4.0 + 6.1 = 35.1) and FY2018–FY2020 (the line items of the derived sums) carry
+components. The IBA 26-11 table
 does not itemize FY2022–FY2027, and the proposed-budget reviews' itemizations use different totals from
 the adopted figures, so `components` is null for those years.
