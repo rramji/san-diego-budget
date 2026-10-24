@@ -119,3 +119,8 @@ main { padding-bottom: 80px; }
 .cite { border-bottom: 1px dotted var(--muted); }
 .legend li.legend-note { flex-basis: 100%; display: block; }
 .chart-cap { margin: 10px 0 0; font: 0.85rem/1.45 var(--font-ui); color: var(--muted); }
+
+/* chapter 2 funnel */
+.fbar { margin: 0 0 22px; }
+.fbar .legend { margin: 8px 0 0; }
+.fbar .chart-cap { margin-top: 8px; }

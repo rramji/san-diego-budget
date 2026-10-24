@@ -1,5 +1,6 @@
 import { money } from './format.js';
 import * as deficitBars from './charts/deficit-bars.js';
+import * as funnel from './charts/funnel.js';
 import { themeColors, observeWidth } from './charts/util.js';
 
 const FILES = {
@@ -180,6 +181,17 @@ function renderChapter1(data) {
   observeWidth(dig, () => { if (dig.getBoundingClientRect().width > 0) deficitBars.renderDig(dig, prep, themeColors()); });
 }
 
+function renderChapter2(data) {
+  for (const sp of document.querySelectorAll('[data-hl-fig]')) {
+    const f = data.headline[sp.dataset.hlFig];
+    sp.replaceWith(figureSpan(f, money(f.value)));
+  }
+  const el = document.getElementById('ch2-funnel');
+  const prep = funnel.prepare(data.headline, data.funnel);
+  const captions = [1, 2, 3, 4].map((n) => el.getAttribute(`data-caption-${n}`));
+  observeWidth(el, () => { funnel.render(el, prep, themeColors(), captions); mountPopovers(el); });
+}
+
 async function main() {
   mountProgress();
   mountDigDeeper(document);
@@ -188,6 +200,7 @@ async function main() {
   renderHeadline(data.headline);
   renderGlossary(data.glossary);
   renderChapter1(data);
+  renderChapter2(data);
   mountPopovers(document);
   document.dispatchEvent(new CustomEvent('data-ready', { detail: data }));
 }

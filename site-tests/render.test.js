@@ -69,3 +69,49 @@ test('prepare computes peak share of General Fund spending; null where spending 
   assert.equal(p.bars.find((b) => b.fy === 2027).proposed_net, true);
   assert.equal(p.bars.find((b) => b.fy === 2026).proposed_net, false);
 });
+
+// ---- Chapter 2 funnel ----
+import { prepare as funnelPrepare } from '../site/charts/funnel.js';
+
+const fig = (value) => ({ value, source: { doc: 'test', page: 1, url: 'https://example.org/x' } });
+const hl = { fy: 2027, total_budget_m: fig(6486.9), general_fund_m: fig(2256.7), enterprise_m: fig(1915.1), special_revenue_m: fig(1207.9), internal_service_m: fig(225.7), capital_project_m: fig(23.5), cip_m: fig(858.1) };
+const fn = { fy: 2027, bar3: { pension_adc_m: fig(396.1), debt_service_m: fig(75), everything_else_m: fig(1700) }, bar4: [{ dept: 'Police', amount_m: fig(718.3) }, { dept: 'All other', amount_m: fig(1538.4) }], gap_m: fig(118) };
+
+test('test_funnel_gap_ratio', () => {
+  const p = funnelPrepare(hl, fn);
+  assert.ok(Math.abs(p.gapRatio - 118 / 1700) < 1e-9);
+  assert.ok(Math.abs(p.gapRatio - 0.0694) < 0.0001);
+  assert.equal(p.bars[0].total_m, 6486.9);
+  assert.deepEqual(p.bars.map((b) => b.id), ['total', 'locked', 'gf', 'depts']);
+});
+
+test('funnel bar 2 derives from bar 1: non-GF locked, GF unchanged', () => {
+  const [b1, b2] = funnelPrepare(hl, fn).bars;
+  assert.deepEqual(b2.segments.map((s) => s.amount_m), b1.segments.map((s) => s.amount_m));
+  assert.equal(b2.segments[0].kind, 'general');
+  assert.ok(b2.segments.slice(1).every((s) => s.kind === 'locked'));
+  assert.ok(b1.segments.slice(1).every((s) => s.kind === 'restricted'));
+});
+
+test('funnel bar 3 and 4: contractual segments, gap is a separate segment outside the total', () => {
+  const b = funnelPrepare(hl, fn).bars;
+  assert.deepEqual(b[2].segments.map((s) => s.kind), ['locked', 'locked', 'discretionary']);
+  assert.equal(b[2].segments[2].amount_m, 1700);
+  const gap = b[3].segments.at(-1);
+  assert.equal(gap.kind, 'gap');
+  assert.equal(gap.amount_m, 118);
+  assert.equal(b[3].total_m, 2256.7);
+  const depts = b[3].segments.filter((s) => s.kind !== 'gap');
+  assert.equal(depts.length, 2);
+  assert.ok(depts.every((s) => s.figure && s.figure.source));
+});
+
+test('funnel on real data: segments sum to the General Fund and gap ratio is about 6.6%', () => {
+  const rh = JSON.parse(readFileSync(new URL('../data/build/headline.json', import.meta.url), 'utf8'));
+  const rf = JSON.parse(readFileSync(new URL('../data/build/funnel.json', import.meta.url), 'utf8'));
+  const p = funnelPrepare(rh, rf);
+  const sum = (b) => b.segments.filter((s) => s.kind !== 'gap').reduce((a, s) => a + s.amount_m, 0);
+  assert.ok(Math.abs(sum(p.bars[3]) - 2256.7) < 0.05);
+  assert.ok(Math.abs(sum(p.bars[2]) - 2256.7) < 0.05);
+  assert.ok(Math.abs(p.gapRatio - 0.0661) < 0.0005);
+});
