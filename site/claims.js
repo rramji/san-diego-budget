@@ -1,6 +1,7 @@
 // Chapter 4 claim cards: a tablist of chips, one open tabpanel at a time.
-import { figureSpan, mountPopovers } from './app.js';
+import { figureSpan, mountPopovers } from './sources.js';
 import * as claimChart from './charts/claim-chart.js';
+import { linkTerms } from './glossary.js';
 import { themeColors, observeWidth } from './charts/util.js';
 
 const CHIP_LABELS = {
@@ -11,12 +12,18 @@ const CHIP_LABELS = {
   homelessness: 'Homelessness spending',
 };
 const PREFIX = "What this doesn't tell you: ";
+// First use of a glossary term in each card links to its entry.
+const TERMS = [
+  [/General Fund/, 'general-fund'],
+  [/required pension payment/, 'pension-adc'],
+  [/one-time (?=federal|money|resources)/, 'one-time-resources'],
+];
 
 export function claimCardModel(claim) {
   return {
     id: claim.id,
     chipLabel: CHIP_LABELS[claim.id] || claim.claim.split(' ').slice(0, 4).join(' '),
-    claimText: `“${claim.claim}”`,
+    claimText: `"${claim.claim}"`,
     finding: claim.finding,
     hasChart: claim.chart != null,
     chart: claim.chart ?? null,
@@ -58,7 +65,9 @@ export function mountClaims(root, claims) {
   const build = (m, claim) => {
     const h = el('h3', 'claim-q', m.claimText);
     h.tabIndex = -1;
-    const parts = [h, el('p', 'claim-finding', m.finding)];
+    const finding = el('p', 'claim-finding');
+    finding.append(...linkTerms(m.finding, TERMS));
+    const parts = [h, finding];
     let chartBox = null;
     if (m.hasChart) {
       const fig = el('figure', 'chart claim-fig');

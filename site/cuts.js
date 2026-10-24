@@ -1,12 +1,7 @@
 // Chapter 2 dig-deeper tables: FY2027 reductions and what Council restored.
 // Source spans use the shared .figure + data-src-* convention; app.js mounts the popover buttons.
 import { money } from './format.js';
-
-function srcData(el, src) {
-  el.dataset.srcDoc = src.doc;
-  el.dataset.srcPage = src.page ?? '';
-  el.dataset.srcUrl = src.url;
-}
+import { srcData } from './sources.js';
 
 function srcSpan(src, text) {
   const s = document.createElement('span');
@@ -57,14 +52,14 @@ export function renderCuts(el, cuts) {
     r.reason,
     [srcSpan(r.source, 'Cut'), ' ', srcSpan(r.reason_source, 'Reason')],
   ]);
-  const res = cuts.restorations.map((r) => [r.item, r.status, amount(r.amount_m), srcSpan(r.source, 'Restored')]);
+  const res = cuts.restorations.map((r) => [r.item, r.status, amount(r.amount_m), srcSpan(r.source, 'Source')]);
   el.replaceChildren(
     tableBlock('What the budget cut',
-      'These reductions are the ones listed under \u201cCritical Reductions\u201d in the adopted budget, with the reasons taken from the Independent Budget Analyst\u2019s department reviews.',
+      'These are the reductions listed under "Critical Reductions" in the adopted budget. The reasons come from the department reviews by the Independent Budget Analyst (IBA), the Council\'s own budget office.',
       ['Item', 'Department', 'Amount', 'Reason', 'Source'], red),
-    tableBlock('What Council restored',
-      'These are the items that the May Revision and the Council\u2019s modifications added back, with the status of each.',
-      ['Item', 'Status', 'Amount', 'Source'], res),
+    tableBlock('What was added back',
+      'Items that the Mayor\'s revised proposal (the May Revision) or the IBA\'s recommended Council changes put back, and one the Mayor commented on.',
+      ['Item', 'Where it came from', 'Amount', 'Source'], res),
   );
 }
 

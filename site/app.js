@@ -4,6 +4,10 @@ import * as funnel from './charts/funnel.js';
 import { renderCuts } from './cuts.js';
 export { renderCuts };
 import { mountGapToggle, gapMoney } from './gapui.js';
+import { figureSpan, srcData, mountPopovers, renderSources } from './sources.js';
+export { mountPopovers, renderSources };
+import { renderGlossary, wireGlossaryLinks } from './glossary.js';
+export { renderGlossary };
 export { mountGapToggle };
 import { mountClaims, claimCardModel } from './claims.js';
 export { mountClaims, claimCardModel };
@@ -33,83 +37,6 @@ export async function loadData() {
   }
 }
 
-// ---- Popovers ---------------------------------------------------------
-let openPop = null;
-let openBtn = null;
-
-function closePop(returnFocus) {
-  if (!openPop) return;
-  openPop.remove();
-  openBtn.setAttribute('aria-expanded', 'false');
-  openBtn.removeAttribute('aria-controls');
-  if (returnFocus) openBtn.focus();
-  openPop = openBtn = null;
-}
-
-function openPopover(btn, el) {
-  closePop(false);
-  const pop = document.createElement('div');
-  pop.className = 'popover';
-  pop.id = 'popover';
-  pop.setAttribute('role', 'dialog');
-  pop.setAttribute('aria-label', 'Source');
-  const doc = document.createElement('p');
-  doc.className = 'pop-doc';
-  doc.textContent = el.dataset.srcDoc;
-  pop.append(doc);
-  const page = el.dataset.srcPage;
-  if (page && page !== 'null') {
-    const p = document.createElement('p');
-    p.className = 'pop-meta';
-    p.textContent = `Page ${page}`;
-    pop.append(p);
-  }
-  const a = document.createElement('a');
-  a.href = el.dataset.srcUrl;
-  a.target = '_blank';
-  a.rel = 'noopener';
-  a.textContent = 'Open the document';
-  pop.append(a);
-  btn.after(pop);
-  const r = btn.getBoundingClientRect();
-  const w = pop.offsetWidth;
-  const left = Math.max(8, Math.min(r.left + window.scrollX, window.scrollX + document.documentElement.clientWidth - w - 8));
-  pop.style.left = `${left}px`;
-  pop.style.top = `${r.bottom + window.scrollY + 6}px`;
-  btn.setAttribute('aria-expanded', 'true');
-  btn.setAttribute('aria-controls', 'popover');
-  openPop = pop;
-  openBtn = btn;
-}
-
-let globalListeners = false;
-export function mountPopovers(root = document) {
-  if (!globalListeners) {
-    globalListeners = true;
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closePop(true); });
-    document.addEventListener('click', (e) => {
-      if (openPop && !openPop.contains(e.target) && !e.target.closest('.fn')) closePop(false);
-    });
-  }
-  let n = 0;
-  root.querySelectorAll('[data-src-url]').forEach((el) => {
-    if (el.nextElementSibling && el.nextElementSibling.classList.contains('fn')) return;
-    n += 1;
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'fn';
-    btn.textContent = '¹';
-    btn.setAttribute('aria-expanded', 'false');
-    const label = (el.textContent || '').trim();
-    btn.setAttribute('aria-label', `Source for ${label || 'this figure'}`);
-    btn.addEventListener('click', () => {
-      if (openBtn === btn) closePop(false); else openPopover(btn, el);
-    });
-    el.after(btn);
-  });
-  return n;
-}
-
 // ---- Dig deeper ---------------------------------------------------------
 // Native <details> handles open/close without JS; this only guarantees every panel has a summary.
 export function mountDigDeeper(root = document) {
@@ -137,36 +64,12 @@ export function mountProgress() {
   update();
 }
 
-// ---- Headline + glossary ------------------------------------------------------
-export function figureSpan(fig, text) {
-  const s = document.createElement('span');
-  s.className = 'figure';
-  s.dataset.srcDoc = fig.source.doc;
-  s.dataset.srcPage = fig.source.page ?? '';
-  s.dataset.srcUrl = fig.source.url;
-  s.textContent = text;
-  return s;
-}
-
+// ---- Headline ------------------------------------------------------
 function renderHeadline(h) {
   const t = document.getElementById('dek-total');
   const g = document.getElementById('dek-gf');
   t.replaceChildren(figureSpan(h.total_budget_m, money(h.total_budget_m.value)));
   g.replaceChildren(figureSpan(h.general_fund_m, money(h.general_fund_m.value)));
-}
-
-function slug(term) { return term.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''); }
-
-function renderGlossary(items) {
-  const dl = document.getElementById('glossary-list');
-  for (const { term, plain } of items) {
-    const dt = document.createElement('dt');
-    dt.id = `g-${slug(term)}`;
-    dt.textContent = term;
-    const dd = document.createElement('dd');
-    dd.textContent = plain;
-    dl.append(dt, dd);
-  }
 }
 
 function renderChapter1(data) {
@@ -202,12 +105,6 @@ function renderChapter2(data) {
 }
 
 // ---- Dig deeper: money-flow Sankey + selected-flow panel -------------------------------------
-function srcData(el, src) {
-  el.dataset.srcDoc = src.doc;
-  el.dataset.srcPage = src.page ?? '';
-  el.dataset.srcUrl = src.url;
-}
-
 function flowAmount(link) {
   const amt = document.createElement('span');
   amt.className = 'figure';
@@ -242,7 +139,7 @@ function buildFlowList(prep) {
   sum.textContent = 'All flows as text';
   det.append(sum);
   for (const grp of sankey.groupFlows(prep)) {
-    const h = document.createElement('h4');
+    const h = document.createElement('h3');
     h.textContent = grp.rule.label;
     const ul = document.createElement('ul');
     for (const l of grp.links) {
@@ -300,14 +197,16 @@ async function main() {
   mountProgress();
   mountDigDeeper(document);
   const data = await loadData();
-  window.__data = data;
+  if (new URLSearchParams(location.search).has('debug')) window.__data = data;
   renderHeadline(data.headline);
-  renderGlossary(data.glossary);
+  renderGlossary(document.getElementById('glossary-list'), data.glossary);
   renderChapter1(data);
   renderChapter2(data);
   renderChapter3(data);
   renderChapter4(data);
   mountPopovers(document);
+  renderSources(document.getElementById('sources-list'), data);
+  wireGlossaryLinks(document);
   document.dispatchEvent(new CustomEvent('data-ready', { detail: data }));
 }
 

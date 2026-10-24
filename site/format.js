@@ -1,12 +1,17 @@
 // Pure formatting helpers. Money inputs are millions of dollars.
 const trim = (n, d) => String(Number(n.toFixed(d)));
 
+// Rounds before choosing the unit, so 999.96 is "$1B" and 0.9996 is "$1M", never "$1000M".
+// One decimal under $100M ("$23.1M"), whole millions from $100M, two decimals in billions.
 export function money(m) {
-  const sign = m < 0 ? '-' : '';
   const a = Math.abs(m);
-  if (a >= 1000) return `${sign}$${trim(a / 1000, 2)}B`;
-  if (a >= 1) return `${sign}$${a < 10 ? trim(a, 1) : Math.round(a)}M`;
-  return `${sign}$${Math.round(a * 1000)}K`;
+  const k = Math.round(a * 1000);
+  const sign = m < 0 && k > 0 ? '-' : '';
+  if (k === 0) return '$0';
+  if (k < 1000) return `${sign}$${k}K`;
+  if (Number(a.toFixed(1)) < 100) return `${sign}$${trim(a, 1)}M`;
+  if (Math.round(a) < 1000) return `${sign}$${Math.round(a)}M`;
+  return `${sign}$${trim(a / 1000, 2)}B`;
 }
 
 export function pct(x, digits = 0) {

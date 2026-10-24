@@ -1,23 +1,30 @@
 import { money, pct, perPerson, cents } from './format.js';
 import { compute } from './gapcalc.js';
-import { figureSpan, mountPopovers } from './app.js';
+import { figureSpan, srcData, mountPopovers } from './sources.js';
 
 const OPTIONS = [
   { mode: 'pre_cut', text: "Before this year's cuts" },
   { mode: 'post_cut', text: "After this year's cuts" },
 ];
 
+const HEADINGS = {
+  Both: "The city's budget office and the IBA",
+  'City budget office': "The city's budget office",
+  'Independent Budget Analyst': "Counted the IBA's way",
+};
+
 const derived = (how, src) => ({ source: { doc: `derived: ${how}`, page: src.page ?? null, url: src.url } });
 // Gap amounts keep their stated precision ($23.1M, $80.1M); format.money would round them to $23M.
 export const gapMoney = (m) => (m >= 1000 ? money(m) : `$${Number(m.toFixed(1))}M`);
 const num = (fig, text) => figureSpan(fig, text);
+const cite = (src, text) => { const c = document.createElement('span'); c.className = 'cite'; srcData(c, src); c.textContent = text; return c; };
 
 function column(f, gap) {
   const col = document.createElement('section');
   col.className = 'gap-col';
   const h = document.createElement('h3');
   h.className = 'gap-framing';
-  h.textContent = f.framing === 'Both' ? 'Both the city budget office and the Independent Budget Analyst' : f.framing;
+  h.textContent = HEADINGS[f.framing] || f.framing;
   const big = document.createElement('p');
   big.className = 'gap-amount';
   const amt = num({ source: f.sources.amount }, gapMoney(f.amount_m));
@@ -30,7 +37,7 @@ function column(f, gap) {
   rows.push(
     ['Spread across residents', derived('the gap divided by the city population (California Department of Finance, Jan. 1, 2026)', s.population), pp],
     ['Spread across households', derived('the gap divided by the number of households (California Department of Finance, Jan. 1, 2026)', s.households), hh],
-    ['As a sales tax increase', derived('the gap divided by what the city’s 1% share of sales tax raises', s.sales_tax), cents(f.amount_m, gap.sales_tax_1pct_m.value)],
+    ['As a sales tax increase', derived("the gap divided by what the city's 1% share of sales tax raises", s.sales_tax), cents(f.amount_m, gap.sales_tax_1pct_m.value)],
     ['As a flat monthly fee', derived('the per-household yearly amount divided by 12', s.households), `$${Math.round(f.monthlyFeePerHousehold)} a month per household`],
   );
   const dl = document.createElement('dl');
@@ -95,10 +102,16 @@ export function mountGapToggle(el, gap) {
     reserve.hidden = mode !== 'post_cut';
     reserve.replaceChildren();
     if (mode === 'post_cut') {
+      const EXEC = { doc: 'FY2027 Adopted Budget Vol. I, Executive Summary, Financial Outlook and Stability: the budget continues to delay the planned General Fund reserve contribution', page: 5, url: 'https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1executivesummary.pdf' };
+      const IBA = { doc: "IBA Report 26-11, Key Citywide Issues: Structural Budget Deficit (Reserve Policy targets; suspended reserve contributions treated as a one-time resource)", page: 78, url: 'https://www.sandiego.gov/sites/default/files/2026-04/iba-report-26-11-review-of-the-fiscal-year-2027-proposed-budget_0.pdf' };
       reserve.append(
-        'Why two numbers? The city’s Reserve Policy calls for a rainy-day deposit each year, and the FY2027 budget made almost none of it (',
-        figureSpan(gap.skipped_reserve_m, gapMoney(gap.skipped_reserve_m.value)),
-        '). Nothing was borrowed, but the obligation to catch up remains, so the Independent Budget Analyst counts the skipped deposit as money the budget is living on.',
+        'Why two numbers? ',
+        cite(IBA, "The city's Reserve Policy sets a savings target for its rainy-day fund"),
+        '. The FY2027 budget delayed almost all of the deposit needed to reach it (',
+        figureSpan(gap.skipped_reserve_m, gapMoney(gap.skipped_reserve_m.value)), '). ',
+        cite(EXEC, 'Nothing was borrowed: the deposit was put off'),
+        ', so the city still has to catch up later. ',
+        cite(IBA, 'That is why the IBA counts the skipped deposit as one-time money the budget is living on'), '.',
       );
     }
     mountPopovers(body);
