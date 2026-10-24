@@ -61,7 +61,7 @@ def main():
         "other_special": (tot["other_special"], ops + "all other Special Revenue Funds (FY2026; list in docs/research/flows-sources.md)", OP_URL),
     }
     bike_ref = ("FY2025 adopted CIP budget, City of San Diego open data (cip_budget.csv), projects: " + "; ".join(projects)
-                + "; fund types: " + ", ".join(f"{k} ${v:.2f}M" for k, v in split.items()) + ". Other restricted flows are FY2026 operating or FY2027 grants; the Active Transportation Program restriction is a grant-program rule not stated in the data")
+                + "; fund types: " + ", ".join(f"{k} ${v:.2f}M" for k, v in split.items()) + ". Other restricted flows are FY2026 operating or FY2027 grants; the data does not tie any grant to these projects")
     path = ROOT / "data" / "curated" / "flows.json"
     flows = json.loads(path.read_text(encoding="utf-8"))
     rest_in = sum(amounts[k][0] for k in ("grants", "gas_transnet", "hotel_setasides", "other_special"))

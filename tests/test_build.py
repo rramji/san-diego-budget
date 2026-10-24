@@ -198,7 +198,8 @@ def test_curated_flows_gf_matches_funnel_and_headline():
     assert abs(sum(out.values()) - headline["general_fund_m"]["value"]) <= 0.1
     assert 15 <= len(flows["links"]) <= 28
     hl = [l for l in flows["links"] if l["highlight"]]
-    assert hl[0]["target"] == "bike_ped" and "Active Transportation Program" in hl[0]["rule"]
+    assert hl[0]["target"] == "bike_ped" and all(k in hl[0]["rule"] for k in ("bond proceeds", "TransNet", "day-to-day services"))
+    assert "Active Transportation Program" not in hl[0]["rule"] and "never" not in hl[0]["rule"]
 
 
 def test_curated_cuts_shape():

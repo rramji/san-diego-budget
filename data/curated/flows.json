@@ -463,9 +463,9 @@
       "source": "rule_restricted",
       "target": "bike_ped",
       "amount_m": 6.77,
-      "rule": "State and federal Active Transportation Program grants and TransNet-style set-asides can only pay for bike and pedestrian projects, so this money could never be used to resurface a road.",
+      "rule": "In the city's own capital budget these projects were paid for with bond proceeds, TransNet (a voter-approved regional sales tax that can only fund transportation) and developer impact fees; bond proceeds can only fund capital projects, so none of this money could have paid for day-to-day services like police, parks or libraries.",
       "ref": {
-        "doc": "FY2025 adopted CIP budget, City of San Diego open data (cip_budget.csv), projects: Minor Bike Facilities; University Ave Bikeway Pavement Repair; fund types: Development Impact Fees $0.00M, TransNet Funds $0.27M, Bond Financing $6.50M. Other restricted flows are FY2026 operating or FY2027 grants; the Active Transportation Program restriction is a grant-program rule not stated in the data",
+        "doc": "FY2025 adopted CIP budget, City of San Diego open data (cip_budget.csv), projects: Minor Bike Facilities; University Ave Bikeway Pavement Repair; fund types: Development Impact Fees $0.00M, TransNet Funds $0.27M, Bond Financing $6.50M. Other restricted flows are FY2026 operating or FY2027 grants; the data does not tie any grant to these projects",
         "page": null,
         "url": "https://data.sandiego.gov/datasets/cip-fy-budget/"
       },
