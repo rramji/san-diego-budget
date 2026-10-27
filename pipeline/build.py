@@ -434,7 +434,7 @@ WHY_GROUP_TOLERANCE = 0.05
 WHY_FIGURES = {
     "property_dollar": ("cities_cents",),
     "sales_tax": ("sd_rate_pct", "city_cents_of_rate"),
-    "hotel": ("base_cents", "gf_cents", "gf_m"),
+    "hotel": ("base_cents", "gf_cents", "promo_cents", "council_cents", "gf_m"),
     "trash": ("moved_m", "positions", "fee_monthly", "settlement_gf_fy2028_m"),
     "growth": ("revenue_pct", "inflation_pct"),
     "prop13": ("rate_pct", "cap_pct", "lag_low_months", "lag_high_months"),
@@ -444,7 +444,7 @@ WHY_FIGURES = {
 def build_why_short(d: dict) -> dict:
     """Section 2 figures. Checks: the County's property-tax slices sum to 100 cents (within 0.2), the "Cities"
     slices add up to cities_cents, the Measure E margin is no - yes votes and labeled our arithmetic, San Diego
-    is among the peer rates at sd_rate_pct, and every required figure, period and source is present."""
+    is among the peer rates at sd_rate_pct, the hotel cents add up to the base rate, and every required figure, period and source is present."""
     d = copy.deepcopy(d)
     for sec, keys in WHY_FIGURES.items():
         if not isinstance(d.get(sec), dict):
@@ -503,6 +503,9 @@ def build_why_short(d: dict) -> dict:
 
     if d["hotel"]["gf_cents"]["value"] >= d["hotel"]["base_cents"]["value"]:
         raise ValueError("hotel.gf_cents: must be less than base_cents")
+    ho = {k: d["hotel"][k]["value"] for k in ("base_cents", "gf_cents", "promo_cents", "council_cents")}
+    if abs(ho["gf_cents"] + ho["promo_cents"] + ho["council_cents"] - ho["base_cents"]) > WHY_GROUP_TOLERANCE:
+        raise ValueError("hotel: gf_cents + promo_cents + council_cents must equal base_cents")
     for k in ("revenue_period", "inflation_period"):
         if not isinstance(d["growth"].get(k), str) or not d["growth"][k].strip():
             raise ValueError(f"growth.{k}: required non-empty string (state both periods; they differ)")

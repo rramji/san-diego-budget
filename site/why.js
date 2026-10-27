@@ -76,10 +76,12 @@ export function blocks(d) {
       h('p', null, 'In November 2024, a measure to add one more cent (Measure E), which the city estimated would raise about ',
         fig(me.est_annual_m, mText(me.est_annual_m.value)), ' a year, failed: ', fig(me.yes_pct, pctText(me.yes_pct.value)), ' voted yes and ',
         fig(me.no_pct, pctText(me.no_pct.value)), ' no, a difference of ', fig(me.margin_votes, `${votes(me.margin_votes.value)} votes`), '.')),
-    block('Hotel tax: mostly set aside',
+    block('Hotel tax: part of it goes to promoting tourism',
       ['Hotel guests pay a base hotel tax (transient occupancy tax) of ', fig(ho.base_cents, centsWord(ho.base_cents.value)),
-        ' per dollar of rent, but city law sends only ', fig(ho.gf_cents, centsWord(ho.gf_cents.value)), ' (', fig(ho.gf_m, mText(ho.gf_m.value)),
-        ' in FY2027) to the General Fund. Of the rest, ', fig(ho.promo_cents, centsWord(ho.promo_cents.value)), ' go to promoting tourism.'],
+        ' per dollar of rent, and city law sends ', fig(ho.gf_cents, centsWord(ho.gf_cents.value)), ' of it (', fig(ho.gf_m, mText(ho.gf_m.value)),
+        ' in FY2027) to the General Fund. Of the rest, ', fig(ho.promo_cents, centsWord(ho.promo_cents.value)),
+        ' go to promoting tourism, some of it paid back to the General Fund for costs such as safety and upkeep around visitor sites, and ',
+        fig(ho.council_cents, centsWord(ho.council_cents.value)), ' can go to any purpose the City Council approves.'],
       [cite(c.measure_c, 'A further hotel tax that voters approved in March 2020 (Measure C), collected since May 2025, can pay only for the Convention Center and homelessness programs, and from November 2030 also street repair.')]),
     block('Trash pickup: free for a century',
       [cite(c.peoples_ordinance, 'From 1919 until 2025, a voter-approved law (the People’s Ordinance) had the city pick up trash from most single-family homes for free'),
@@ -111,7 +113,7 @@ export function dig(d) {
       ' that the state sends through property tax in place of car-registration fees (vehicle license fees), a swap made in 2004.'),
     h('h3', null, 'The 2026 trash settlement'),
     h('p', null, 'From July 1, 2027, the monthly fee for the standard 95-gallon bundle drops to ', fig(tr.settlement_fee_monthly, `$${tr.settlement_fee_monthly.value.toFixed(2)}`),
-      ', and the city has dropped planned weekly recycling and bulky-item pickup. The IBA estimated in May 2026, for the tentative settlement, that the trash fund would collect ',
+      ', and the city has dropped planned weekly recycling and bulky-item pickup. In a June 2, 2026 report on the settlement the Council had tentatively approved on May 20, the IBA estimated that the trash fund would collect ',
       fig(tr.settlement_revenue_cut_fy2028_m, mText(tr.settlement_revenue_cut_fy2028_m.value)), ' less in FY2028, and that after savings the General Fund would pay about ',
       fig(tr.settlement_gf_fy2028_m, mText(tr.settlement_gf_fy2028_m.value)), ' in FY2028 and ', fig(tr.settlement_gf_fy2029_m, mText(tr.settlement_gf_fy2029_m.value)),
       ' in FY2029.'),
@@ -124,6 +126,8 @@ function fillLead(root, d) {
     'property_dollar.cities_cents': (v) => `${v.toFixed(1)}¢`,
     'sales_tax.city_cents_of_rate': (v) => centsWord(v),
     'sales_tax.sd_rate_pct': pctText,
+    'hotel.gf_cents': (v) => v.toFixed(1),
+    'hotel.base_cents': (v) => v.toFixed(1),
   };
   for (const sp of root.querySelectorAll('[data-why-fig]')) {
     const key = sp.dataset.whyFig;

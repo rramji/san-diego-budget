@@ -276,6 +276,14 @@
         "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1generalfundrevenues.pdf"
       }
     },
+    "council_cents": {
+      "value": 1.0,
+      "source": {
+        "doc": "City of San Diego, FY 2027 Adopted Budget Vol. I, General Fund Revenues, General Fund Transient Occupancy Tax (TOT): '1.0 cent for any purpose approved by the City Council'",
+        "page": 69,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1generalfundrevenues.pdf"
+      }
+    },
     "gf_m": {
       "value": 169.7,
       "source": {
@@ -313,7 +321,7 @@
     "settlement_gf_fy2028_m": {
       "value": 10.8,
       "source": {
-        "doc": "IBA Report 26-15, Solid Waste Management Fee Impacts (estimate for the May 2026 tentative settlement, before the Council's June 8, 2026 approval)",
+        "doc": "IBA Report 26-15 (June 2, 2026), Solid Waste Management Fee Impacts (estimate for the settlement the Council tentatively approved May 20, 2026, p.44; made before its June 8, 2026 approval)",
         "page": 45,
         "url": "https://www.sandiego.gov/sites/default/files/2026-05/26-15-recommended-city-council-modifications-to-the-mayors-proposed-fy-2027-budget-and-review-of-the-may-revision.pdf"
       }
@@ -321,7 +329,7 @@
     "settlement_gf_fy2029_m": {
       "value": 10.0,
       "source": {
-        "doc": "IBA Report 26-15, Solid Waste Management Fee Impacts (estimate for the May 2026 tentative settlement, before the Council's June 8, 2026 approval)",
+        "doc": "IBA Report 26-15 (June 2, 2026), Solid Waste Management Fee Impacts (estimate for the settlement the Council tentatively approved May 20, 2026, p.44; made before its June 8, 2026 approval)",
         "page": 45,
         "url": "https://www.sandiego.gov/sites/default/files/2026-05/26-15-recommended-city-council-modifications-to-the-mayors-proposed-fy-2027-budget-and-review-of-the-may-revision.pdf"
       }
@@ -329,7 +337,7 @@
     "settlement_revenue_cut_fy2028_m": {
       "value": 40.9,
       "source": {
-        "doc": "IBA Report 26-15, Solid Waste Management Fee Impacts (estimate for the May 2026 tentative settlement, before the Council's June 8, 2026 approval)",
+        "doc": "IBA Report 26-15 (June 2, 2026), Solid Waste Management Fee Impacts (estimate for the settlement the Council tentatively approved May 20, 2026, p.44; made before its June 8, 2026 approval)",
         "page": 45,
         "url": "https://www.sandiego.gov/sites/default/files/2026-05/26-15-recommended-city-council-modifications-to-the-mayors-proposed-fy-2027-budget-and-review-of-the-may-revision.pdf"
       }

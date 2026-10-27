@@ -198,6 +198,9 @@ def test_why_short_sources_and_arithmetic():
     assert (d["property_tax_m"]["value"], d["property_tax_share_pct"]["value"]) == (881.0, 39.0)
     assert d["trash"]["settlement_gf_fy2028_m"]["value"] == 10.8
     assert d["trash"]["settlement_gf_fy2028_m"]["source"]["page"] == 45
+    h = d["hotel"]
+    assert (h["promo_cents"]["value"], h["council_cents"]["value"]) == (4.0, 1.0)
+    assert "June 2, 2026" in d["trash"]["settlement_gf_fy2028_m"]["source"]["doc"]
 
 
 @pytest.mark.parametrize("edit, where", [
@@ -207,6 +210,7 @@ def test_why_short_sources_and_arithmetic():
     (lambda d: d["sales_tax"]["peers"].pop(), "peers"),
     (lambda d: d["growth"].__setitem__("revenue_period", ""), "growth.revenue_period"),
     (lambda d: d["quote"]["source"].__setitem__("url", "http://x"), "quote.source"),
+    (lambda d: d["hotel"]["promo_cents"].__setitem__("value", 5.0), "hotel"),
 ])
 def test_why_short_rejects_bad_input(edit, where):
     d = copy.deepcopy(curated.load(CUR, "why_short"))
