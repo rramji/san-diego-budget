@@ -11,26 +11,19 @@ def _fy(value: str) -> int:
     return 2000 + int(value)
 
 
-def load_budget_rows(raw_dir: Path) -> list[dict]:
+def _read_budget(raw_dir: Path) -> tuple[list[dict], list[dict]]:
+    """Operating-budget rows split into (matched, unmatched): unmatched rows have an account
+    number that is missing from ref_accounts.csv, so their account type is unknown."""
     raw_dir = Path(raw_dir)
     with open(raw_dir / "ref_accounts.csv", newline="", encoding="utf-8") as f:
         accounts = {
             r["account_number"]: (r["account_type"], r["account_group"])
             for r in csv.DictReader(f)
         }
-    rows = []
-    dropped = 0
-    dropped_total = 0.0
+    rows, unmatched = [], []
     with open(raw_dir / "operating_budget.csv", newline="", encoding="utf-8") as f:
         for r in csv.DictReader(f):
-            amount = float(r["amount"] or 0)
-            acct = accounts.get(r["account_number"])
-            if acct is None:
-                dropped += 1
-                dropped_total += amount
-                continue
-            acct_type, acct_group = acct
-            rows.append({
+            base = {
                 "fy": _fy(r["report_fy"]),
                 "cycle": r["budget_cycle"],
                 "fund_type": r["fund_type"],
@@ -39,17 +32,37 @@ def load_budget_rows(raw_dir: Path) -> list[dict]:
                 "funds_center_number": r["funds_center_number"],
                 "account": r["account"],
                 "account_number": r["account_number"],
-                "account_type": acct_type,
-                "account_group": acct_group,
-                "amount": amount,
-            })
+            }
+            amount = float(r["amount"] or 0)
+            acct = accounts.get(r["account_number"])
+            if acct is None:
+                unmatched.append({**base, "amount": amount})
+                continue
+            acct_type, acct_group = acct
+            rows.append({**base, "account_type": acct_type, "account_group": acct_group, "amount": amount})
+    return rows, unmatched
+
+
+def load_budget_rows(raw_dir: Path) -> list[dict]:
+    rows, dropped = _read_budget(raw_dir)
     if dropped:
         print(
-            f"csv_loader: dropped {dropped} rows (total ${dropped_total:,.0f}) "
+            f"csv_loader: dropped {len(dropped)} rows (total ${sum(r['amount'] for r in dropped):,.0f}) "
             "with account numbers not in reference",
             file=sys.stderr,
         )
     return rows
+
+
+def unmatched_rows(raw_dir: Path) -> list[dict]:
+    """The rows load_budget_rows drops: account number not in ref_accounts.csv (all fiscal years)."""
+    return _read_budget(raw_dir)[1]
+
+
+def load_fund_names(raw_dir: Path) -> dict[str, str]:
+    """fund_number -> fund_name from ref_funds.csv."""
+    with open(Path(raw_dir) / "ref_funds.csv", newline="", encoding="utf-8") as f:
+        return {r["fund_number"]: r["fund_name"] for r in csv.DictReader(f)}
 
 
 def select_cycle(rows: list[dict]) -> list[dict]:

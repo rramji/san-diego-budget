@@ -10,6 +10,9 @@ PROPERTY_TAX_FY2026_M = 844.6
 TOLERANCE = 0.01
 BAR4_TOLERANCE_M = 0.5
 MAX_BYTES = 300_000
+TREE_MAX_BYTES = 130_000
+TREE_SUM_TOLERANCE = 0.01      # same-year children (plus offsets) vs. their parent
+TREE_ROUNDING_SLACK_M = 0.0005  # per summed value: build output is rounded to 3 decimals
 
 
 def _load(out_dir: Path, name: str) -> dict:
@@ -21,6 +24,36 @@ def _within(actual: float, expected: float, label: str, failures: list[str]) -> 
         failures.append(
             f"{label} = {actual:.1f} not within {TOLERANCE:.0%} of published {expected}"
         )
+
+
+def _tree_nodes(tree: dict):
+    """(path, node) for every node of every map, roots included."""
+    stack = [(p[side]["name"], p[side]) for p in tree["pots"] for side in ("in", "out")]
+    while stack:
+        path, n = stack.pop()
+        yield path, n
+        stack.extend((f"{path} > {c['name']}", c) for c in n["children"] or [])
+
+
+def check_budget_tree(out_dir: Path, failures: list[str]) -> None:
+    path = Path(out_dir) / "budget_tree.json"
+    try:
+        size = path.stat().st_size
+        tree = json.loads(path.read_text(encoding="utf-8"))
+        if size >= TREE_MAX_BYTES:
+            failures.append(f"budget_tree.json size {size} bytes exceeds {TREE_MAX_BYTES:,} byte limit")
+        for where, n in _tree_nodes(tree):
+            kids = n["children"]
+            # Children from a different year are detail (FY2026 lines under an FY2027 box), not a sum.
+            if not kids or any(c["fy"] != n["fy"] for c in kids):
+                continue
+            parts = [c["value_m"] for c in kids] + [o["value_m"] for o in n["offsets"] or []]
+            s = sum(parts)
+            if abs(s - n["value_m"]) > TREE_SUM_TOLERANCE * abs(n["value_m"]) + TREE_ROUNDING_SLACK_M * len(parts):
+                failures.append(f"budget_tree {where}: children and offsets sum to {s:.3f}, "
+                                f"not within {TREE_SUM_TOLERANCE:.0%} of {n['value_m']}")
+    except (OSError, KeyError, TypeError, ValueError) as e:
+        failures.append(f"budget_tree.json check could not run: {e!r}")
 
 
 def run(out_dir: Path) -> list[str]:
@@ -52,6 +85,7 @@ def run(out_dir: Path) -> list[str]:
             failures.append("series.json vintage is empty (missing data/raw/manifest.json?)")
     except (OSError, KeyError, ValueError) as e:
         failures.append(f"series.json vintage check could not run: {e!r}")
+    check_budget_tree(out_dir, failures)
     total = sum(p.stat().st_size for p in out_dir.glob("*.json"))
     if total >= MAX_BYTES:
         failures.append(f"data/build size {total} bytes exceeds 300,000 byte limit")

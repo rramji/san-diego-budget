@@ -20,8 +20,8 @@ def _build(tmp_path):
 def test_build_all_writes_expected_files(tmp_path):
     out, paths = _build(tmp_path)
     assert sorted(p.name for p in paths) == [
-        "claims.json", "cuts.json", "flows.json", "funnel.json", "gap.json", "glossary.json",
-        "headline.json", "series.json", "structural_deficit.json"
+        "budget_tree.json", "claims.json", "cuts.json", "flows.json", "funnel.json", "gap.json",
+        "glossary.json", "headline.json", "series.json", "structural_deficit.json"
     ]
     assert sorted(p.name for p in out.glob("*.json")) == sorted(p.name for p in paths)
     text = (out / "series.json").read_text()

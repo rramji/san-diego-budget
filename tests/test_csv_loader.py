@@ -43,3 +43,17 @@ def test_gf_totals_split_revenue_and_expense(rows):
 def test_gf_by_dept_excludes_major_revenues(rows):
     out = gf_by_dept(select_cycle(rows), 2023)
     assert out == [("Police", pytest.approx(150e-6))]
+
+
+def test_unmatched_rows_lists_what_the_loader_drops():
+    from pipeline.csv_loader import unmatched_rows
+    out = unmatched_rows(FIX)
+    assert len(out) == 1
+    r = out[0]
+    assert r["account_number"] == "999999" and r["amount"] == 77 and r["fy"] == 2023
+    assert r["cycle"] == "adopted" and r["fund_type"] == "General Fund" and r["dept_name"] == "Police"
+
+
+def test_load_fund_names():
+    from pipeline.csv_loader import load_fund_names
+    assert load_fund_names(FIX) == {"100000": "General Fund", "200000": "Special Fund"}

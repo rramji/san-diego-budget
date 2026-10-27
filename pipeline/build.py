@@ -9,12 +9,15 @@ from pathlib import Path
 
 from pipeline import curated
 from pipeline.bike_match import is_bike_project, is_road_repair
+from pipeline.budget_tree import build_budget_tree
 from pipeline.csv_loader import (
     gf_by_dept,
     gf_totals_by_fy,
     load_budget_rows,
     load_cip_rows,
+    load_fund_names,
     select_cycle,
+    unmatched_rows,
 )
 
 
@@ -415,6 +418,14 @@ def _build_into(raw_dir: Path, curated_dir: Path, out_dir: Path) -> list[str]:
         ("claims", lambda: build_claims(curated.load(curated_dir, "claims"), cip_rows, series,
                                          curated.load(curated_dir, "funnel"))),
         ("glossary", lambda: build_glossary(curated.load(curated_dir, "glossary"))),
+        ("budget_tree", lambda: build_budget_tree(
+            rows, load_fund_names(raw_dir),
+            headline=curated.load(curated_dir, "headline"),
+            funnel=curated.load(curated_dir, "funnel"),
+            gf_revenue=build_gf_revenue(curated.load(curated_dir, "gf_revenue_fy2027")),
+            cip=build_cip(curated.load(curated_dir, "cip_fy2027")),
+            labels=curated.load(curated_dir, "labels"),
+            unmatched=unmatched_rows(raw_dir))),
     ]
     return [_write(out_dir, name, fn()).name for name, fn in steps]
 
