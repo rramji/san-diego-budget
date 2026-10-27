@@ -200,9 +200,9 @@
       "link": null
     },
     "Transient Occupancy Tax": {
-      "text": "Hotel guests pay 10.5 cents per dollar of room rent for stays under a month (transient occupancy tax), and city law sends 5.5 of those cents to the General Fund. Of the rest, 4 cents go to promoting San Diego to visitors and 1 cent to uses the City Council approves.",
+      "text": "The base hotel tax (transient occupancy tax) is 10.5 cents per dollar of room rent for stays under a month, and city law sends 5.5 of those cents to the General Fund, 4 cents to promoting San Diego to visitors and 1 cent to uses the City Council approves. The extra hotel tax from Measure C is budgeted separately and isn't counted here.",
       "source": {
-        "doc": "FY2027 Adopted Budget Vol. I, General Fund Revenues, General Fund Transient Occupancy Tax (TOT)",
+        "doc": "FY2027 Adopted Budget Vol. I, General Fund Revenues, General Fund Transient Occupancy Tax (TOT) (pp.69-70; Measure C revenue is not included in these figures)",
         "page": 69,
         "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1generalfundrevenues.pdf"
       },
@@ -632,7 +632,7 @@
       "link": null
     },
     "Other costs": {
-      "text": "Spending the city files under other account groups. Citywide in FY2026, most of it ($53.1M of $81.9M) was the Underground Surcharge Fund's spending on moving overhead power lines underground (account Taxes-UU Surcharge Construction).",
+      "text": "Costs that fit none of the other groups. Citywide, most of it is the Underground Surcharge Fund's spending on moving power lines underground.",
       "link": null
     },
     "_everything_else": {
