@@ -521,6 +521,141 @@ def build_why_short(d: dict) -> dict:
     return d
 
 
+GAP_TOLERANCE_M = 0.05
+WATERFALL_KINDS = ("start", "up", "down", "subtotal", "end")
+GAP_OFFICES = ("IBA", "City")
+_OURS = "our arithmetic: "
+
+
+def _text(v, path: str) -> str:
+    if not isinstance(v, str) or not v.strip():
+        raise ValueError(f"{path}: required non-empty string")
+    return v
+
+
+def _ours(fig, path: str, expected: bool) -> None:
+    is_ours = fig["source"]["doc"].startswith(_OURS)
+    if is_ours != expected:
+        raise ValueError(f"{path}: {'a computed figure must be labeled' if expected else 'only computed figures may be labeled'} "
+                         f"'{_OURS}'")
+
+
+def _check_waterfall(steps) -> None:
+    """Runs the steps as a running total: subtotals must equal it, and the end must bring it to 0 (within 0.05)."""
+    if not isinstance(steps, list) or len(steps) < 2:
+        raise ValueError("waterfall: list of at least two steps required")
+    total = 0.0
+    for i, st in enumerate(steps):
+        path = f"waterfall[{i}]"
+        if not isinstance(st, dict):
+            raise ValueError(f"{path}: object required")
+        _text(st.get("label"), f"{path}.label")
+        kind = st.get("kind")
+        if kind not in WATERFALL_KINDS:
+            raise ValueError(f"{path}.kind: {kind!r} is not one of {', '.join(WATERFALL_KINDS)}")
+        if (kind == "start") != (i == 0) or (kind == "end") != (i == len(steps) - 1):
+            raise ValueError(f"{path}.kind: the first step must be the only start and the last the only end")
+        amt = _need_value(st.get("amount_m"), f"{path}.amount_m")
+        if amt < 0:
+            raise ValueError(f"{path}.amount_m: amounts are sizes; the kind gives the direction")
+        if not isinstance(st.get("our_arithmetic"), bool):
+            raise ValueError(f"{path}.our_arithmetic: true or false required")
+        _ours(st["amount_m"], f"{path}.amount_m", st["our_arithmetic"])
+        if st.get("positions") is not None:
+            _need_value(st["positions"], f"{path}.positions")
+        if kind == "start":
+            total = amt
+        elif kind == "up":
+            total += amt
+        elif kind == "down":
+            total -= amt
+        elif abs(amt - total) > GAP_TOLERANCE_M:
+            raise ValueError(f"{path}: {kind} {amt} but the running total is {total:.2f}")
+    if abs(total) > GAP_TOLERANCE_M:
+        raise ValueError(f"waterfall: the steps end at {total:.2f}, not 0; the budget must close")
+
+
+def build_gap_story(d: dict) -> dict:
+    """Section 3 figures. Checks: the waterfall closes to 0 and its subtotals match the running total; the
+    residual adds up (one_time - one_time_uses = ongoing; ongoing + skipped_reserve = with_reserve, labeled our
+    arithmetic); every headline, timeline entry and definition is complete; every Figure is valid (curated.load)."""
+    d = copy.deepcopy(d)
+    h = d.get("headlines")
+    if not isinstance(h, dict):
+        raise ValueError("headlines: object required")
+    for k in ("this_year", "worst", "coming"):
+        if not isinstance(h.get(k), dict):
+            raise ValueError(f"headlines.{k}: object required")
+    _need_value(h["this_year"].get("value_m"), "headlines.this_year.value_m")
+    _text(h["this_year"].get("counting"), "headlines.this_year.counting")
+    w = h["worst"]
+    for k in ("value_m", "without_reserve_m"):
+        _need_value(w.get(k), f"headlines.worst.{k}")
+    _text(w.get("counting"), "headlines.worst.counting")
+    if not isinstance(w.get("fy"), int) or w["without_reserve_m"]["value"] > w["value_m"]["value"]:
+        raise ValueError("headlines.worst: fy (int) required, and without_reserve_m cannot exceed value_m")
+    c = h["coming"]
+    if not isinstance(c.get("fy"), int):
+        raise ValueError("headlines.coming.fy: int required")
+    for k in ("city_m", "iba_m"):
+        _need_value(c.get(k), f"headlines.coming.{k}")
+    for k in ("note", "city_counting", "iba_counting"):
+        _text(c.get(k), f"headlines.coming.{k}")
+    if f"${c['city_m']['value']}M" not in c["note"]:
+        raise ValueError("headlines.coming.note: must name the city's figure as it is shown")
+    sett = c.get("settlement")
+    if not isinstance(sett, list) or not sett:
+        raise ValueError("headlines.coming.settlement: non-empty list required")
+    for i, s in enumerate(sett):
+        _text(s.get("label") if isinstance(s, dict) else None, f"headlines.coming.settlement[{i}].label")
+        _need_value(s.get("amount_m"), f"headlines.coming.settlement[{i}].amount_m")
+    due = c.get("forecast_due")
+    if not isinstance(due, dict) or not re.fullmatch(r"\d{4}-\d{2}-\d{2}", str(due.get("date", ""))):
+        raise ValueError("headlines.coming.forecast_due: date (YYYY-MM-DD) required")
+    _check_source(due.get("source"), "headlines.coming.forecast_due.source")
+
+    _check_waterfall(d.get("waterfall"))
+    note = d.get("adopted_note")
+    _need_value(note.get("positions_change") if isinstance(note, dict) else None, "adopted_note.positions_change")
+
+    r = d.get("residual")
+    if not isinstance(r, dict):
+        raise ValueError("residual: object required")
+    v = {k: _need_value(r.get(k), f"residual.{k}") for k in (
+        "one_time_m", "one_time_uses_m", "ongoing_m", "skipped_reserve_m", "with_reserve_m", "iba_proposed_m", "iba_may_m")}
+    if abs(v["one_time_m"] - v["one_time_uses_m"] - v["ongoing_m"]) > GAP_TOLERANCE_M:
+        raise ValueError("residual.ongoing_m: must equal one_time_m - one_time_uses_m")
+    if abs(v["ongoing_m"] + v["skipped_reserve_m"] - v["with_reserve_m"]) > GAP_TOLERANCE_M:
+        raise ValueError("residual.with_reserve_m: must equal ongoing_m + skipped_reserve_m")
+    _ours(r["with_reserve_m"], "residual.with_reserve_m", True)
+
+    defs = d.get("definitions")
+    if not isinstance(defs, list) or not defs:
+        raise ValueError("definitions: non-empty list required")
+    for i, x in enumerate(defs):
+        for k in ("term", "plain"):
+            _text(x.get(k) if isinstance(x, dict) else None, f"definitions[{i}].{k}")
+        _check_source(x.get("source"), f"definitions[{i}].source")
+
+    tl = d.get("timeline")
+    if not isinstance(tl, list) or not tl:
+        raise ValueError("timeline: non-empty list required")
+    for i, e in enumerate(tl):
+        path = f"timeline[{i}]"
+        if not isinstance(e, dict) or not re.fullmatch(r"20\d\d-(0[1-9]|1[0-2])", str(e.get("date", ""))):
+            raise ValueError(f"{path}.date: YYYY-MM required")
+        if e.get("office") not in GAP_OFFICES:
+            raise ValueError(f"{path}.office: one of {', '.join(GAP_OFFICES)}")
+        if not isinstance(e.get("describes_fy"), int) or isinstance(e["describes_fy"], bool):
+            raise ValueError(f"{path}.describes_fy: int required")
+        for k in ("doc_label", "counts"):
+            _text(e.get(k), f"{path}.{k}")
+        _need_value(e.get("value_m"), f"{path}.value_m")
+        if e.get("value2_m") is not None:
+            _need_value(e["value2_m"], f"{path}.value2_m")
+    return d
+
+
 class BuildCheckError(RuntimeError):
     """checks.run reported failures on the freshly built files; out_dir was left untouched."""
 
@@ -593,8 +728,8 @@ def _build_into(raw_dir: Path, curated_dir: Path, out_dir: Path) -> list[str]:
             labels=build_labels(curated.load(curated_dir, "labels")),
             unmatched=unmatched_rows(raw_dir))),
         ("why_short", lambda: build_why_short(curated.load(curated_dir, "why_short"))),
-        # Stubs until Tasks 10-11 replace them with validators; passed through so the page's loadData finds them.
-        ("gap_story", lambda: curated.load(curated_dir, "gap_story")),
+        ("gap_story", lambda: build_gap_story(curated.load(curated_dir, "gap_story"))),
+        # Stub until Task 11 replaces it with a validator; passed through so the page's loadData finds it.
         ("piles_up", lambda: curated.load(curated_dir, "piles_up")),
     ]
     return [_write(out_dir, name, fn()).name for name, fn in steps]

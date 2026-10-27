@@ -1,6 +1,6 @@
 // Browser acceptance checks. Run from anywhere:
 //   node scripts/accept.mjs --smoke   load the page at 375/1200 px, light and dark; no errors, no horizontal scroll
-//   node scripts/accept.mjs           smoke plus the section checks below (sections 1 and 2) and their screenshots
+//   node scripts/accept.mjs           smoke plus the section checks below (sections 1, 2 and 3) and their screenshots
 // Not part of `npm test` (needs a browser). Override the playwright path with PLAYWRIGHT_CORE.
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
@@ -301,6 +301,152 @@ async function section2(chromium) {
   return failures;
 }
 
+// Section 3: three headline cards, the waterfall, the residual, the debt box, and the dig deeper (definitions,
+// timeline, funnel). Checks at 375 and 1200; screenshots of the whole section, dig deeper open, at 375 light and dark.
+async function section3(chromium) {
+  const failures = [];
+  const browser = await chromium.launch();
+  try {
+    for (const [width, scheme, shot] of [[375, 'light', 'v2-s3-375'], [375, 'dark', 'v2-s3-375-dark'], [1200, 'light', null]]) {
+      const label = `s3 ${width}px ${scheme}`;
+      const fail = (m) => failures.push(`${label}: ${m}`);
+      const ctx = await browser.newContext({ viewport: { width, height: 900 }, colorScheme: scheme });
+      const page = await ctx.newPage();
+      const errors = [];
+      page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
+      page.on('console', (m) => { if (m.type() === 'error') errors.push(`console: ${m.text()}`); });
+      await page.goto(`${BASE}/site/`, { waitUntil: 'networkidle' });
+      await page.waitForSelector('#s3-waterfall svg', { timeout: 10000 }).catch(() => {});
+      const overlaps = (sel) => `(() => { const r = [...document.querySelectorAll('${sel}')].map((e) => e.getBoundingClientRect());
+        const out = []; for (let i = 0; i < r.length; i += 1) for (let j = i + 1; j < r.length; j += 1) {
+          const a = r[i], b = r[j]; if (a.left < b.right - 0.5 && b.left < a.right - 0.5 && a.top < b.bottom - 0.5 && b.top < a.bottom - 0.5) out.push([i, j]); }
+        return out; })()`;
+      const r = await page.evaluate((ov) => {
+        const sec = document.getElementById('gap');
+        const lead = sec.querySelector('.lead');
+        const cards = [...sec.querySelectorAll('#s3-headlines .hl-card')].map((c) => c.getBoundingClientRect());
+        const pair = [...sec.querySelectorAll('.hl-pair .hl-num')];
+        const steps = [...sec.querySelectorAll('#s3-waterfall .wf-step')].map((li) => li.textContent);
+        const svg = sec.querySelector('#s3-waterfall svg')?.getBoundingClientRect();
+        const vals = [...sec.querySelectorAll('#s3-waterfall .wf-val')].map((t) => t.getBoundingClientRect());
+        return {
+          placeholder: sec.querySelectorAll('[data-lead="placeholder"], [data-gap-fig]').length,
+          leadFig: lead.querySelector('.figure')?.textContent,
+          leadSentences: (lead.textContent.match(/[.!?](\s|$)/g) || []).length,
+          cards: cards.map((c) => [Math.round(c.left), Math.round(c.top)]),
+          questions: [...sec.querySelectorAll('.hl-q')].map((q) => q.textContent),
+          pair: pair.map((n) => [n.textContent.replace(/¹/g, ''), getComputedStyle(n).fontSize, Math.round(n.getBoundingClientRect().top)]),
+          sett: sec.querySelectorAll('.hl-sett li').length,
+          cardOverflow: [...sec.querySelectorAll('.hl-card .hl-num')].filter((n) => { const c = n.closest('.hl-pair > div') || n.closest('.hl-card'); const fn = n.querySelector('.fn') || n; return fn.getBoundingClientRect().right > c.getBoundingClientRect().right + 0.5; }).map((n) => n.textContent),
+          note: sec.querySelector('.hl-note')?.textContent || '',
+          steps,
+          hatched: sec.querySelectorAll('#s3-waterfall .wf-bar.is-ours rect[fill^="url("]').length,
+          valsOut: svg ? vals.filter((v) => v.left < svg.left - 1 || v.right > svg.right + 1 || v.top < svg.top - 1).length : -1,
+          valOverlap: eval(ov.vals),
+          after: sec.querySelector('.wf-after')?.textContent || '',
+          residual: sec.querySelector('#s3-residual')?.textContent || '',
+          debtLinks: [...sec.querySelectorAll('#s3-debt a')].map((a) => a.getAttribute('href')),
+          ours: [...sec.querySelectorAll('.figure')].filter((f) => f.dataset.srcDoc.startsWith('our arithmetic'))
+            .filter((f) => !/our arithmetic/.test(f.closest('li, p')?.textContent || '')).map((f) => f.textContent),
+        };
+      }, { vals: overlaps('#s3-waterfall .wf-val') });
+      if (r.placeholder) fail(`${r.placeholder} placeholder(s) left in #gap`);
+      if (r.leadFig !== '$118M') fail(`lead's first figure is "${r.leadFig}"`);
+      if (r.leadSentences < 2 || r.leadSentences > 4) fail(`lead has ${r.leadSentences} sentences`);
+      if (r.cards.length !== 3) fail(`${r.cards.length} headline cards`);
+      const row = new Set(r.cards.map((c) => c[1])).size === 1 && new Set(r.cards.map((c) => c[0])).size === 3;
+      const stack = new Set(r.cards.map((c) => c[0])).size === 1;
+      if (width < 640 ? !stack : !row) fail(`cards ${width < 640 ? 'do not stack' : 'not in a row'}: ${JSON.stringify(r.cards)}`);
+      if (r.questions.join('|') !== 'How big was it this year?|How bad did it get?|What’s coming?') fail(`questions: ${r.questions}`);
+      if (r.pair.length !== 2 || r.pair[0][0] !== '$9.5M' || r.pair[1][0] !== '$32.9M' || r.pair[0][1] !== r.pair[1][1] || r.pair[0][2] !== r.pair[1][2]) {
+        fail(`FY2028 pair not side by side at equal size: ${JSON.stringify(r.pair)}`);
+      }
+      if (r.cardOverflow.length) fail(`headline numbers overflow their card: ${r.cardOverflow.join(', ')}`);
+      if (r.sett !== 2) fail(`${r.sett} settlement items`);
+      if (!/November 6, 2026/.test(r.note)) fail(`note: "${r.note}"`);
+      if (r.steps.length !== 9) fail(`${r.steps.length} waterfall steps`);
+      if (r.steps.filter((t) => /\(our arithmetic\)/.test(t)).length !== 1) fail('waterfall: not exactly one "(our arithmetic)" step');
+      if (r.hatched !== 1) fail(`${r.hatched} hatched bars`);
+      if (r.valsOut) fail(`${r.valsOut} waterfall value label(s) outside the chart`);
+      if (r.valOverlap.length) fail(`waterfall value labels overlap: ${JSON.stringify(r.valOverlap)}`);
+      if (!/133\.66/.test(r.after)) fail(`adopted note: "${r.after}"`);
+      if (!/about \$103M.*\(our arithmetic\)/.test(r.residual)) fail('residual: ~$103M is not labeled our arithmetic');
+      if (r.debtLinks.join() !== '#reserves,#infrastructure,#pension') fail(`debt box links: ${r.debtLinks}`);
+      if (r.ours.length) fail(`our-arithmetic figures without the words on screen: ${r.ours.join(', ')}`);
+
+      // Dig deeper: open it, then the timeline and the funnel draw at the open width.
+      await page.evaluate(() => { document.querySelector('#gap details.dig').open = true; });
+      await page.waitForSelector('#s3-timeline .tl-pt', { timeout: 3000 }).catch(() => {});
+      await page.waitForTimeout(200);
+      const d = await page.evaluate((ov) => {
+        const sec = document.getElementById('gap');
+        const host = sec.querySelector('#s3-timeline .tl-host');
+        const funnel = sec.querySelector('#ch2-funnel');
+        const fsvg = funnel.querySelector('svg');
+        return {
+          defs: [...sec.querySelectorAll('.gap-defs dt')].map((x) => x.textContent),
+          points: sec.querySelectorAll('#s3-timeline .tl-pt').length,
+          ptOverlap: eval(ov.pts),
+          ptOut: [...sec.querySelectorAll('#s3-timeline .tl-pt')].filter((p) => p.getBoundingClientRect().right > host.getBoundingClientRect().right + 1).length,
+          funnelW: fsvg ? Math.round(fsvg.getBoundingClientRect().width) : 0,
+          funnelBox: Math.round(funnel.getBoundingClientRect().width),
+          unsourced: sec.querySelectorAll('.figure:not([data-src-url])').length,
+          noFn: [...sec.querySelectorAll('[data-src-url]')].filter((e) => !(e.nextElementSibling && e.nextElementSibling.classList.contains('fn'))).length,
+          scroll: document.documentElement.scrollWidth - window.innerWidth,
+        };
+      }, { pts: overlaps('#s3-timeline .tl-pt') });
+      if (d.defs.join('|') !== 'Forecast gap|Structural deficit|Balanced budget') fail(`definitions: ${d.defs}`);
+      if (d.points !== 8) fail(`${d.points} timeline points`);
+      if (d.ptOverlap.length) fail(`timeline labels overlap: ${JSON.stringify(d.ptOverlap)}`);
+      if (d.ptOut) fail(`${d.ptOut} timeline label(s) past the right edge`);
+      if (!d.funnelW || Math.abs(d.funnelW - d.funnelBox) > 2) fail(`funnel drawn at ${d.funnelW}px in a ${d.funnelBox}px box after opening`);
+      if (d.unsourced) fail(`${d.unsourced} .figure without data-src-url`);
+      if (d.noFn) fail(`${d.noFn} sourced element(s) without a footnote button`);
+      if (d.scroll > 0) fail(`horizontal scroll (${d.scroll}px)`);
+      // A dot opens its details on click and on keyboard focus; Escape closes them.
+      const dot = page.locator('#s3-timeline .tl-dot').nth(2);
+      await dot.click();
+      const tip = await page.evaluate(() => {
+        const t = document.querySelector('#s3-timeline .tl-tip:not([hidden])');
+        return t ? { text: t.textContent, expanded: document.querySelectorAll('#s3-timeline .tl-dot[aria-expanded="true"]').length } : null;
+      });
+      if (!tip || !/Who.*Document.*Describes.*What it counts/.test(tip.text) || tip.expanded !== 1) fail(`dot click details: ${JSON.stringify(tip)}`);
+      await page.keyboard.press('Escape');
+      if (await page.locator('#s3-timeline .tl-tip:not([hidden])').count()) fail('Escape did not close the details');
+      await page.locator('#s3-timeline .tl-dot').nth(0).focus();
+      await page.keyboard.press('Tab'); // keyboard focus (focus-visible) on the next stop
+      const kb = await page.evaluate(() => {
+        const a = document.activeElement;
+        const t = a?.closest('.tl-pt')?.querySelector('.tl-tip');
+        return { onDot: !!a?.classList.contains('tl-dot'), shown: t ? !t.hidden : false, fn: !!a?.classList.contains('fn') };
+      });
+      if (!kb.fn && !(kb.onDot && kb.shown)) fail(`keyboard focus did not show details: ${JSON.stringify(kb)}`);
+      await page.keyboard.press('Escape');
+
+      if (shot) {
+        await page.evaluate(() => document.activeElement?.blur());
+        const box = await page.evaluate(() => {
+          const el = document.getElementById('gap').getBoundingClientRect();
+          return { x: el.left + window.scrollX, y: el.top + window.scrollY, width: el.width, height: el.height };
+        });
+        await page.setViewportSize({ width, height: Math.ceil(box.y + box.height) });
+        await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+        await page.waitForTimeout(150);
+        const box2 = await page.evaluate(() => {
+          const el = document.getElementById('gap').getBoundingClientRect();
+          return { x: el.left + window.scrollX, y: el.top + window.scrollY, width: el.width, height: el.height };
+        });
+        await page.screenshot({ path: path.join(SHOTS, `${shot}.png`), clip: box2 });
+      }
+      if (errors.length) fail(errors.join('; '));
+      await ctx.close();
+    }
+  } finally {
+    await browser.close();
+  }
+  return failures;
+}
+
 async function main() {
   const smokeOnly = process.argv.includes('--smoke');
   const { chromium } = await import(process.env.PLAYWRIGHT_CORE || '/home/robert/node_modules/playwright-core/index.mjs');
@@ -311,7 +457,7 @@ async function main() {
   try {
     await waitForServer();
     failures = await smoke(chromium);
-    if (!smokeOnly) failures.push(...(await section1(chromium)), ...(await section2(chromium)));
+    if (!smokeOnly) failures.push(...(await section1(chromium)), ...(await section2(chromium)), ...(await section3(chromium)));
   } finally {
     if (server) server.kill();
   }

@@ -56,7 +56,7 @@ function column(f, gap) {
   cmp.append(
     'Closing it with cuts alone means cutting about one dollar in ',
     num(share, String(f.oneDollarIn)), ' (', num(share, pct(f.shareOfCuttable)),
-    ') from the services in the last bar of the funnel above.',
+    ') from the General Fund services the Council can cut (the last bar of the funnel under Dig deeper).',
   );
   col.append(cmp);
   return col;

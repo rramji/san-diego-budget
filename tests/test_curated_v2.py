@@ -1,9 +1,10 @@
 import copy
 import csv
+import re
 from pathlib import Path
 import pytest
 from pipeline import curated
-from pipeline.build import build_gf_revenue, build_cip, build_labels, build_why_short
+from pipeline.build import build_gf_revenue, build_cip, build_labels, build_why_short, build_gap_story
 ROOT = Path(__file__).parent.parent
 CUR = ROOT / "data" / "curated"
 
@@ -223,4 +224,103 @@ def test_why_short_input_not_mutated():
     raw = curated.load(CUR, "why_short")
     before = copy.deepcopy(raw)
     build_why_short(raw)
+    assert raw == before
+
+
+def test_gap_story_values():
+    d = build_gap_story(curated.load(CUR, "gap_story"))
+    h = d["headlines"]
+    assert (h["this_year"]["value_m"]["value"], h["worst"]["value_m"]["value"], h["worst"]["without_reserve_m"]["value"]) == (118.0, 203.8, 181.4)
+    assert h["worst"]["fy"] == 2025 and h["coming"]["fy"] == 2028
+    assert (h["coming"]["city_m"]["value"], h["coming"]["iba_m"]["value"]) == (9.5, 32.9)
+    assert [s["amount_m"]["value"] for s in h["coming"]["settlement"]] == [10.8, 9.4]
+    assert h["coming"]["note"] == ("The two were measured at different stages. The city's documents don't say whether its "
+                                   "$9.5M includes the settlement costs. A new forecast is due November 6, 2026.")
+    assert h["coming"]["forecast_due"]["date"] == "2026-11-06"
+    r = d["residual"]
+    assert (r["one_time_m"]["value"], r["one_time_uses_m"]["value"], r["ongoing_m"]["value"]) == (40.8, 17.7, 23.1)
+    assert r["with_reserve_m"]["source"]["doc"].startswith("our arithmetic") and r["with_reserve_m"]["value"] == 103.2
+    assert (r["iba_proposed_m"]["value"], r["iba_may_m"]["value"]) == (91.3, 95.4)
+    vals = sorted(e["value_m"]["value"] for e in d["timeline"])
+    assert vals == sorted([258.2, 88.8, 118.0, 11.2, 15.3, 23.1, 32.9, 9.5])
+    assert sorted(e["value2_m"]["value"] for e in d["timeline"] if e["value2_m"]) == [91.3, 95.4]
+    assert [x["term"] for x in d["definitions"]] == ["Forecast gap", "Structural deficit", "Balanced budget"]
+
+
+def test_gap_story_waterfall_steps_and_pages():
+    d = build_gap_story(curated.load(CUR, "gap_story"))
+    w = d["waterfall"]
+    assert [s["kind"] for s in w] == ["start", "up", "subtotal", "down", "subtotal", "down", "down", "down", "end"]
+    assert [s["amount_m"]["value"] for s in w] == [118.0, 28.2, 146.2, 26.2, 120.0, 66.4, 44.5, 9.1, 0]
+    ours = [s for s in w if s["our_arithmetic"]]
+    assert len(ours) == 1 and ours[0]["amount_m"]["source"]["doc"].startswith("our arithmetic: ")
+    assert all(not s["amount_m"]["source"]["doc"].startswith("our arithmetic") for s in w if not s["our_arithmetic"])
+    cuts = w[5]
+    assert cuts["positions"]["value"] == 236.76 and "236.76 positions" in cuts["label"]
+    assert all(s["positions"] is None for i, s in enumerate(w) if i != 5)
+    assert d["adopted_note"]["positions_change"]["value"] == -133.66
+    # Printed footer pages, IBA Report 26-11 (checked in the cached text).
+    assert [s["amount_m"]["source"]["page"] for s in w[:7]] == [3, 5, 5, 6, 6, 35, 35]
+
+
+def test_gap_story_matches_calculator_and_headline():
+    d = build_gap_story(curated.load(CUR, "gap_story"))
+    gap = curated.load(CUR, "gap")
+    headline = curated.load(CUR, "headline")
+    assert d["residual"]["with_reserve_m"]["value"] == gap["post_cut_with_reserve_m"]["value"]
+    assert d["residual"]["ongoing_m"]["value"] == gap["post_cut_city_m"]["value"]
+    assert d["residual"]["skipped_reserve_m"]["value"] == gap["skipped_reserve_m"]["value"]
+    assert d["headlines"]["this_year"]["value_m"]["value"] == gap["pre_cut_m"]["value"]
+    assert d["adopted_note"]["positions_change"] == headline["gf_fte_change"]
+
+
+def test_gap_story_timeline_shape():
+    d = build_gap_story(curated.load(CUR, "gap_story"))
+    for e in d["timeline"]:
+        assert re.fullmatch(r"20\d\d-(0[1-9]|1[0-2])", e["date"]), e
+        assert e["office"] in ("IBA", "City") and isinstance(e["describes_fy"], int)
+        assert e["doc_label"].strip() and e["counts"].strip()
+
+
+def _bump(path):
+    def edit(d):
+        node = d
+        for k in path[:-1]:
+            node = node[k]
+        node[path[-1]]["value"] += 1
+    return edit
+
+
+def test_gap_story_rejects_unbalanced_waterfall():
+    d = copy.deepcopy(curated.load(CUR, "gap_story"))
+    d["waterfall"][6]["amount_m"]["value"] += 1
+    with pytest.raises(ValueError, match="waterfall"):
+        build_gap_story(d)
+
+
+@pytest.mark.parametrize("edit, where", [
+    (_bump(["waterfall", 2, "amount_m"]), "waterfall"),
+    (lambda d: d["waterfall"][1].__setitem__("kind", "sideways"), "waterfall"),
+    (lambda d: d["waterfall"][7]["amount_m"]["source"].__setitem__("doc", "IBA"), "waterfall"),
+    (_bump(["residual", "with_reserve_m"]), "with_reserve_m"),
+    (_bump(["residual", "one_time_uses_m"]), "ongoing_m"),
+    (lambda d: d["residual"]["with_reserve_m"]["source"].__setitem__("doc", "IBA"), "with_reserve_m"),
+    (lambda d: d["headlines"]["coming"].__setitem__("note", " "), "coming.note"),
+    (lambda d: d["headlines"]["coming"]["forecast_due"].__setitem__("date", "Nov 6"), "forecast_due"),
+    (lambda d: d["timeline"][0].__setitem__("office", "Mayor"), "timeline"),
+    (lambda d: d["timeline"][0].__setitem__("date", "2024-13"), "timeline"),
+    (lambda d: d["definitions"][0]["source"].__setitem__("url", "http://x"), "definitions"),
+    (lambda d: d["headlines"]["worst"].pop("without_reserve_m"), "worst"),
+])
+def test_gap_story_rejects_bad_input(edit, where):
+    d = copy.deepcopy(curated.load(CUR, "gap_story"))
+    edit(d)
+    with pytest.raises(ValueError, match=where):
+        build_gap_story(d)
+
+
+def test_gap_story_input_not_mutated():
+    raw = curated.load(CUR, "gap_story")
+    before = copy.deepcopy(raw)
+    build_gap_story(raw)
     assert raw == before

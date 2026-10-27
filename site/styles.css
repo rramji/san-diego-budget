@@ -325,3 +325,86 @@ main { padding-bottom: 80px; }
 #s2-dig h3 { margin: 18px 0 4px; font: 650 0.95rem/1.3 var(--font-ui); }
 #s2-dig h3:first-child { margin-top: 4px; }
 #s2-dig p { margin: 0 0 10px; max-width: 34em; }
+
+/* ---- Section 3: the gap ---- */
+/* The three questions are the section's memorable element: each reader question set in the body serif, its answer as a
+   large sans number. Plain tiles with a top rule (no shadow); they sit in a row from 640px and stack below that. */
+.sub-h { margin: 32px 0 6px; font: 700 1.1rem/1.3 var(--font-ui); letter-spacing: -0.005em; }
+.hl-cards { display: grid; grid-template-columns: 1fr; gap: 14px; margin: 8px 0 0; }
+.hl-card { background: var(--surface); border-top: 3px solid var(--text); padding: 12px 14px 14px; min-width: 0; }
+.hl-q { margin: 0 0 6px; font: italic 400 1.05rem/1.35 var(--font-body); letter-spacing: 0; }
+.hl-num { margin: 0; font: 750 1.9rem/1.1 var(--font-ui); letter-spacing: -0.02em; }
+.hl-num { white-space: nowrap; }
+.hl-num .figure { font-variant-numeric: proportional-nums; font-weight: 750; }
+.hl-num .fn { font-size: 0.8rem; vertical-align: 0.9em; }
+.hl-sub { margin: 4px 0 0; font: 0.9rem/1.4 var(--font-ui); }
+.hl-what, .hl-who { margin: 8px 0 0; font: 0.85rem/1.45 var(--font-ui); color: var(--muted); }
+.hl-fy { margin: 0 0 6px; font: 600 0.85rem/1.3 var(--font-ui); color: var(--muted); }
+.hl-pair { display: grid; grid-template-columns: 1fr 1fr; }
+.hl-pair > div { min-width: 0; padding-right: 12px; }
+.hl-pair > div + div { padding: 0 0 0 12px; border-left: 1px solid var(--rule); }
+.hl-sett-h { margin: 14px 0 4px; padding-top: 10px; border-top: 1px solid var(--rule); font: 0.85rem/1.45 var(--font-ui); }
+.hl-sett { margin: 0; padding-left: 1.1em; font: 0.85rem/1.45 var(--font-ui); }
+.hl-sett li { margin: 2px 0; }
+.hl-sett .figure { white-space: nowrap; }
+.hl-note { margin: 10px 0 0; font: 0.85rem/1.45 var(--font-ui); color: var(--muted); }
+.hl-note .figure, .hl-sett .figure, .hl-sub .figure { color: var(--text); }
+@media (min-width: 640px) {
+  .hl-cards { grid-template-columns: 1fr 1fr 1.75fr; }
+  .hl-num { font-size: 1.65rem; }
+  .hl-pair > div { padding-right: 10px; }
+  .hl-pair > div + div { padding-left: 10px; }
+}
+
+/* waterfall: the plot, then a numbered step list that carries the sourced amounts */
+.wf-legend { margin-top: 10px; }
+.wf-legend .swatch, .wf-steps .swatch { width: 12px; height: 12px; border-radius: 2px; }
+.swatch.is-hatched { background: repeating-linear-gradient(45deg, var(--discretionary) 0 2px, var(--bg) 2px 5px); box-shadow: inset 0 0 0 1px var(--discretionary); }
+.wf-plot { margin: 4px 0 0; }
+.wf-svg { display: block; max-width: 100%; height: auto; }
+.wf-val { font: 600 11px/1 var(--font-ui); font-variant-numeric: tabular-nums; pointer-events: none; }
+.wf-num { font: 11px/1 var(--font-ui); pointer-events: none; }
+.tip-src { margin-top: 4px; color: var(--muted); }
+.wf-steps { list-style: none; margin: 10px 0 0; padding: 0; font: 0.88rem/1.4 var(--font-ui); }
+.wf-step { display: grid; grid-template-columns: 1.6em 12px minmax(0, 1fr) auto; column-gap: 8px; align-items: baseline; padding: 5px 0; border-bottom: 1px solid var(--rule); }
+.wf-step:first-child { border-top: 1px solid var(--rule); }
+.wf-step .swatch { align-self: center; }
+.wf-n { color: var(--muted); font-variant-numeric: tabular-nums; text-align: right; }
+.wf-amt { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.wf-start .wf-name, .wf-subtotal .wf-name, .wf-end .wf-name { font-weight: 650; }
+.wf-name .figure { font-weight: 600; }
+.wf-after { margin-top: 10px; }
+.wf-after .figure { color: var(--text); }
+
+#s3-residual p { max-width: 34em; }
+
+.debt-box { margin: 28px 0; padding: 4px 0 4px 16px; border-left: 3px solid var(--muted); }
+.debt-box h3 { margin: 0 0 6px; font: 700 1.05rem/1.3 var(--font-ui); }
+.debt-box p { margin: 0 0 10px; max-width: 34em; }
+.debt-box p:last-child { margin-bottom: 0; }
+
+/* dig deeper: definitions and the timeline */
+.gap-defs { margin: 4px 0 16px; }
+.gap-defs dt { margin-top: 10px; font-size: 0.95rem; }
+.gap-defs dd { max-width: 34em; }
+.tl-host { margin: 12px 0 8px; }
+.tl { position: relative; }
+.tl-svg { position: absolute; inset: 0 auto auto 0; overflow: visible; }
+.tl-axis { stroke: var(--muted); stroke-width: 1; }
+.tl-break { stroke: var(--muted); stroke-width: 1.5; fill: none; }
+.tl-break-text, .tl-date { font: 11px/1 var(--font-ui); fill: var(--muted); }
+.tl-list { list-style: none; margin: 0; padding: 0; }
+.tl-pt { position: absolute; font-family: var(--font-ui); }
+.tl-pt p { margin: 0; }
+.tl-val { font: 650 0.95rem/20px var(--font-ui); }
+.tl-val2 { font: 0.8rem/16px var(--font-ui); color: var(--muted); }
+.tl-val2 .figure { color: var(--text); font-weight: 600; }
+.tl-meta { font: 0.75rem/16px var(--font-ui); color: var(--muted); }
+.tl-dot { position: absolute; top: -1px; width: 24px; height: 24px; padding: 0; border: 0; background: none; cursor: pointer; border-radius: 50%; }
+.tl-dot::before { content: ""; position: absolute; left: 7px; top: 7px; width: 10px; height: 10px; border-radius: 50%; background: var(--gap); box-shadow: 0 0 0 2px var(--bg); }
+.tl-dot[aria-expanded="true"]::before { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--gap); }
+.tl-tip { position: absolute; top: calc(100% + 6px); z-index: 30; background: var(--surface); color: var(--text); border: 1px solid var(--rule); border-radius: 6px; box-shadow: 0 4px 16px rgb(0 0 0 / 0.18); padding: 8px 10px; font: 0.8rem/1.4 var(--font-ui); }
+.tl-tip[hidden] { display: none; }
+.tl-tip dl { margin: 4px 0 0; }
+.tl-tip dt { margin: 6px 0 0; font: 650 0.75rem/1.3 var(--font-ui); color: var(--muted); }
+.tl-tip dd { margin: 0; }

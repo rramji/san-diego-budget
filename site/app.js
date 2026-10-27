@@ -16,6 +16,8 @@ import { themeColors, observeWidth } from './charts/util.js';
 import * as bm from './charts/budget-map.js';
 import { renderWhy } from './why.js';
 export { renderWhy };
+import { renderGapStory } from './gapstory.js';
+export { renderGapStory };
 
 const FILES = {
   headline: 'headline', series: 'series', structural: 'structural_deficit', funnel: 'funnel',
@@ -85,11 +87,6 @@ function renderHowLong(data) {
   for (const sp of document.querySelectorAll('[data-fy-top]')) {
     const b = prep.bars.find((x) => x.fy === Number(sp.dataset.fyTop));
     sp.replaceWith(figureSpan(b.top_figure, money(b.top_m)));
-  }
-  const fy28 = prep.markers.find((x) => x.fy === 2028);
-  for (const sp of document.querySelectorAll('[data-fy28-fig]')) {
-    const f = fy28.figures[Number(sp.dataset.fy28Fig)];
-    sp.replaceWith(figureSpan(f, money(f.value)));
   }
   const chart = document.getElementById('ch1-chart');
   const dig = document.getElementById('ch1-dig-chart');
@@ -399,6 +396,7 @@ async function main() {
   guarded('section 1: budget maps', 's1-maps', () => renderWhat(data));
   guarded('section 1 dig: money-flow Sankey', 'ch2-sankey', () => renderSankey(data.flows));
   guarded('section 2: why a wealthy city is short', 's2-blocks', () => renderWhy(document.getElementById('why-short'), data.whyShort));
+  guarded('section 3: the gap', 's3-headlines', () => renderGapStory(document.getElementById('gap'), data.gapStory));
   guarded('section 3: gap calculator', 'ch3-calc', () => renderGapCalc(data));
   guarded('section 3 dig: funnel', 'ch2-funnel', () => renderFunnel(data));
   guarded('section 3 dig: cuts', 'ch2-cuts', () => renderCuts(document.getElementById('ch2-cuts'), data.cuts));
