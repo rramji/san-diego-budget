@@ -1,0 +1,426 @@
+{
+  "fy": 2027,
+  "total_m": {
+    "value": 858.1,
+    "source": {
+      "doc": "FY2027 Adopted Budget Vol. III, Capital Improvements Program, Table 1: Fiscal Year 2027 Adopted CIP Budget, Grand Total $858,083,119",
+      "page": 4,
+      "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v3.pdf"
+    }
+  },
+  "sources": [
+    {
+      "name": "Sewer Funds",
+      "amount_m": {
+        "value": 306.3,
+        "source": {
+          "doc": "FY2027 Adopted Budget Vol. III, Capital Improvements Program, Table 1: Fiscal Year 2027 Adopted CIP Budget, Sewer Funds $306,253,127",
+          "page": 4,
+          "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v3.pdf"
+        }
+      }
+    },
+    {
+      "name": "Water Fund",
+      "amount_m": {
+        "value": 283.7,
+        "source": {
+          "doc": "FY2027 Adopted Budget Vol. III, Capital Improvements Program, Table 1: Fiscal Year 2027 Adopted CIP Budget, Water Fund $283,713,764",
+          "page": 4,
+          "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v3.pdf"
+        }
+      }
+    },
+    {
+      "name": "Bond Financing",
+      "amount_m": {
+        "value": 89.0,
+        "source": {
+          "doc": "FY2027 Adopted Budget Vol. III, Capital Improvements Program, Table 1: Fiscal Year 2027 Adopted CIP Budget, Bond Financing $89,030,000",
+          "page": 4,
+          "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v3.pdf"
+        }
+      }
+    },
+    {
+      "name": "Utilities Undergrounding Program Fund",
+      "amount_m": {
+        "value": 42.8,
+        "source": {
+          "doc": "FY2027 Adopted Budget Vol. III, Capital Improvements Program, Table 1: Fiscal Year 2027 Adopted CIP Budget, Utilities Undergrounding Program Fund $42,751,581",
+          "page": 4,
+          "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v3.pdf"
+        }
+      }
+    },
+    {
+      "name": "TransNet Funds",
+      "amount_m": {
+        "value": 25.8,
+        "source": {
+          "doc": "FY2027 Adopted Budget Vol. III, Capital Improvements Program, Table 1: Fiscal Year 2027 Adopted CIP Budget, TransNet Funds $25,758,735",
+          "page": 4,
+          "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v3.pdf"
+        }
+      }
+    },
+    {
+      "name": "Development Impact Fees",
+      "amount_m": {
+        "value": 19.3,
+        "source": {
+          "doc": "FY2027 Adopted Budget Vol. III, Capital Improvements Program, Table 1: Fiscal Year 2027 Adopted CIP Budget, Development Impact Fees $19,326,879",
+          "page": 4,
+          "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v3.pdf"
+        }
+      }
+    },
+    {
+      "name": "TOT Convention Center",
+      "amount_m": {
+        "value": 18.3,
+        "source": {
+          "doc": "FY2027 Adopted Budget Vol. III, Capital Improvements Program, Table 1: Fiscal Year 2027 Adopted CIP Budget, TOT Convention Center $18,290,000",
+          "page": 4,
+          "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v3.pdf"
+        }
+      }
+    },
+    {
+      "name": "Mission Bay Park Improvement Fund",
+      "amount_m": {
+        "value": 12.9,
+        "source": {
+          "doc": "FY2027 Adopted Budget Vol. III, Capital Improvements Program, Table 1: Fiscal Year 2027 Adopted CIP Budget, Mission Bay Park Improvement Fund $12,919,752",
+          "page": 4,
+          "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v3.pdf"
+        }
+      }
+    },
+    {
+      "name": "Facilities Benefit Assessments",
+      "amount_m": {
+        "value": 11.2,
+        "source": {
+          "doc": "FY2027 Adopted Budget Vol. III, Capital Improvements Program, Table 1: Fiscal Year 2027 Adopted CIP Budget, Facilities Benefit Assessments $11,170,000",
+          "page": 4,
+          "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v3.pdf"
+        }
+      }
+    },
+    {
+      "name": "Enhanced Infrastructure Financing District Fund",
+      "amount_m": {
+        "value": 9.3,
+        "source": {
+          "doc": "FY2027 Adopted Budget Vol. III, Capital Improvements Program, Table 1: Fiscal Year 2027 Adopted CIP Budget, Enhanced Infrastructure Financing District Fund $9,250,339",
+          "page": 4,
+          "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v3.pdf"
+        }
+      }
+    },
+    {
+      "name": "Regional Transportation Congestion Improvement Program",
+      "amount_m": {
+        "value": 8.2,
+        "source": {
+          "doc": "FY2027 Adopted Budget Vol. III, Capital Improvements Program, Table 1: Fiscal Year 2027 Adopted CIP Budget, Regional Transportation Congestion Improvement Program $8,225,980",
+          "page": 4,
+          "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v3.pdf"
+        }
+      }
+    },
+    {
+      "name": "Gas Tax Fund",
+      "amount_m": {
+        "value": 5.3,
+        "source": {
+          "doc": "FY2027 Adopted Budget Vol. III, Capital Improvements Program, Table 1: Fiscal Year 2027 Adopted CIP Budget, Gas Tax Fund $5,300,000",
+          "page": 4,
+          "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v3.pdf"
+        }
+      }
+    }
+  ],
+  "departments": [
+    {
+      "name": "Public Utilities",
+      "amount_m": {
+        "value": 580.7,
+        "source": {
+          "doc": "FY2027 Adopted Budget Vol. III, Capital Improvements Program, Table 2: Multi-Year CIP (FY2027 column), Public Utilities $580,746,891",
+          "page": 6,
+          "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v3.pdf"
+        }
+      },
+      "projects": [
+        {
+          "name": "Water Main Replacements",
+          "amount_m": {
+            "value": 114.2,
+            "source": {
+              "doc": "FY2027 Adopted Budget Vol. III, Public Utilities project page: Water Main Replacements (AKB00003), Total row, FY2027 column $114,218,850",
+              "page": 312,
+              "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v3.pdf"
+            }
+          }
+        },
+        {
+          "name": "Sewer Main Replacements",
+          "amount_m": {
+            "value": 105.6,
+            "source": {
+              "doc": "FY2027 Adopted Budget Vol. III, Public Utilities project page: Sewer Main Replacements (AJA00001), Total row, FY2027 column $105,589,259",
+              "page": 303,
+              "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v3.pdf"
+            }
+          }
+        },
+        {
+          "name": "Environmental Monitoring and Technical Services Division Lab Remodel at NTC",
+          "amount_m": {
+            "value": 45.9,
+            "source": {
+              "doc": "FY2027 Adopted Budget Vol. III, Public Utilities project page: Environmental Monitoring and Technical Services Division Lab Remodel at NTC (S21003), Total row, FY2027 column $45,903,956",
+              "page": 263,
+              "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v3.pdf"
+            }
+          }
+        },
+        {
+          "name": "Pump Stations 1 & 2 Improvements & Modernization",
+          "amount_m": {
+            "value": 42.0,
+            "source": {
+              "doc": "FY2027 Adopted Budget Vol. III, Public Utilities project page: Pump Stations 1 & 2 Improvements & Modernization (L24000), Total row, FY2027 column $42,000,000",
+              "page": 295,
+              "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v3.pdf"
+            }
+          }
+        },
+        {
+          "name": "Pure Water Program",
+          "amount_m": {
+            "value": 37.9,
+            "source": {
+              "doc": "our arithmetic: $20,600,848 (Sewer Funds, Vol. III p.14) + $17,255,061 (Water Fund, p.16) = $37,855,909; equals the FY2027 Total row on the Public Utilities project page for Pure Water Program (ALA00001)",
+              "page": 299,
+              "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v3.pdf"
+            }
+          }
+        },
+        {
+          "name": "Metro Treatment Plants",
+          "amount_m": {
+            "value": 36.2,
+            "source": {
+              "doc": "our arithmetic: $29,815,688 (Sewer Funds, Vol. III p.13) + $6,376,665 (Water Fund, p.16) = $36,192,353; equals the FY2027 Total row on the Public Utilities project page for Metro Treatment Plants (ABO00001)",
+              "page": 275,
+              "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v3.pdf"
+            }
+          }
+        },
+        {
+          "name": "Alvarado Laboratory Improvements",
+          "amount_m": {
+            "value": 30.0,
+            "source": {
+              "doc": "our arithmetic: $22,500,000 (Sewer Funds, Vol. III p.13) + $7,500,000 (Water Fund, p.16) = $30,000,000; equals the FY2027 Total row on the Public Utilities project page for Alvarado Laboratory Improvements (L22000)",
+              "page": 250,
+              "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v3.pdf"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Transportation",
+      "amount_m": {
+        "value": 141.5,
+        "source": {
+          "doc": "FY2027 Adopted Budget Vol. III, Capital Improvements Program, Table 2: Multi-Year CIP (FY2027 column), Transportation $141,517,284",
+          "page": 6,
+          "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v3.pdf"
+        }
+      },
+      "projects": [
+        {
+          "name": "Utilities Undergrounding Program",
+          "amount_m": {
+            "value": 42.8,
+            "source": {
+              "doc": "FY2027 Adopted Budget Vol. III, Transportation project page: Utilities Undergrounding Program (AID00001), Total row, FY2027 column $42,751,581",
+              "page": 395,
+              "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v3.pdf"
+            }
+          }
+        },
+        {
+          "name": "Street Resurfacing and Reconstruction",
+          "amount_m": {
+            "value": 30.7,
+            "source": {
+              "doc": "our arithmetic: $8,625,832 (Bond Financing, Vol. III p.7) + $5,300,000 (Gas Tax Fund, p.11) + $14,314,300 (TransNet Funds, p.15) + $2,470,000 (Trench Cut/Excavation Fee Fund, p.15) = $30,710,132; equals the FY2027 Total row on the Transportation project page for Street Resurfacing and Reconstruction (AID00005)",
+              "page": 387,
+              "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v3.pdf"
+            }
+          }
+        },
+        {
+          "name": "Sidewalk Repair and Reconstruction",
+          "amount_m": {
+            "value": 12.0,
+            "source": {
+              "doc": "FY2027 Adopted Budget Vol. III, Transportation project page: Sidewalk Repair and Reconstruction (AIK00003), Total row, FY2027 column $12,037,129",
+              "page": 381,
+              "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v3.pdf"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Stormwater",
+      "amount_m": {
+        "value": 47.0,
+        "source": {
+          "doc": "FY2027 Adopted Budget Vol. III, Capital Improvements Program, Table 2: Multi-Year CIP (FY2027 column), Stormwater $46,983,207",
+          "page": 6,
+          "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v3.pdf"
+        }
+      },
+      "projects": [
+        {
+          "name": "Flood Resilience Infrastructure",
+          "amount_m": {
+            "value": 31.2,
+            "source": {
+              "doc": "FY2027 Adopted Budget Vol. III, Stormwater project page: Flood Resilience Infrastructure (ACA00001), Total row, FY2027 column $31,235,800 (Total row is on the next page, p.325)",
+              "page": 324,
+              "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v3.pdf"
+            }
+          }
+        },
+        {
+          "name": "Villa La Jolla SD System Lining",
+          "amount_m": {
+            "value": 14.6,
+            "source": {
+              "doc": "FY2027 Adopted Budget Vol. III, Stormwater project page: Villa La Jolla SD System Lining (S26001), Total row, FY2027 column $14,577,407",
+              "page": 331,
+              "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v3.pdf"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Parks & Recreation",
+      "amount_m": {
+        "value": 33.0,
+        "source": {
+          "doc": "FY2027 Adopted Budget Vol. III, Capital Improvements Program, Table 2: Multi-Year CIP (FY2027 column), Parks & Recreation $33,008,301",
+          "page": 6,
+          "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v3.pdf"
+        }
+      },
+      "projects": []
+    },
+    {
+      "name": "Citywide",
+      "amount_m": {
+        "value": 18.3,
+        "source": {
+          "doc": "FY2027 Adopted Budget Vol. III, Capital Improvements Program, Table 2: Multi-Year CIP (FY2027 column), Citywide $18,290,000",
+          "page": 6,
+          "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v3.pdf"
+        }
+      },
+      "projects": [
+        {
+          "name": "Convention Center Improvements",
+          "amount_m": {
+            "value": 18.3,
+            "source": {
+              "doc": "FY2027 Adopted Budget Vol. III, Citywide project page: Convention Center Improvements (ABT00009), Total row, FY2027 column $18,290,000",
+              "page": 80,
+              "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v3.pdf"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Department of Information Technology",
+      "amount_m": {
+        "value": 15.9,
+        "source": {
+          "doc": "FY2027 Adopted Budget Vol. III, Capital Improvements Program, Table 2: Multi-Year CIP (FY2027 column), Department of Information Technology $15,908,536",
+          "page": 6,
+          "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v3.pdf"
+        }
+      },
+      "projects": []
+    },
+    {
+      "name": "General Services",
+      "amount_m": {
+        "value": 8.1,
+        "source": {
+          "doc": "FY2027 Adopted Budget Vol. III, Capital Improvements Program, Table 2: Multi-Year CIP (FY2027 column), General Services $8,096,000",
+          "page": 6,
+          "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v3.pdf"
+        }
+      },
+      "projects": []
+    },
+    {
+      "name": "Environmental Services",
+      "amount_m": {
+        "value": 6.6,
+        "source": {
+          "doc": "FY2027 Adopted Budget Vol. III, Capital Improvements Program, Table 2: Multi-Year CIP (FY2027 column), Environmental Services $6,632,900",
+          "page": 6,
+          "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v3.pdf"
+        }
+      },
+      "projects": []
+    },
+    {
+      "name": "Fire-Rescue",
+      "amount_m": {
+        "value": 6.4,
+        "source": {
+          "doc": "FY2027 Adopted Budget Vol. III, Capital Improvements Program, Table 2: Multi-Year CIP (FY2027 column), Fire-Rescue $6,400,000",
+          "page": 6,
+          "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v3.pdf"
+        }
+      },
+      "projects": [
+        {
+          "name": "Mission Beach Lifeguard Station",
+          "amount_m": {
+            "value": 5.4,
+            "source": {
+              "doc": "FY2027 Adopted Budget Vol. III, Fire-Rescue project page: Mission Beach Lifeguard Station (L25001), Total row, FY2027 column $5,400,000 ($3,400,000 Debt Funded General Fund CIP Projects + $2,000,000 Mission Bay Park Improvements)",
+              "page": 112,
+              "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v3.pdf"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Library",
+      "amount_m": {
+        "value": 0.5,
+        "source": {
+          "doc": "FY2027 Adopted Budget Vol. III, Capital Improvements Program, Table 2: Multi-Year CIP (FY2027 column), Library $500,000",
+          "page": 6,
+          "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v3.pdf"
+        }
+      },
+      "projects": []
+    }
+  ]
+}

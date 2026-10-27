@@ -1,4 +1,5 @@
 """Assemble the published JSON files in data/build/ from raw CSVs and curated figures."""
+import copy
 import json
 import os
 import shutil
@@ -271,6 +272,84 @@ def build_glossary(entries: list[dict]) -> list[dict]:
             if not isinstance(e.get(key), str) or not e[key].strip():
                 raise ValueError(f"glossary[{i}].{key}: required non-empty string")
     return entries
+
+
+SUM_TOLERANCE_M = 0.3   # published tables are rounded, and the city notes they "may not foot"
+PROJECT_TOLERANCE_M = 0.05
+
+
+def _need_value(node, path: str) -> float:
+    if not isinstance(node, dict) or "value" not in node:
+        raise ValueError(f"{path}: figure required")
+    return node["value"]
+
+
+def _check_csv_mapping(m, path: str) -> None:
+    if not isinstance(m, dict) or set(m) != {"types", "include", "exclude"}:
+        raise ValueError(f"{path}: csv must have exactly types, include, exclude")
+    t = m["types"]
+    if not isinstance(t, list) or not t or not all(isinstance(x, str) and x.strip() for x in t):
+        raise ValueError(f"{path}.types: non-empty list of account types required")
+    for k in ("include", "exclude"):
+        if m[k] is not None and not (isinstance(m[k], str) and m[k].strip()):
+            raise ValueError(f"{path}.{k}: string or null required")
+
+
+def build_gf_revenue(d: dict) -> dict:
+    """FY2027 General Fund revenue (Vol. I Table 2): the 12 categories must sum to total_m within 0.3."""
+    d = copy.deepcopy(d)
+    total = _need_value(d.get("total_m"), "total_m")
+    cats = d.get("categories")
+    if not isinstance(cats, list) or not cats:
+        raise ValueError("categories: non-empty list required")
+    seen = set()
+    for i, c in enumerate(cats):
+        name = c.get("name")
+        if not isinstance(name, str) or not name.strip() or name in seen:
+            raise ValueError(f"categories[{i}].name: unique non-empty string required")
+        seen.add(name)
+        _check_csv_mapping(c.get("csv"), f"categories[{i}].csv")
+        _need_value(c.get("amount_m"), f"categories[{i}].amount_m")
+    s = sum(c["amount_m"]["value"] for c in cats)
+    if abs(s - total) > SUM_TOLERANCE_M:
+        raise ValueError(f"categories: sum {s:.1f} differs from total_m {total:.1f} by more than {SUM_TOLERANCE_M}")
+    return d
+
+
+def build_cip(d: dict) -> dict:
+    """FY2027 adopted CIP. Departments must sum to total_m within 0.3, each department's listed
+    projects may not exceed it (lists may be partial), and "Other sources" is derived as
+    total_m minus the named sources."""
+    d = copy.deepcopy(d)
+    total_fig = d.get("total_m")
+    total = _need_value(total_fig, "total_m")
+    srcs, deps = d.get("sources"), d.get("departments")
+    if not isinstance(srcs, list) or not isinstance(deps, list):
+        raise ValueError("sources and departments: lists required")
+    for i, s in enumerate(srcs):
+        if s.get("name") == "Other sources":
+            raise ValueError(f"sources[{i}]: 'Other sources' is derived at build time; remove it from curated cip")
+        _need_value(s.get("amount_m"), f"sources[{i}].amount_m")
+    named = sum(s["amount_m"]["value"] for s in srcs)
+    other = round(total - named, 1)
+    if other < 0:
+        raise ValueError(f"sources: named sources sum {named:.1f} exceeds total_m {total:.1f}")
+    for i, x in enumerate(deps):
+        _need_value(x.get("amount_m"), f"departments[{i}].amount_m")
+        for j, p in enumerate(x.get("projects", [])):
+            _need_value(p.get("amount_m"), f"departments[{i}].projects[{j}].amount_m")
+        ps = sum(p["amount_m"]["value"] for p in x.get("projects", []))
+        if ps > x["amount_m"]["value"] + PROJECT_TOLERANCE_M:
+            raise ValueError(f"departments[{i}].projects: sum {ps:.1f} exceeds department {x['amount_m']['value']:.1f}")
+    dsum = sum(x["amount_m"]["value"] for x in deps)
+    if abs(dsum - total) > SUM_TOLERANCE_M:
+        raise ValueError(f"departments: sum {dsum:.1f} differs from total_m {total:.1f} by more than {SUM_TOLERANCE_M}")
+    parts = " + ".join(f"{s['amount_m']['value']:.1f}" for s in srcs)
+    d["sources"].append({"name": "Other sources", "amount_m": {"value": other, "source": {
+        "doc": (f"our arithmetic: {total:.1f} (Grand Total) - {named:.1f} (sum of the {len(srcs)} named sources: {parts}) "
+                f"= {other:.1f}; stands for the other Table 1 lines combined, as a difference of rounded figures"),
+        "page": total_fig["source"]["page"], "url": total_fig["source"]["url"]}}})
+    return d
 
 
 class BuildCheckError(RuntimeError):

@@ -1,0 +1,230 @@
+{
+  "fy": 2027,
+  "total_m": {
+    "value": 2256.6,
+    "source": {
+      "doc": "FY2027 Adopted Budget Vol. I, General Fund Revenues, Table 2 (FY 2027 Adopted Budget column), Total row (the table notes that numbers may not foot due to rounding)",
+      "page": 57,
+      "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1generalfundrevenues.pdf"
+    }
+  },
+  "categories": [
+    {
+      "name": "Property Tax",
+      "csv": {
+        "types": [
+          "Property Tax Revenue"
+        ],
+        "include": null,
+        "exclude": null
+      },
+      "amount_m": {
+        "value": 881.0,
+        "source": {
+          "doc": "FY2027 Adopted Budget Vol. I, General Fund Revenues, Table 2 (FY 2027 Adopted Budget column), Property Tax",
+          "page": 57,
+          "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1generalfundrevenues.pdf"
+        }
+      }
+    },
+    {
+      "name": "Sales Tax",
+      "csv": {
+        "types": [
+          "Sales Taxes"
+        ],
+        "include": null,
+        "exclude": null
+      },
+      "amount_m": {
+        "value": 386.7,
+        "source": {
+          "doc": "FY2027 Adopted Budget Vol. I, General Fund Revenues, Table 2 (FY 2027 Adopted Budget column), Sales Tax",
+          "page": 57,
+          "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1generalfundrevenues.pdf"
+        }
+      }
+    },
+    {
+      "name": "Transient Occupancy Tax",
+      "csv": {
+        "types": [
+          "Transient Occupancy Taxes"
+        ],
+        "include": null,
+        "exclude": null
+      },
+      "amount_m": {
+        "value": 169.7,
+        "source": {
+          "doc": "FY2027 Adopted Budget Vol. I, General Fund Revenues, Table 2 (FY 2027 Adopted Budget column), Transient Occupancy Tax",
+          "page": 57,
+          "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1generalfundrevenues.pdf"
+        }
+      }
+    },
+    {
+      "name": "Franchise Fees",
+      "csv": {
+        "types": [
+          "Other Local Taxes"
+        ],
+        "include": null,
+        "exclude": "Transfer"
+      },
+      "amount_m": {
+        "value": 105.7,
+        "source": {
+          "doc": "FY2027 Adopted Budget Vol. I, General Fund Revenues, Table 2 (FY 2027 Adopted Budget column), Franchise Fees",
+          "page": 57,
+          "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1generalfundrevenues.pdf"
+        }
+      }
+    },
+    {
+      "name": "Property Transfer Taxes",
+      "csv": {
+        "types": [
+          "Other Local Taxes"
+        ],
+        "include": "Transfer",
+        "exclude": null
+      },
+      "amount_m": {
+        "value": 12.0,
+        "source": {
+          "doc": "FY2027 Adopted Budget Vol. I, General Fund Revenues, Table 2 (FY 2027 Adopted Budget column), Property Transfer Taxes",
+          "page": 57,
+          "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1generalfundrevenues.pdf"
+        }
+      }
+    },
+    {
+      "name": "Licenses & Permits",
+      "csv": {
+        "types": [
+          "Licenses and Permits"
+        ],
+        "include": null,
+        "exclude": null
+      },
+      "amount_m": {
+        "value": 57.8,
+        "source": {
+          "doc": "FY2027 Adopted Budget Vol. I, General Fund Revenues, Table 2 (FY 2027 Adopted Budget column), Licenses & Permits",
+          "page": 57,
+          "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1generalfundrevenues.pdf"
+        }
+      }
+    },
+    {
+      "name": "Fines, Forfeitures, and Penalties",
+      "csv": {
+        "types": [
+          "Fines Forfeitures and Penalties"
+        ],
+        "include": null,
+        "exclude": null
+      },
+      "amount_m": {
+        "value": 45.9,
+        "source": {
+          "doc": "FY2027 Adopted Budget Vol. I, General Fund Revenues, Table 2 (FY 2027 Adopted Budget column), Fines, Forfeitures, and Penalties",
+          "page": 57,
+          "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1generalfundrevenues.pdf"
+        }
+      }
+    },
+    {
+      "name": "Revenue from Money and Property",
+      "csv": {
+        "types": [
+          "Revenue from the Use of Money and Property"
+        ],
+        "include": null,
+        "exclude": null
+      },
+      "amount_m": {
+        "value": 96.7,
+        "source": {
+          "doc": "FY2027 Adopted Budget Vol. I, General Fund Revenues, Table 2 (FY 2027 Adopted Budget column), Revenue from Money and Property",
+          "page": 57,
+          "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1generalfundrevenues.pdf"
+        }
+      }
+    },
+    {
+      "name": "Revenue from Federal and Other Agencies",
+      "csv": {
+        "types": [
+          "Revenue from Federal Agencies",
+          "Revenue from Other Agencies"
+        ],
+        "include": null,
+        "exclude": null
+      },
+      "amount_m": {
+        "value": 11.8,
+        "source": {
+          "doc": "FY2027 Adopted Budget Vol. I, General Fund Revenues, Table 2 (FY 2027 Adopted Budget column), Revenue from Federal and Other Agencies",
+          "page": 57,
+          "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1generalfundrevenues.pdf"
+        }
+      }
+    },
+    {
+      "name": "Charges for Current Services",
+      "csv": {
+        "types": [
+          "Charges for Current Services"
+        ],
+        "include": null,
+        "exclude": null
+      },
+      "amount_m": {
+        "value": 374.7,
+        "source": {
+          "doc": "FY2027 Adopted Budget Vol. I, General Fund Revenues, Table 2 (FY 2027 Adopted Budget column), Charges for Current Services",
+          "page": 57,
+          "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1generalfundrevenues.pdf"
+        }
+      }
+    },
+    {
+      "name": "Transfers In",
+      "csv": {
+        "types": [
+          "Transfers In"
+        ],
+        "include": null,
+        "exclude": null
+      },
+      "amount_m": {
+        "value": 111.6,
+        "source": {
+          "doc": "FY2027 Adopted Budget Vol. I, General Fund Revenues, Table 2 (FY 2027 Adopted Budget column), Transfers In",
+          "page": 57,
+          "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1generalfundrevenues.pdf"
+        }
+      }
+    },
+    {
+      "name": "Other Revenue",
+      "csv": {
+        "types": [
+          "Other Revenue"
+        ],
+        "include": null,
+        "exclude": null
+      },
+      "amount_m": {
+        "value": 3.1,
+        "source": {
+          "doc": "FY2027 Adopted Budget Vol. I, General Fund Revenues, Table 2 (FY 2027 Adopted Budget column), Other Revenue",
+          "page": 57,
+          "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1generalfundrevenues.pdf"
+        }
+      }
+    }
+  ]
+}
