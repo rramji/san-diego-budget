@@ -14,18 +14,22 @@ def _fy(value: str) -> int:
 def load_budget_rows(raw_dir: Path) -> list[dict]:
     raw_dir = Path(raw_dir)
     with open(raw_dir / "ref_accounts.csv", newline="", encoding="utf-8") as f:
-        types = {r["account_number"]: r["account_type"] for r in csv.DictReader(f)}
+        accounts = {
+            r["account_number"]: (r["account_type"], r["account_group"])
+            for r in csv.DictReader(f)
+        }
     rows = []
     dropped = 0
     dropped_total = 0.0
     with open(raw_dir / "operating_budget.csv", newline="", encoding="utf-8") as f:
         for r in csv.DictReader(f):
             amount = float(r["amount"] or 0)
-            acct_type = types.get(r["account_number"])
-            if acct_type is None:
+            acct = accounts.get(r["account_number"])
+            if acct is None:
                 dropped += 1
                 dropped_total += amount
                 continue
+            acct_type, acct_group = acct
             rows.append({
                 "fy": _fy(r["report_fy"]),
                 "cycle": r["budget_cycle"],
@@ -36,6 +40,7 @@ def load_budget_rows(raw_dir: Path) -> list[dict]:
                 "account": r["account"],
                 "account_number": r["account_number"],
                 "account_type": acct_type,
+                "account_group": acct_group,
                 "amount": amount,
             })
     if dropped:
@@ -54,6 +59,15 @@ def select_cycle(rows: list[dict]) -> list[dict]:
         r for r in rows
         if (r["cycle"] == "adopted" if r["fy"] in has_adopted else r["cycle"] == "")
     ]
+
+
+def latest_detail_fy(rows: list[dict]) -> int:
+    """Latest fiscal year that has General Fund spending rows, after select_cycle."""
+    return max(
+        r["fy"]
+        for r in select_cycle(rows)
+        if r["fund_type"] == "General Fund" and r["account_type"] in EXPENSE_TYPES
+    )
 
 
 def gf_totals_by_fy(rows: list[dict]) -> dict[int, dict]:
