@@ -2,7 +2,7 @@
 
 Date: 2026-10-27
 Owner: Robert Ramji
-Status: builder check complete; awaiting Robert's approval
+Status: approved by Robert 2026-10-27
 Builds on: `docs/superpowers/specs/2026-10-23-sd-budget-explainer-design.md`
 (v1). Everything in v1 still holds unless this document changes it. In
 particular v1's audience, anti-goals, constraints, sourcing rule, tone,
