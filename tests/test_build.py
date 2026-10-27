@@ -21,7 +21,8 @@ def test_build_all_writes_expected_files(tmp_path):
     out, paths = _build(tmp_path)
     assert sorted(p.name for p in paths) == [
         "budget_tree.json", "claims.json", "cuts.json", "flows.json", "funnel.json", "gap.json",
-        "glossary.json", "headline.json", "series.json", "structural_deficit.json"
+        "gap_story.json", "glossary.json", "headline.json", "piles_up.json", "series.json",
+        "structural_deficit.json", "why_short.json"
     ]
     assert sorted(p.name for p in out.glob("*.json")) == sorted(p.name for p in paths)
     text = (out / "series.json").read_text()
@@ -446,7 +447,7 @@ def test_curated_glossary_terms():
     import re
     gl = json.loads((CURATED / "glossary.json").read_text())
     terms = [g["term"] for g in gl]
-    assert len(terms) == 5 and "General Fund" in terms
+    assert len(terms) == 12 and "General Fund" in terms
     for g in gl:
         assert len(re.split(r"(?<=[.!?])\s+", g["plain"].strip())) <= 2, g["term"]
 

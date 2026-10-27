@@ -500,6 +500,10 @@ def _build_into(raw_dir: Path, curated_dir: Path, out_dir: Path) -> list[str]:
             cip=build_cip(curated.load(curated_dir, "cip_fy2027")),
             labels=build_labels(curated.load(curated_dir, "labels")),
             unmatched=unmatched_rows(raw_dir))),
+        # Stubs until Tasks 9-11 replace them with validators; passed through so the page's loadData finds them.
+        ("why_short", lambda: curated.load(curated_dir, "why_short")),
+        ("gap_story", lambda: curated.load(curated_dir, "gap_story")),
+        ("piles_up", lambda: curated.load(curated_dir, "piles_up")),
     ]
     return [_write(out_dir, name, fn()).name for name, fn in steps]
 

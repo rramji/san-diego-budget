@@ -17,6 +17,7 @@ import { themeColors, observeWidth } from './charts/util.js';
 const FILES = {
   headline: 'headline', series: 'series', structural: 'structural_deficit', funnel: 'funnel',
   flows: 'flows', cuts: 'cuts', gap: 'gap', claims: 'claims', glossary: 'glossary',
+  budgetTree: 'budget_tree', whyShort: 'why_short', gapStory: 'gap_story', pilesUp: 'piles_up',
 };
 
 export async function loadData() {
@@ -67,12 +68,10 @@ export function mountProgress() {
 // ---- Headline ------------------------------------------------------
 function renderHeadline(h) {
   const t = document.getElementById('dek-total');
-  const g = document.getElementById('dek-gf');
   t.replaceChildren(figureSpan(h.total_budget_m, money(h.total_budget_m.value)));
-  g.replaceChildren(figureSpan(h.general_fund_m, money(h.general_fund_m.value)));
 }
 
-function renderChapter1(data) {
+function renderHowLong(data) {
   const prep = deficitBars.prepare(data.structural);
   prep.fy27_adopted = data.gap.post_cut_city_m;
   for (const sp of document.querySelectorAll('[data-fy-fig]')) {
@@ -97,17 +96,11 @@ function renderChapter1(data) {
   observeWidth(dig, () => { if (dig.getBoundingClientRect().width > 0) deficitBars.renderDig(dig, prep, themeColors()); });
 }
 
-function renderChapter2(data) {
-  for (const sp of document.querySelectorAll('[data-hl-fig]')) {
-    const f = data.headline[sp.dataset.hlFig];
-    sp.replaceWith(figureSpan(f, money(f.value)));
-  }
+function renderFunnel(data) {
   const el = document.getElementById('ch2-funnel');
   const prep = funnel.prepare(data.headline, data.funnel);
   const captions = [1, 2, 3, 4].map((n) => el.getAttribute(`data-caption-${n}`));
   observeWidth(el, () => { funnel.render(el, prep, themeColors(), captions); mountPopovers(el); });
-  renderSankey(data.flows);
-  renderCuts(document.getElementById('ch2-cuts'), data.cuts);
 }
 
 // ---- Dig deeper: money-flow Sankey + selected-flow panel -------------------------------------
@@ -186,7 +179,7 @@ function renderSankey(flows) {
   });
 }
 
-function renderChapter3(data) {
+function renderGapCalc(data) {
   const g = data.gap;
   for (const sp of document.querySelectorAll('[data-gap-fig]')) {
     const f = g[sp.dataset.gapFig];
@@ -195,7 +188,7 @@ function renderChapter3(data) {
   mountGapToggle(document.getElementById('ch3-calc'), g);
 }
 
-function renderChapter4(data) {
+function renderClaims(data) {
   mountClaims(document.getElementById('ch4-claims'), data.claims);
 }
 
@@ -222,10 +215,13 @@ async function main() {
   if (new URLSearchParams(location.search).has('debug')) window.__data = data;
   guarded('headline', null, () => renderHeadline(data.headline));
   guarded('glossary', 'glossary-list', () => renderGlossary(document.getElementById('glossary-list'), data.glossary));
-  guarded('chapter 1', 'ch1-chart', () => renderChapter1(data));
-  guarded('chapter 2', 'ch2-funnel', () => renderChapter2(data));
-  guarded('chapter 3', 'ch3-calc', () => renderChapter3(data));
-  guarded('chapter 4', 'ch4-claims', () => renderChapter4(data));
+  // Section order on the page: what, why-short, gap, piles, how-long, claims. Later tasks add their renderers here.
+  guarded('section 1 dig: money-flow Sankey', 'ch2-sankey', () => renderSankey(data.flows));
+  guarded('section 3: gap calculator', 'ch3-calc', () => renderGapCalc(data));
+  guarded('section 3 dig: funnel', 'ch2-funnel', () => renderFunnel(data));
+  guarded('section 3 dig: cuts', 'ch2-cuts', () => renderCuts(document.getElementById('ch2-cuts'), data.cuts));
+  guarded('section 5: how long', 'ch1-chart', () => renderHowLong(data));
+  guarded('section 6: claims', 'ch4-claims', () => renderClaims(data));
   guarded('popovers', null, () => mountPopovers(document));
   guarded('sources', 'sources-list', () => renderSources(document.getElementById('sources-list'), data));
   guarded('glossary links', null, () => wireGlossaryLinks(document));
