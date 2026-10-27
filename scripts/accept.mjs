@@ -1,6 +1,6 @@
 // Browser acceptance checks. Run from anywhere:
 //   node scripts/accept.mjs --smoke   load the page at 375/1200 px, light and dark; no errors, no horizontal scroll
-//   node scripts/accept.mjs           smoke plus the section checks below and their screenshots
+//   node scripts/accept.mjs           smoke plus the section checks below (sections 1 and 2) and their screenshots
 // Not part of `npm test` (needs a browser). Override the playwright path with PLAYWRIGHT_CORE.
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
@@ -213,6 +213,94 @@ async function section1(chromium) {
   return failures;
 }
 
+// Section 2: cents bar, six blocks, rate bars, quote, dig deeper. Checks at 375 and 1200; screenshots at 375 light and dark.
+async function section2(chromium) {
+  const failures = [];
+  const browser = await chromium.launch();
+  try {
+    for (const [width, scheme, shot] of [[375, 'light', 'v2-s2-375'], [375, 'dark', 'v2-s2-375-dark'], [1200, 'light', null]]) {
+      const label = `s2 ${width}px ${scheme}`;
+      const fail = (m) => failures.push(`${label}: ${m}`);
+      const ctx = await browser.newContext({ viewport: { width, height: 900 }, colorScheme: scheme });
+      const page = await ctx.newPage();
+      const errors = [];
+      page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
+      page.on('console', (m) => { if (m.type() === 'error') errors.push(`console: ${m.text()}`); });
+      await page.goto(`${BASE}/site/`, { waitUntil: 'networkidle' });
+      await page.waitForSelector('#s2-cents svg', { timeout: 10000 }).catch(() => {});
+      const r = await page.evaluate(() => {
+        const sec = document.getElementById('why-short');
+        const lead = sec.querySelector('.lead');
+        const segs = [...sec.querySelectorAll('#s2-cents .cents-seg')];
+        const overflow = [];
+        segs.forEach((g) => {
+          const b = g.querySelector('rect').getBBox();
+          g.querySelectorAll('text').forEach((t) => {
+            const tb = t.getBBox();
+            if (tb.x < b.x - 0.5 || tb.x + tb.width > b.x + b.width + 0.5) overflow.push(t.textContent);
+          });
+        });
+        const rows = [...sec.querySelectorAll('.rate-bars li')];
+        return {
+          placeholder: sec.querySelectorAll('[data-lead="placeholder"], [data-why-fig]').length,
+          leadFirstFig: lead.querySelector('.figure')?.textContent,
+          leadSentences: (lead.textContent.match(/[.!?](\s|$)/g) || []).length,
+          hi: sec.querySelectorAll('#s2-cents .cents-seg.is-hi').length,
+          hiLabel: sec.querySelector('#s2-cents .cents-seg.is-hi title')?.textContent,
+          legend: sec.querySelectorAll('#s2-cents .cents-legend li').length,
+          caption: sec.querySelector('#s2-cents figcaption')?.textContent || '',
+          overflow,
+          blocks: [...sec.querySelectorAll('#s2-blocks .why-block > h3')].map((h) => h.textContent),
+          rows: rows.map((li) => [li.querySelector('.rb-city').textContent, li.classList.contains('is-hi'), li.querySelector('.rb-bar').getBoundingClientRect().width]),
+          quote: !!sec.querySelector('#s2-blocks blockquote footer [data-src-url]'),
+          dig: sec.querySelectorAll('#s2-dig .figure').length,
+          ours: [...sec.querySelectorAll('.figure')].filter((f) => f.dataset.srcDoc.startsWith('our arithmetic'))
+            .filter((f) => !/our arithmetic/.test(f.closest('li, p')?.textContent || '')).map((f) => f.textContent),
+          unsourced: sec.querySelectorAll('.figure:not([data-src-url])').length,
+          noFn: [...sec.querySelectorAll('[data-src-url]')].filter((e) => !(e.nextElementSibling && e.nextElementSibling.classList.contains('fn'))).length,
+          perCapita: /per (person|capita|resident)/i.test(sec.textContent),
+          scroll: document.documentElement.scrollWidth - window.innerWidth,
+        };
+      });
+      if (r.placeholder) fail(`${r.placeholder} placeholder(s) left in #why-short`);
+      if (r.leadFirstFig !== '17.8¢') fail(`lead's first figure is "${r.leadFirstFig}", expected 17.8¢`);
+      if (r.leadSentences < 2 || r.leadSentences > 4) fail(`lead has ${r.leadSentences} sentences`);
+      if (r.hi !== 1 || !/^Cities: 17\.8¢$/.test(r.hiLabel || '')) fail(`highlight: ${r.hi} segment(s), "${r.hiLabel}"`);
+      if (r.legend < 6) fail(`legend lists ${r.legend} segments`);
+      if (!/average for all the cities/.test(r.caption)) fail(`caption does not say it is the countywide average for cities: "${r.caption}"`);
+      for (const t of r.overflow) fail(`cents label "${t}" overflows its segment`);
+      const want = ['Property tax', 'Sales tax', 'Hotel tax', 'Trash', 'Costs', 'IBA'];
+      if (r.blocks.length !== 6 || !want.every((w, i) => r.blocks[i]?.includes(w))) fail(`blocks: ${JSON.stringify(r.blocks)}`);
+      const cities = r.rows.map((x) => x[0]);
+      if (cities.join() !== 'Oakland,Los Angeles,San Jose,Sacramento,San Francisco,San Diego') fail(`rate bars: ${cities.join()}`);
+      if (r.rows.filter((x) => x[1]).map((x) => x[0]).join() !== 'San Diego') fail('rate bars: San Diego is not the one highlight');
+      if (r.rows.some((x, i) => i && x[2] > r.rows[i - 1][2] + 0.5)) fail('rate bars are not sorted by width');
+      if (!r.quote) fail('IBA quote has no sourced cite');
+      if (r.dig < 5) fail(`dig deeper has ${r.dig} figures`);
+      if (r.ours.length) fail(`our-arithmetic figures without the words on screen: ${r.ours.join(', ')}`);
+      if (r.unsourced) fail(`${r.unsourced} .figure without data-src-url`);
+      if (r.noFn) fail(`${r.noFn} sourced element(s) without a footnote button`);
+      if (r.perCapita) fail('section mentions a per-person comparison');
+      if (r.scroll > 0) fail(`horizontal scroll (${r.scroll}px)`);
+      if (shot) {
+        await page.evaluate(() => { document.querySelector('#why-short details.dig').open = true; });
+        const box = await page.evaluate(() => {
+          const el = document.getElementById('why-short').getBoundingClientRect();
+          return { x: el.left + window.scrollX, y: el.top + window.scrollY, width: el.width, height: el.height };
+        });
+        await page.setViewportSize({ width, height: Math.ceil(box.y + box.height) });
+        await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+        await page.screenshot({ path: path.join(SHOTS, `${shot}.png`), clip: box });
+      }
+      if (errors.length) fail(errors.join('; '));
+      await ctx.close();
+    }
+  } finally {
+    await browser.close();
+  }
+  return failures;
+}
+
 async function main() {
   const smokeOnly = process.argv.includes('--smoke');
   const { chromium } = await import(process.env.PLAYWRIGHT_CORE || '/home/robert/node_modules/playwright-core/index.mjs');
@@ -223,7 +311,7 @@ async function main() {
   try {
     await waitForServer();
     failures = await smoke(chromium);
-    if (!smokeOnly) failures.push(...(await section1(chromium)));
+    if (!smokeOnly) failures.push(...(await section1(chromium)), ...(await section2(chromium)));
   } finally {
     if (server) server.kill();
   }

@@ -429,6 +429,95 @@ def build_labels(d: dict) -> dict:
     return d
 
 
+WHY_SLICE_TOLERANCE = 0.2   # the County's chart prints one decimal; its slices sum to 100.0
+WHY_GROUP_TOLERANCE = 0.05
+WHY_FIGURES = {
+    "property_dollar": ("cities_cents",),
+    "sales_tax": ("sd_rate_pct", "city_cents_of_rate"),
+    "hotel": ("base_cents", "gf_cents", "gf_m"),
+    "trash": ("moved_m", "positions", "fee_monthly", "settlement_gf_fy2028_m"),
+    "growth": ("revenue_pct", "inflation_pct"),
+    "prop13": ("rate_pct", "cap_pct", "lag_low_months", "lag_high_months"),
+}
+
+
+def build_why_short(d: dict) -> dict:
+    """Section 2 figures. Checks: the County's property-tax slices sum to 100 cents (within 0.2), the "Cities"
+    slices add up to cities_cents, the Measure E margin is no - yes votes and labeled our arithmetic, San Diego
+    is among the peer rates at sd_rate_pct, and every required figure, period and source is present."""
+    d = copy.deepcopy(d)
+    for sec, keys in WHY_FIGURES.items():
+        if not isinstance(d.get(sec), dict):
+            raise ValueError(f"{sec}: object required")
+        for k in keys:
+            _need_value(d[sec].get(k), f"{sec}.{k}")
+    for k in ("property_tax_m", "property_tax_share_pct"):
+        _need_value(d.get(k), k)
+    pd = d["property_dollar"]
+    slices = pd.get("slices")
+    if not isinstance(slices, list) or not slices:
+        raise ValueError("property_dollar.slices: non-empty list required")
+    labels = set()
+    for i, s in enumerate(slices):
+        label = s.get("label") if isinstance(s, dict) else None
+        if not isinstance(label, str) or not label.strip() or label in labels:
+            raise ValueError(f"property_dollar.slices[{i}].label: unique non-empty string required")
+        labels.add(label)
+        if _need_value(s.get("cents"), f"property_dollar.slices[{i}].cents") < 0:
+            raise ValueError(f"property_dollar.slices[{i}].cents: negative")
+    total = sum(s["cents"]["value"] for s in slices)
+    if abs(total - 100) > WHY_SLICE_TOLERANCE:
+        raise ValueError(f"property_dollar.slices: sum {total:.1f} cents differs from 100 by more than {WHY_SLICE_TOLERANCE}")
+    cities = sum(s["cents"]["value"] for s in slices if s.get("group", s["label"]) == "Cities")
+    if abs(cities - pd["cities_cents"]["value"]) > WHY_GROUP_TOLERANCE:
+        raise ValueError(f"property_dollar.cities_cents: {pd['cities_cents']['value']} but the Cities slices sum to {cities:.1f}")
+    if not isinstance(pd.get("note"), str) or not pd["note"].strip():
+        raise ValueError("property_dollar.note: required non-empty string")
+
+    st = d["sales_tax"]
+    peers = st.get("peers")
+    if not isinstance(peers, list) or len(peers) < 2:
+        raise ValueError("sales_tax.peers: list of at least two cities required")
+    seen = set()
+    for i, p in enumerate(peers):
+        city = p.get("city") if isinstance(p, dict) else None
+        if not isinstance(city, str) or not city.strip() or city in seen:
+            raise ValueError(f"sales_tax.peers[{i}].city: unique non-empty string required")
+        seen.add(city)
+        _need_value(p.get("rate_pct"), f"sales_tax.peers[{i}].rate_pct")
+    sd = next((p for p in peers if p["city"] == "San Diego"), None)
+    if sd is None or sd["rate_pct"]["value"] != st["sd_rate_pct"]["value"]:
+        raise ValueError("sales_tax.peers: San Diego must be listed at sd_rate_pct")
+    me = st.get("measure_e")
+    if not isinstance(me, dict):
+        raise ValueError("sales_tax.measure_e: object required")
+    vals = {k: _need_value(me.get(k), f"sales_tax.measure_e.{k}")
+            for k in ("yes_pct", "no_pct", "yes_votes", "no_votes", "margin_votes", "est_annual_m")}
+    if vals["margin_votes"] != vals["no_votes"] - vals["yes_votes"]:
+        raise ValueError(f"sales_tax.measure_e.margin_votes: {vals['margin_votes']} is not no_votes - yes_votes "
+                         f"({vals['no_votes'] - vals['yes_votes']})")
+    if not me["margin_votes"]["source"]["doc"].startswith("our arithmetic: "):
+        raise ValueError("sales_tax.measure_e.margin_votes: a computed figure must be labeled 'our arithmetic: '")
+    if abs(vals["yes_pct"] + vals["no_pct"] - 100) > 0.011:
+        raise ValueError("sales_tax.measure_e: yes_pct + no_pct must be 100")
+
+    if d["hotel"]["gf_cents"]["value"] >= d["hotel"]["base_cents"]["value"]:
+        raise ValueError("hotel.gf_cents: must be less than base_cents")
+    for k in ("revenue_period", "inflation_period"):
+        if not isinstance(d["growth"].get(k), str) or not d["growth"][k].strip():
+            raise ValueError(f"growth.{k}: required non-empty string (state both periods; they differ)")
+    q = d.get("quote")
+    if not isinstance(q, dict) or not isinstance(q.get("text"), str) or not q["text"].strip():
+        raise ValueError("quote.text: required non-empty string")
+    _check_source(q.get("source"), "quote.source")
+    cites = d.get("cites")
+    if not isinstance(cites, dict):
+        raise ValueError("cites: object required")
+    for k, v in cites.items():
+        _check_source(v, f"cites.{k}")
+    return d
+
+
 class BuildCheckError(RuntimeError):
     """checks.run reported failures on the freshly built files; out_dir was left untouched."""
 
@@ -500,8 +589,8 @@ def _build_into(raw_dir: Path, curated_dir: Path, out_dir: Path) -> list[str]:
             cip=build_cip(curated.load(curated_dir, "cip_fy2027")),
             labels=build_labels(curated.load(curated_dir, "labels")),
             unmatched=unmatched_rows(raw_dir))),
-        # Stubs until Tasks 9-11 replace them with validators; passed through so the page's loadData finds them.
-        ("why_short", lambda: curated.load(curated_dir, "why_short")),
+        ("why_short", lambda: build_why_short(curated.load(curated_dir, "why_short"))),
+        # Stubs until Tasks 10-11 replace them with validators; passed through so the page's loadData finds them.
         ("gap_story", lambda: curated.load(curated_dir, "gap_story")),
         ("piles_up", lambda: curated.load(curated_dir, "piles_up")),
     ]

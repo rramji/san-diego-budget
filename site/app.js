@@ -14,6 +14,8 @@ export { mountClaims, claimCardModel };
 import * as sankey from './charts/sankey.js';
 import { themeColors, observeWidth } from './charts/util.js';
 import * as bm from './charts/budget-map.js';
+import { renderWhy } from './why.js';
+export { renderWhy };
 
 const FILES = {
   headline: 'headline', series: 'series', structural: 'structural_deficit', funnel: 'funnel',
@@ -396,6 +398,7 @@ async function main() {
   // Section order on the page: what, why-short, gap, piles, how-long, claims. Later tasks add their renderers here.
   guarded('section 1: budget maps', 's1-maps', () => renderWhat(data));
   guarded('section 1 dig: money-flow Sankey', 'ch2-sankey', () => renderSankey(data.flows));
+  guarded('section 2: why a wealthy city is short', 's2-blocks', () => renderWhy(document.getElementById('why-short'), data.whyShort));
   guarded('section 3: gap calculator', 'ch3-calc', () => renderGapCalc(data));
   guarded('section 3 dig: funnel', 'ch2-funnel', () => renderFunnel(data));
   guarded('section 3 dig: cuts', 'ch2-cuts', () => renderCuts(document.getElementById('ch2-cuts'), data.cuts));

@@ -3,7 +3,7 @@ import csv
 from pathlib import Path
 import pytest
 from pipeline import curated
-from pipeline.build import build_gf_revenue, build_cip, build_labels
+from pipeline.build import build_gf_revenue, build_cip, build_labels, build_why_short
 ROOT = Path(__file__).parent.parent
 CUR = ROOT / "data" / "curated"
 
@@ -168,3 +168,55 @@ def test_labels_input_not_mutated():
     before = copy.deepcopy(d)
     build_labels(d)
     assert d == before
+
+
+def test_why_short_values():
+    d = build_why_short(curated.load(CUR, "why_short"))
+    sl = {s["label"]: s["cents"]["value"] for s in d["property_dollar"]["slices"]}
+    assert abs(sum(sl.values()) - 100) <= 0.2 and d["property_dollar"]["cities_cents"]["value"] == 17.8
+    assert {p["city"]: p["rate_pct"]["value"] for p in d["sales_tax"]["peers"]} == {
+        "Los Angeles": 10.25, "San Jose": 10.0, "Oakland": 10.75, "San Francisco": 8.625, "Sacramento": 8.75, "San Diego": 7.75}
+    me = d["sales_tax"]["measure_e"]
+    assert (me["yes_pct"]["value"], me["no_pct"]["value"], me["margin_votes"]["value"], me["est_annual_m"]["value"]) == (49.69, 50.31, 3506, 400)
+    assert (d["hotel"]["gf_cents"]["value"], d["hotel"]["base_cents"]["value"], d["hotel"]["gf_m"]["value"]) == (5.5, 10.5, 169.7)
+    assert (d["trash"]["moved_m"]["value"], d["trash"]["positions"]["value"], d["trash"]["fee_monthly"]["value"]) == (80.8, 181, 43.60)
+    assert (d["growth"]["revenue_pct"]["value"], d["growth"]["inflation_pct"]["value"]) == (3.2, 6.2)
+    assert d["growth"]["revenue_period"] == "FY2028–FY2031" and d["growth"]["inflation_period"] == "FY2021–FY2025"
+    assert "relatively low, while expectations of and demands for City services are not" in d["quote"]["text"]
+    assert d["quote"]["source"]["page"] == 77
+
+
+def test_why_short_sources_and_arithmetic():
+    d = build_why_short(curated.load(CUR, "why_short"))
+    pd = d["property_dollar"]
+    # The County Auditor's full slice list (Figure 1, p.4), cities split into its two printed slices.
+    assert len(pd["slices"]) == 9 and all(s["cents"]["source"]["page"] == 4 for s in pd["slices"])
+    cities = [s for s in pd["slices"] if s.get("group") == "Cities"]
+    assert sorted(s["cents"]["value"] for s in cities) == [5.4, 12.4]
+    assert d["sales_tax"]["measure_e"]["margin_votes"]["source"]["doc"].startswith("our arithmetic: ")
+    assert d["sales_tax"]["city_cents_of_rate"]["value"] == 1.0 and d["sales_tax"]["sd_rate_pct"]["value"] == 7.75
+    assert (d["property_tax_m"]["value"], d["property_tax_share_pct"]["value"]) == (881.0, 39.0)
+    assert d["trash"]["settlement_gf_fy2028_m"]["value"] == 10.8
+    assert d["trash"]["settlement_gf_fy2028_m"]["source"]["page"] == 45
+
+
+@pytest.mark.parametrize("edit, where", [
+    (lambda d: d["property_dollar"]["slices"][0]["cents"].__setitem__("value", 50.0), "slices"),
+    (lambda d: d["property_dollar"]["cities_cents"].__setitem__("value", 18.5), "cities_cents"),
+    (lambda d: d["sales_tax"]["measure_e"]["margin_votes"].__setitem__("value", 3000), "margin_votes"),
+    (lambda d: d["sales_tax"]["peers"].pop(), "peers"),
+    (lambda d: d["growth"].__setitem__("revenue_period", ""), "growth.revenue_period"),
+    (lambda d: d["quote"]["source"].__setitem__("url", "http://x"), "quote.source"),
+])
+def test_why_short_rejects_bad_input(edit, where):
+    d = copy.deepcopy(curated.load(CUR, "why_short"))
+    edit(d)
+    with pytest.raises(ValueError, match=where):
+        build_why_short(d)
+
+
+def test_why_short_input_not_mutated():
+    raw = curated.load(CUR, "why_short")
+    before = copy.deepcopy(raw)
+    build_why_short(raw)
+    assert raw == before
