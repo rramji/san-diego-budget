@@ -27,7 +27,11 @@
 ## Review Focus
 
 1. **Negative CSV lines.** FY2026 budgeted vacancy savings ("Other Personnel Expenditures", −$112.1M citywide) and similar credits must never become a zero-area or negative rectangle. They net into their category; a child that is still ≤ 0 moves to `offsets` and the panel lists it. Test in Task 4.
-2. **Blank names in the CSV.** Rows with blank `fund_type` (FY2026: $82.4M) are excluded and counted in the methods note. A blank `dept_name` (FY2026 GF: $19.6M) is labeled "Not named in the city's data". No blank label ever renders. Test in Task 4.
+2. **Blank names in the CSV.** Nothing the city's data contains is silently dropped from the maps.
+   - Spending rows with no fund (FY2026: $82.4M, department "Citywide Other/Special Funds") appear as their own labeled box, "Not assigned to a fund in the city's data", in the Internal services & other spending map. Its panel explains why it sits there.
+   - A blank `dept_name` (FY2026 GF: $19.6M) is labeled "Not named in the city's data".
+   - No blank label ever renders.
+   - Test in Task 4.
 3. **Changing pots mid-drill.** Selecting a different pot while either map is drilled resets both maps to the new pot's top level and shows that pot's panel. Enter or Space on a rectangle without ⊕ shows its details without changing the path. Test in Task 6.
 4. **Tiny shares at 375px.** A 0.1% child still gets a rectangle with positive width and height. It is focusable with a full `aria-label`, and it appears in the list equivalent even when its text label is hidden. Test in Task 6.
 5. **Detail-year headers.** For a CSV-backed map (e.g. Utilities), the header states the children's own year and sum ("FY2026 detail: $1.70B"), never the FY2027 bar value. The pot panel says why in one sentence. Test in Task 6.
@@ -308,7 +312,8 @@ def test_cip_fy2027():
 {bar_fy: 2027, detail_fy: 2026, total_m: Figure,
  sources: {"s0": Source, ...},                 # each distinct Source once
  descs: {key: {text, src|null, link|null}},    # copied from labels (Task 5)
- excluded: {blank_fund_type_m: number},
+ unassigned: {value_m: number, dept_name: str} | null,   # spending rows with no fund (shown as a box, see Rules)
+ unmatched: {rows: int, value_m: number},                 # rows the loader drops: account code missing from the city's account list
  pots: [Pot × 5]}                              # order: general_fund, utilities, purpose, cip, internal
 Pot  = {id, label, value_m, src, answers: {what, money_from, committed_to, who_decides: {text, src}} | null,
         in: Node, out: Node}
@@ -339,7 +344,22 @@ GF out "All other" (387.1) → the FY2026 departments not among the eight named.
   - For a department, CSV fund or curated row, its name.
   - For an account, its category's key.
   - "Everything else" → `"_everything_else"`.
-- Blank `dept_name` gets the name "Not named in the city's data" and key `"_unnamed"`. Rows with blank `fund_type` are excluded, and their sum is recorded in `excluded`.
+- Blank `dept_name` gets the name "Not named in the city's data" and key `"_unnamed"`.
+- **Expense rows with blank `fund_type` are shown, not dropped.** They become one child of the `internal` pot's `out` root:
+  - name "Not assigned to a fund in the city's data", key `"_no_fund"`;
+  - its children are the plain categories, as for any fund;
+  - `unassigned` records its total and department.
+  
+  (Ruling, from Robert 2026-10-27: label it in the maps rather than hide it. The internal pot is the "& other" pot, so it is the least misleading home. The panel says we can't tell which pot it belongs to.)
+  
+  In the 2026-10-24 CSV vintage, these are 2 rows, totaling $82,396,353:
+  - "City Services Billed", $33.8M;
+  - "Miscellaneous Professional/Technical Ser", $48.6M.
+- `unmatched` records what `load_budget_rows` drops: rows whose account code isn't in `ref_accounts.csv`. Expose it with a new `csv_loader.unmatched_rows(raw_dir) -> list[dict]`. In the current vintage that is 12 rows, $83.1M:
+  - 6 rows with no fund and no account, totaling exactly $82,396,353 (an unexplained mirror of the two rows above);
+  - 6 General Fund rows with no account, $0.67M (City Planning, Police).
+  
+  These can't be drawn because we can't tell whether they are spending or income. The methods note (Task 12) states them, with amounts.
 - Map roots are named `"<pot label> money in"` / `"<pot label> money out"` (crumbs start there).
 - Every Source goes through a registry that returns stable keys `s0, s1, …`. CSV nodes cite `{doc: f"City of San Diego open data: operating budget CSV, FY{detail_fy} adopted", page: None, url: "https://seshat.datasd.org/operating_budget/budget_operating_datasd.csv"}`.
 
@@ -372,7 +392,11 @@ def test_negative_lines_become_offsets(tree_from_rows):
 def test_blank_names(tree_from_rows):
     names = [n["name"] for n in walk(tree_from_rows.tree)]
     assert "" not in names and "Not named in the city's data" in names
-    assert tree_from_rows.tree["excluded"]["blank_fund_type_m"] == 82.4  # fixture row of 82.4M with fund_type ""
+    internal_out = next(p for p in tree_from_rows.tree["pots"] if p["id"] == "internal")["out"]
+    nf = next(c for c in internal_out["children"] if c["key"] == "_no_fund")  # fixture expense row of 82.4M with fund_type ""
+    assert nf["name"] == "Not assigned to a fund in the city's data" and nf["value_m"] == 82.4
+    assert tree_from_rows.tree["unassigned"]["value_m"] == 82.4
+    assert tree_from_rows.tree["unmatched"]["rows"] >= 1   # fixture row with account 999999
 
 def test_trimming_and_depth(tree_from_rows):
     for n in walk(tree_from_rows.tree):
@@ -428,7 +452,7 @@ def test_labels_cover_pots_and_links():
 def test_labels_reject_three_sentences_and_unknown_link(): ...  # two pytest.raises cases, message names the key
 ```
 
-`checks.py` gains a rule: every level-1 child of the `in` and `out` maps of `general_fund`, and of the `out` maps of `utilities` and `purpose`, has a `descs[key]` entry. Otherwise the check fails, listing the missing names. That is about 38 named items. CIP and internal items may fall back to their category text. Test it in `tests/test_checks.py`.
+`checks.py` gains a rule: every level-1 child of the `in` and `out` maps of `general_fund`, and of the `out` maps of `utilities` and `purpose`, has a `descs[key]` entry. Otherwise the check fails, listing the missing names. That is about 38 named items. `descs["_no_fund"]` is also required. Its text says the city's data lists this spending under "Citywide Other/Special Funds" with no fund, so we can't tell which pot it belongs to, and that it is shown here rather than left out. CIP and internal items may fall back to their category text. Test it in `tests/test_checks.py`.
 
 - [ ] **Step 2: Run the tests and confirm they fail.**
 - [ ] **Step 3: Write the copy.** Pot answers come from the research files and the FY2027 Vol. I sections (cached text in `dl-gap/ab27v1`, `dl-pension/fy27full`). Use `docs/research/source-pdf-index.md` for URLs. Each answer is 1–3 plain sentences:
@@ -800,7 +824,7 @@ test('reserve fill below 1 and goal marked', () => { ... });
   - Add a "How we built this" note in `#what`'s Dig deeper. It says:
     - which levels are FY2027 and which are FY2026;
     - the category rule (from `categories.py`'s docstring);
-    - the excluded blank-fund-type amount (`excluded.blank_fund_type_m`);
+    - the unassigned spending shown in the Internal services & other map (`unassigned`), and the rows we could not draw at all (`unmatched`), with amounts;
     - that "our arithmetic" marks our own sums.
 - [ ] **Step 3: Collect the new sources.** Make sure `renderSources` collects every Source used by the new files: `budget_tree.sources`, `why_short`, `gap_story`, `piles_up`.
 - [ ] **Step 4: Write the full acceptance checks.** `node scripts/accept.mjs` at 375 and 1200, in light and dark:
