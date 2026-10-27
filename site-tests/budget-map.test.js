@@ -299,6 +299,8 @@ test('potPanel: in/out mismatch over 1% adds a note naming both totals', () => {
   assert.equal(p.notes.length, 1);
   assert.match(p.notes[0], /\$2\.02B/);
   assert.match(p.notes[0], /\$1\.70B/);
+  assert.match(p.notes[0], /FY2026 detail/);
+  assert.doesNotMatch(p.notes[0], /because|budgeted separately/); // the cause is unsourced, so it is not stated
   for (const q of tree.pots) {
     const a = bm.mapHeader(q.in, tree).total_m, b = bm.mapHeader(q.out, tree).total_m;
     const mism = Math.abs(a - b) / Math.max(a, b) > 0.01;
@@ -343,4 +345,76 @@ test('list model includes every child, including tiny ones', () => {
   assert.equal(lm[0].opens, true);
   assert.equal(lm[3].opens, false);
   assert.deepEqual(bm.listModel({ name: 'x', value_m: 1, fy: 2026 }), []);
+});
+
+// ---- Task 8: render-side pure helpers ----
+
+test('potSegments: five segments over the five-pot sum, with the brief\'s aria-label', () => {
+  const segs = bm.potSegments(tree);
+  const sum = tree.pots.reduce((s, p) => s + p.value_m, 0);
+  assert.equal(segs.length, 5);
+  assert.equal(segs[0].x0, 0);
+  assert.ok(Math.abs(segs[4].x1 - 1) < 1e-12);
+  segs.forEach((g, i) => {
+    assert.ok(Math.abs(g.x1 - g.x0 - tree.pots[i].value_m / sum) < 1e-12);
+    if (i) assert.equal(g.x0, segs[i - 1].x1);
+  });
+  assert.equal(segs[0].aria, `General Fund, $2.26B, ${Math.round((2256.7 / sum) * 100)}% of the budget`);
+});
+
+test('cellModels: sorted largest first, colour slot follows the tree order, aria names share and opening', () => {
+  const out = pot('general_fund').out;
+  const cells = bm.cellModels(out, tree);
+  assert.equal(cells.length, out.children.length);
+  for (let i = 1; i < cells.length; i++) assert.ok(cells[i - 1].node.value_m >= cells[i].node.value_m);
+  const police = cells.find((c) => c.node.name === 'Police');
+  assert.equal(police.slot, out.children.indexOf(police.node));
+  assert.equal(police.opens, true);
+  assert.match(police.aria, /^Police, \$718M, 32% of General Fund money out, opens further$/);
+  // a detail-year child under an FY2027 parent says which year its share is from
+  const pol = byName(out, 'Police');
+  const ot = bm.cellModels(pol, tree).find((c) => c.node.name === 'Overtime');
+  assert.equal(ot.opens, false);
+  assert.match(ot.aria, /^Overtime, \$45\.3M, \d+% of Police in FY2026$/);
+});
+
+test('headerFigure: own source when the map total is the node value, our arithmetic otherwise', () => {
+  const u = bm.headerFigure(pot('utilities').in, tree);
+  assert.equal(u.prefix, 'FY2026 detail: ');
+  assert.equal(u.amount, '$2.02B');
+  assert.equal(u.ours, false);
+  assert.deepEqual(u.source, tree.sources[pot('utilities').in.src]);
+  const pol = byName(pot('general_fund').out, 'Police');
+  const h = bm.headerFigure(pol, tree);
+  assert.equal(h.ours, true);
+  assert.match(h.source.doc, /^our arithmetic: /);
+  assert.match(h.source.doc, new RegExp(`= ${bm.childrenTotal(pol).toFixed(1)}`));
+  assert.ok(h.source.url.startsWith('https://'));
+});
+
+test('offsetsFigure: credits summed with a minus sign; one line keeps its own source', () => {
+  const sal = byName(byName(pot('general_fund').out, 'Police'), 'Salaries & other pay');
+  const f = bm.offsetsFigure(sal, tree);
+  const sum = sal.offsets.reduce((s, o) => s + o.value_m, 0);
+  assert.ok(Math.abs(f.value_m - sum) < 1e-9 && f.value_m < 0);
+  assert.equal(f.text, `−$${Math.abs(sum).toFixed(1)}M`);
+  assert.equal(f.ours, sal.offsets.length > 1);
+  if (f.ours) assert.match(f.source.doc, /^our arithmetic: /);
+  assert.equal(bm.offsetsFigure(pot('general_fund').out, tree), null);
+  const one = { ...sal, offsets: [sal.offsets[0]] };
+  const g = bm.offsetsFigure(one, tree);
+  assert.equal(g.ours, false);
+  assert.deepEqual(g.source, tree.sources[sal.src]);
+});
+
+test('inkOn: dark ink on light fills, white on dark fills', () => {
+  assert.equal(bm.inkOn('#eda100', '#ffffff', '#1c2530'), '#1c2530');
+  assert.equal(bm.inkOn('#2a78d6', '#ffffff', '#1c2530'), '#ffffff');
+  assert.equal(bm.inkOn('#008300', '#ffffff', '#1c2530'), '#ffffff');
+});
+
+test('isOurs flags our-arithmetic sources only', () => {
+  assert.equal(bm.isOurs(tree.sources[pot('internal').src]), true);
+  assert.equal(bm.isOurs(tree.sources[pot('general_fund').src]), false);
+  assert.equal(bm.isOurs(null), false);
 });

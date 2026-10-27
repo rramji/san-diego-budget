@@ -13,6 +13,7 @@ import { mountClaims, claimCardModel } from './claims.js';
 export { mountClaims, claimCardModel };
 import * as sankey from './charts/sankey.js';
 import { themeColors, observeWidth } from './charts/util.js';
+import * as bm from './charts/budget-map.js';
 
 const FILES = {
   headline: 'headline', series: 'series', structural: 'structural_deficit', funnel: 'funnel',
@@ -101,6 +102,172 @@ function renderFunnel(data) {
   const prep = funnel.prepare(data.headline, data.funnel);
   const captions = [1, 2, 3, 4].map((n) => el.getAttribute(`data-caption-${n}`));
   observeWidth(el, () => { funnel.render(el, prep, themeColors(), captions); mountPopovers(el); });
+}
+
+// ---- Section 1: pots bar, twin money maps, details panel ---------------------------------------
+// Category palette (validated with the dataviz validator, light and dark) lives in styles.css as --cat-1..--cat-10.
+function mapColors() {
+  const cs = getComputedStyle(document.documentElement);
+  const v = (n) => cs.getPropertyValue(n).trim();
+  return { cat: Array.from({ length: 10 }, (_, i) => v(`--cat-${i + 1}`)), ink: v('--on-fill-dark'), paper: v('--on-fill-light') };
+}
+
+function el(tag, cls, text) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text != null) e.textContent = text;
+  return e;
+}
+
+// A sourced amount; an our-arithmetic source says so on screen. No source: plain text (never an unsourced .figure).
+function amountSpan(src, text) {
+  const wrap = el('span', 'amt');
+  if (!src?.url) { wrap.textContent = text; return wrap; }
+  const f = el('span', 'figure', text);
+  srcData(f, src);
+  wrap.append(f);
+  if (bm.isOurs(src)) wrap.append(' (our arithmetic)');
+  return wrap;
+}
+
+// Descriptive copy with its source as a footnote (categories have shared, unsourced definitions).
+function citedText(text, src) {
+  const s = el('span', src?.url ? 'cite' : null, text);
+  if (src?.url) srcData(s, src);
+  return s;
+}
+
+function potPanelBody(tree, pot) {
+  const m = bm.potPanel(pot, tree);
+  const amt = el('p', 'panel-amt');
+  amt.append(amountSpan(m.src, money(m.value_m)), ` in the FY${tree.bar_fy} budget, ${bm.shareText(m.share)} of the city budget.`);
+  const dl = el('dl', 'panel-answers');
+  for (const a of m.answers) {
+    const dd = el('dd');
+    dd.append(citedText(a.text, a.src));
+    dl.append(el('dt', null, a.q), dd);
+  }
+  const out = [el('h3', 'panel-title', m.title), amt, dl];
+  for (const n of m.notes) out.push(el('p', 'panel-note', n));
+  return out;
+}
+
+function nodePanelBody(tree, node, parent) {
+  const m = bm.nodePanel(node, parent, tree);
+  const amt = el('p', 'panel-amt');
+  const share = bm.shareOf(node, parent);
+  amt.append(amountSpan(m.amount_src, money(m.amount_m)), ` in the FY${m.fy} budget${share ? `, ${share}` : ''}.`);
+  const out = [el('h3', 'panel-title', m.title), amt];
+  if (m.text) { const p = el('p', 'panel-desc'); p.append(citedText(m.text, m.descSrc)); out.push(p); }
+  if (m.note) out.push(el('p', 'panel-note', m.note));
+  const off = bm.offsetsFigure(node, tree);
+  if (off) {
+    const p = el('p', 'panel-note');
+    p.append('Also includes credits such as budgeted vacancy savings: ', amountSpan(off.source, off.text));
+    out.push(p);
+  }
+  if (m.opens) out.push(el('p', 'panel-note', 'Its parts are now shown in the map. To go back, use the path above the map.'));
+  if (m.link) { const a = el('a', 'read-more', 'Read more ↓'); a.href = m.link; out.push(a); }
+  return out;
+}
+
+export function renderWhat(data) {
+  const tree = data.budgetTree;
+  for (const sp of document.querySelectorAll('[data-hl-fig]')) {
+    const f = data.headline[sp.dataset.hlFig];
+    sp.replaceWith(figureSpan(f, money(f.value)));
+  }
+  const potsEl = document.getElementById('s1-pots');
+  const mapsEl = document.getElementById('s1-maps');
+  const panel = document.getElementById('s1-panel');
+  panel.classList.add('map-panel');
+  const cols = { in: el('div', 'map-col'), out: el('div', 'map-col') };
+  cols.in.dataset.side = 'in';
+  cols.out.dataset.side = 'out';
+  mapsEl.replaceChildren(cols.in, cols.out);
+
+  let state = bm.createState(tree);
+  let colors = mapColors();
+  let pots = null;
+  let lastUsed = null; // null (on load) | 'pots' | 'in' | 'out'
+  const narrow = () => window.matchMedia('(max-width: 639.98px)').matches;
+
+  // The panel sits below both maps. On a phone, once the reader has used a control, it moves next to that control so
+  // the answer appears where they are looking (the v1 Sankey did the same with its flow panel).
+  const place = () => {
+    if (!narrow() || !lastUsed) { if (mapsEl.nextElementSibling !== panel) mapsEl.after(panel); return; }
+    if (lastUsed === 'pots') { if (potsEl.nextElementSibling !== panel) potsEl.after(panel); return; }
+    const box = cols[lastUsed].querySelector('.map-box');
+    if (box && box.nextElementSibling !== panel) box.after(panel);
+  };
+
+  const showPanel = (announce) => {
+    if (announce) panel.setAttribute('aria-live', 'polite'); // never on load (v1 Sankey rule)
+    const pot = tree.pots.find((p) => p.id === state.pot);
+    panel.style.setProperty('--pot', colors.cat[tree.pots.indexOf(pot)]);
+    let body;
+    if (!state.selected) body = potPanelBody(tree, pot);
+    else {
+      const { side, node } = state.selected;
+      const path = state[side];
+      const top = path[path.length - 1];
+      body = nodePanelBody(tree, node, top === node ? (path[path.length - 2] ?? null) : top);
+    }
+    panel.replaceChildren(...body);
+    mountPopovers(panel);
+  };
+
+  const drawSide = (side) => {
+    bm.render(cols[side], state, tree, colors, handlers);
+    mountPopovers(cols[side]);
+    place();
+  };
+
+  const handlers = {
+    onActivate(side, node, { from, slot }) {
+      const opened = (node.children ?? []).length > 0;
+      state = bm.activate(state, side, node);
+      lastUsed = side;
+      drawSide(side);
+      showPanel(true);
+      const sel = from === 'list' ? '.list-item' : '.cell';
+      const target = opened ? cols[side].querySelector(sel) : cols[side].querySelector(`${sel}[data-slot="${slot}"]`);
+      if (target) target.focus();
+    },
+    onUp(side, depth) {
+      state = bm.goUp(state, side, depth);
+      const path = state[side];
+      // Going back up to a box (not the pot's top level) shows that box's details.
+      if (path.length > 1) state = { ...state, selected: { side, node: path[path.length - 1] } };
+      lastUsed = side;
+      drawSide(side);
+      showPanel(true);
+      const first = cols[side].querySelector('.cell');
+      if (first) first.focus();
+    },
+  };
+
+  const selectPot = (id) => {
+    state = bm.selectPot(state, tree, id);
+    lastUsed = 'pots';
+    pots.select(id);
+    drawSide('in');
+    drawSide('out');
+    showPanel(true);
+  };
+
+  const drawPots = () => { pots = bm.renderPots(potsEl, tree, state, colors, selectPot); place(); };
+  observeWidth(potsEl, drawPots);
+  observeWidth(cols.in, () => drawSide('in'));
+  observeWidth(cols.out, () => drawSide('out'));
+  showPanel(false);
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+    colors = mapColors();
+    drawPots();
+    drawSide('in');
+    drawSide('out');
+    showPanel(false);
+  });
 }
 
 // ---- Dig deeper: money-flow Sankey + selected-flow panel -------------------------------------
@@ -216,6 +383,7 @@ async function main() {
   guarded('headline', null, () => renderHeadline(data.headline));
   guarded('glossary', 'glossary-list', () => renderGlossary(document.getElementById('glossary-list'), data.glossary));
   // Section order on the page: what, why-short, gap, piles, how-long, claims. Later tasks add their renderers here.
+  guarded('section 1: budget maps', 's1-maps', () => renderWhat(data));
   guarded('section 1 dig: money-flow Sankey', 'ch2-sankey', () => renderSankey(data.flows));
   guarded('section 3: gap calculator', 'ch3-calc', () => renderGapCalc(data));
   guarded('section 3 dig: funnel', 'ch2-funnel', () => renderFunnel(data));

@@ -14,6 +14,12 @@
   --font-body: Charter, "Iowan Old Style", "Palatino Linotype", Georgia, serif;
   --font-ui: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --gutter: 16px;
+  /* section 1 map categories: dataviz reference hues 1-8 plus cyan and brown, validated adjacent-pair against --bg
+     in both modes (scripts/validate_palette.js). Text inside a fill uses --on-fill-dark or -light by contrast. */
+  --cat-1: #2a78d6; --cat-2: #eb6834; --cat-3: #1baf7a; --cat-4: #eda100; --cat-5: #e87ba4;
+  --cat-6: #008300; --cat-7: #6250d6; --cat-8: #e34948; --cat-9: #0f8fa6; --cat-10: #a5672e;
+  --on-fill-dark: #1c2530;
+  --on-fill-light: #ffffff;
 }
 @media (prefers-color-scheme: dark) {
   :root {
@@ -27,6 +33,8 @@
     --restricted: #4fb3bf;
     --discretionary: #8e9de0;
     --gap: #ff6f9c;
+    --cat-1: #3987e5; --cat-2: #d95926; --cat-3: #199e70; --cat-4: #c98500; --cat-5: #d55181;
+    --cat-6: #008300; --cat-7: #9085e9; --cat-8: #e66767; --cat-9: #1597ae; --cat-10: #b07434;
   }
 }
 * { box-sizing: border-box; }
@@ -210,3 +218,66 @@ main { padding-bottom: 80px; }
 .part h3 { font: 700 clamp(1.15rem, 4vw, 1.35rem)/1.2 var(--font-ui); letter-spacing: -0.01em; margin: 0; }
 /* empty mounts take no room until a later task fills them */
 .chart:empty, #s1-panel:empty { margin: 0; }
+
+/* ---- Section 1: pots bar, twin money maps, details panel ---- */
+.sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.hint { margin: -8px 0 0; font: 0.9rem/1.4 var(--font-ui); color: var(--muted); }
+#s1-pots { margin: 16px 0 0; }
+.potbar, .map { display: block; max-width: 100%; height: auto; overflow: visible; }
+.potbar text, .map text { fill: var(--ink); font: 600 12px/1 var(--font-ui); pointer-events: none; }
+.potbar .cell-amt, .map .cell-amt { font-weight: 400; font-variant-numeric: tabular-nums; }
+.pot, .cell { cursor: pointer; outline: none; -webkit-tap-highlight-color: transparent; }
+@media (hover: hover) {
+  .potbar:hover .pot:not(:hover) { opacity: 0.5; }
+  .map .cell:hover > rect:first-child { opacity: 0.82; }
+}
+@media (prefers-reduced-motion: no-preference) { .pot { transition: opacity 0.15s; } }
+.pot-sel, .cell-ring { fill: none; stroke: none; stroke-width: 3; pointer-events: none; }
+.pot[aria-pressed="true"] .pot-sel, .cell[aria-pressed="true"] .cell-ring { stroke: var(--text); }
+.pot:focus-visible .pot-sel, .cell:focus-visible .cell-ring { stroke: var(--link); stroke-dasharray: 5 3; }
+.pot[aria-pressed="true"]:focus-visible .pot-sel, .cell[aria-pressed="true"]:focus-visible .cell-ring { stroke: var(--text); }
+.pot-legend { margin: 8px 0 0; }
+.pot-legend .swatch { width: 10px; height: 10px; border-radius: 2px; }
+
+#s1-maps { display: grid; grid-template-columns: minmax(0, 1fr); gap: 28px 16px; margin: 24px 0 0; }
+@media (min-width: 640px) { #s1-maps { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+.map-col { min-width: 0; }
+.map-title { margin: 0; font: 700 1.05rem/1.3 var(--font-ui); }
+.crumbs { margin: 2px 0 0; font: 0.85rem/1.5 var(--font-ui); overflow-wrap: anywhere; }
+.crumb { padding: 0; border: 0; background: none; color: var(--link); font: inherit; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; position: relative; }
+.crumb::after { content: ""; position: absolute; inset: -12px -4px; } /* larger touch target */
+.crumb-sep { color: var(--muted); }
+.crumb-cur { font-weight: 650; }
+.map-head { margin: 0 0 8px; font: 0.8rem/1.4 var(--font-ui); color: var(--muted); }
+.map-head .figure { color: var(--text); }
+.map-box { margin: 0; }
+
+.maplist { margin: 10px 0 0; font: 0.85rem/1.4 var(--font-ui); }
+.maplist > summary { cursor: pointer; padding: 8px 0; min-height: 44px; display: flex; align-items: center; gap: 8px; font-weight: 600; color: var(--muted); list-style: none; }
+.maplist > summary::-webkit-details-marker { display: none; }
+.maplist > summary::before { content: "+"; width: 1em; font-weight: 400; }
+.maplist[open] > summary::before { content: "\2212"; }
+.maplist ul { list-style: none; margin: 0; padding: 0; }
+.maplist li { display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--rule); }
+.maplist li:first-child { border-top: 1px solid var(--rule); }
+.maplist .swatch { width: 10px; height: 10px; border-radius: 2px; }
+.list-item { flex: 1; min-width: 0; min-height: 40px; padding: 6px 0; border: 0; background: none; color: var(--text); font: inherit; text-align: left; cursor: pointer; overflow-wrap: anywhere; }
+.list-item[aria-pressed="true"] { font-weight: 650; }
+.list-item .opens { color: var(--muted); }
+.list-amt { flex: none; text-align: right; }
+
+.map-panel { margin: 24px 0 8px; padding: 14px var(--gutter) 16px; background: var(--surface); border-left: 4px solid var(--pot, var(--rule)); border-radius: 0 6px 6px 0; overflow-wrap: anywhere; }
+.map-col .map-panel { margin: 12px 0 4px; }
+.map-panel > :last-child { margin-bottom: 0; }
+.panel-title { margin: 0 0 2px; font: 700 1.15rem/1.3 var(--font-ui); }
+.panel-amt { margin: 0 0 10px; font: 0.9rem/1.45 var(--font-ui); color: var(--muted); }
+.panel-amt .figure { color: var(--text); font-size: 1.05rem; }
+.panel-desc { margin: 0 0 10px; max-width: 34em; }
+.panel-note { margin: 0 0 8px; font: 0.85rem/1.45 var(--font-ui); color: var(--muted); }
+.panel-note .figure { color: var(--text); }
+.panel-answers { margin: 0 0 10px; }
+.panel-answers dt { margin: 12px 0 0; font: 650 0.85rem/1.3 var(--font-ui); color: var(--muted); }
+.panel-answers dt:first-child { margin-top: 4px; }
+.panel-answers dd { margin: 2px 0 0; max-width: 34em; }
+.read-more { display: inline-block; padding: 6px 0; font: 600 0.9rem/1.3 var(--font-ui); }
+.dig-intro { margin: 0 0 4px; font-weight: 600; }

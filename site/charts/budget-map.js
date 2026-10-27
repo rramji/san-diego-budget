@@ -1,5 +1,6 @@
 // Opening section: pots bar and twin drill-down treemaps.
-// This file is the pure logic only (no DOM, no d3 at the top level); render() is added on top of it later.
+// The pure logic comes first (importable in Node). The DOM renderers at the bottom (renderPots, render) touch the
+// document only when called.
 //
 // Tree contract (data/build/budget_tree.json, docs/data-contracts.md). Ruling R11: absent === null. A node omits
 // children / offsets / src, and a descs entry omits src / link, when the value would be null. Every read below goes
@@ -195,7 +196,7 @@ export function potPanel(pot, tree) {
   const big = Math.max(hi.total_m, ho.total_m);
   if (big > 0 && Math.abs(hi.total_m - ho.total_m) / big > 0.01) {
     notes.push(
-      `The two maps total different amounts (money in ${hi.text}; money out ${ho.text}), because revenue and spending are budgeted separately for this group. Read each map as its own total.`,
+      `The two maps total different amounts (money in ${hi.text}; money out ${ho.text}). Read each map as its own total.`,
     );
   }
   const barTotal = tree.pots.reduce((s, p) => s + p.value_m, 0);
@@ -212,4 +213,369 @@ export function potPanel(pot, tree) {
 // The list equivalent of a map: every child, tiny ones included.
 export function listModel(node) {
   return kids(node).map((c) => ({ name: c.name, value_m: c.value_m, opens: kids(c).length > 0 }));
+}
+
+// ---- render-side models (pure) ----
+
+export const isOurs = (src) => typeof src?.doc === 'string' && src.doc.startsWith('our arithmetic');
+
+// "32%", or "less than 1%" so a real share never reads as 0%.
+export function shareText(x) {
+  if (x == null) return null;
+  return x < 0.005 ? 'less than 1%' : `${Math.round(x * 100)}%`;
+}
+
+// "32% of General Fund money out", plus the year when the child is a different year from its parent, so a share of
+// FY2026 detail never reads as a share of the FY2027 parent value.
+export function shareOf(node, parent) {
+  const total = parent ? childrenTotal(parent) : 0;
+  if (!(total > 0)) return null;
+  const p = node.value_m / total; // same rule as nodePanel's share
+  return `${shareText(p)} of ${parent.name}${node.fy !== parent.fy ? ` in FY${node.fy}` : ''}`;
+}
+
+// The pots bar: five segments, each a fraction [x0, x1) of the five-pot sum.
+export function potSegments(tree) {
+  const sum = tree.pots.reduce((s, p) => s + p.value_m, 0);
+  let x = 0;
+  return tree.pots.map((pot, i) => {
+    const share = sum > 0 ? pot.value_m / sum : 0;
+    const seg = { pot, slot: i, share, x0: x, x1: i === tree.pots.length - 1 ? 1 : x + share };
+    seg.aria = `${pot.label}, ${money(pot.value_m)}, ${shareText(share)} of the budget`;
+    x = seg.x1;
+    return seg;
+  });
+}
+
+// One map level ready to draw: largest first (squarify needs descending input), colour slot = the child's place in
+// the tree's own order, so colour follows the item, not its rank.
+export function cellModels(node, tree) {
+  return kids(node)
+    .map((c, slot) => {
+      const opens = kids(c).length > 0;
+      const share = shareOf(c, node);
+      const aria = [c.name, money(c.value_m), share, opens ? 'opens further' : null].filter(Boolean).join(', ');
+      return { node: c, slot, opens, aria };
+    })
+    .sort((a, b) => b.node.value_m - a.node.value_m || a.slot - b.slot);
+}
+
+const n1 = (v) => (Math.round(v * 10) / 10).toFixed(1);
+
+// The map header amount as a sourced figure. It is the node's own figure when the children add up to the node's value
+// in the node's own year; otherwise (e.g. FY2026 detail under an FY2027 department) it is our sum of the boxes shown.
+export function headerFigure(node, tree) {
+  const h = mapHeader(node, tree);
+  const cut = h.text.indexOf(': ') + 2;
+  const own = resolve(tree, node.src ?? null);
+  const same = h.fy === node.fy && Math.abs(h.total_m - node.value_m) <= 0.05;
+  if (same && own) return { prefix: h.text.slice(0, cut), amount: h.text.slice(cut), source: own, ours: isOurs(own) };
+  const terms = [...kids(node), ...(node.offsets ?? [])].map((c) => n1(c.value_m));
+  const anySrc = kids(node).map((c) => resolve(tree, c.src ?? null)).find(Boolean) ?? own;
+  const source = {
+    doc: `our arithmetic: ${terms.join(' + ')} = ${n1(h.total_m)} (the ${kids(node).length} boxes in this map${node.offsets?.length ? ' plus its credits' : ''}, FY${h.fy})`,
+    page: null,
+    url: anySrc?.url ?? null,
+  };
+  return { prefix: h.text.slice(0, cut), amount: h.text.slice(cut), source, ours: true };
+}
+
+// Credits netted into a node (offsets are negative): one figure, "−$28.8M". Two or more lines are our sum.
+export function offsetsFigure(node, tree) {
+  const offs = node.offsets ?? [];
+  if (!offs.length) return null;
+  const value_m = offs.reduce((s, o) => s + o.value_m, 0);
+  const own = resolve(tree, node.src ?? null);
+  const text = `−${money(Math.abs(value_m))}`;
+  if (offs.length === 1) return { value_m, text, source: own, ours: isOurs(own) };
+  const source = {
+    doc: `our arithmetic: ${offs.map((o) => `${n1(o.value_m)} (${o.name})`).join(' + ')} = ${n1(value_m)}`,
+    page: own?.page ?? null,
+    url: own?.url ?? null,
+  };
+  return { value_m, text, source, ours: true };
+}
+
+// WCAG contrast picks the label colour for text set inside a coloured fill.
+function lum(hex) {
+  const h = hex.replace('#', '');
+  const c = [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16) / 255).map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
+  return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+}
+const contrast = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
+export function inkOn(fill, light, dark) {
+  return contrast(fill, light) >= contrast(fill, dark) ? light : dark;
+}
+
+// ---- DOM renderers (browser only) ----
+
+const SVGNS = 'http://www.w3.org/2000/svg';
+const svgEl = (tag, attrs = {}) => {
+  const e = document.createElementNS(SVGNS, tag);
+  for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, String(v));
+  return e;
+};
+const LINE = 15; // label line height, px
+const PAD = 6;
+
+// Add a <text> line; returns it, or null (removed) when wider than maxW.
+function fitText(parent, str, x, y, maxW, cls) {
+  const t = svgEl('text', { x, y, class: cls });
+  t.textContent = str;
+  parent.append(t);
+  if (t.getComputedTextLength() <= maxW) return t;
+  t.remove();
+  return null;
+}
+
+// Longest prefix of `str` (ending in "…") that fits maxW, or null when not even a few letters fit.
+function truncFit(parent, str, x, y, maxW, cls) {
+  const t = svgEl('text', { x, y, class: cls });
+  parent.append(t);
+  const fits = (n) => { t.textContent = `${str.slice(0, n).trimEnd()}…`; return t.getComputedTextLength() <= maxW; };
+  // Prefer cutting at a word boundary; fall back to letters only when no whole word fits.
+  for (let n = str.lastIndexOf(' '); n >= 4; n = str.lastIndexOf(' ', n - 1)) if (fits(n)) return t;
+  for (let n = str.length - 1; n >= 4; n -= 1) if (fits(n)) return t;
+  t.remove();
+  return null;
+}
+
+// Greedy two-line wrap; the second line is truncated if it still overflows. Returns true when placed.
+function wrapTwo(parent, str, x, y, maxW, cls) {
+  const words = str.split(' ');
+  if (words.length < 2) return false;
+  const probe = svgEl('text', { x, y, class: cls });
+  parent.append(probe);
+  let k = 0;
+  for (let i = 1; i < words.length; i += 1) {
+    probe.textContent = words.slice(0, i).join(' ');
+    if (probe.getComputedTextLength() <= maxW) k = i; else break;
+  }
+  probe.remove();
+  if (!k) return false;
+  fitText(parent, words.slice(0, k).join(' '), x, y, maxW, cls);
+  const rest = words.slice(k).join(' ');
+  return !!(fitText(parent, rest, x, y + LINE, maxW, cls) || truncFit(parent, rest, x, y + LINE, maxW, cls));
+}
+
+// Label a rectangle only where the text fits inside it with padding. Never clipped: anything that does not fit is
+// left to the aria-label, the panel and the list.
+function labelCell(g, r, name, amount, opens) {
+  const maxW = r.w - 2 * PAD;
+  const x = r.x + PAD;
+  const y = r.y + PAD + 11;
+  const mark = opens ? ' ⊕' : '';
+  const room = Math.floor((r.h - 2 * PAD + 3) / LINE); // lines that fit vertically
+  const tryAll = () => {
+    if (maxW < 20 || room < 1) return false;
+    if (room >= 2 && fitText(g, name, x, y, maxW, 'cell-name')) {
+      if (fitText(g, amount + mark, x, y + LINE, maxW, 'cell-amt')) return true;
+      g.replaceChildren(...[...g.children].filter((c) => c.tagName !== 'text'));
+    }
+    if (room >= 3 && wrapTwo(g, name, x, y, maxW, 'cell-name')) {
+      if (fitText(g, amount + mark, x, y + 2 * LINE, maxW, 'cell-amt')) return true;
+      g.replaceChildren(...[...g.children].filter((c) => c.tagName !== 'text'));
+    }
+    if (room >= 2 && truncFit(g, name, x, y, maxW, 'cell-name')) {
+      if (fitText(g, amount + mark, x, y + LINE, maxW, 'cell-amt')) return true;
+      g.replaceChildren(...[...g.children].filter((c) => c.tagName !== 'text'));
+    }
+    return !!fitText(g, amount + mark, x, y, maxW, 'cell-amt');
+  };
+  if (tryAll()) return;
+  // Too small for words: an opening box still shows its mark when there is room for it.
+  if (opens && r.w >= 16 && r.h >= 16) {
+    const t = svgEl('text', { x: r.x + r.w / 2, y: r.y + r.h / 2 + 4, class: 'cell-amt', 'text-anchor': 'middle' });
+    t.textContent = '⊕';
+    g.append(t);
+  }
+}
+
+const press = (fn) => (e) => {
+  if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') { e.preventDefault(); fn(); }
+};
+
+// The pots bar plus its legend. colors = {cat: [hex…], ink, paper}. onSelect(potId). Returns {select(potId)}.
+export function renderPots(el, tree, state, colors, onSelect) {
+  el.replaceChildren();
+  const W = Math.max(280, Math.round(el.getBoundingClientRect().width || 320));
+  const H = 56;
+  const svg = svgEl('svg', { class: 'potbar', viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: 'group', 'aria-label': 'The five pots of the city budget' });
+  el.append(svg);
+  const segs = potSegments(tree);
+  for (const s of segs) {
+    const x0 = s.slot === 0 ? 0 : s.x0 * W + 1;
+    const x1 = s.slot === segs.length - 1 ? W : s.x1 * W - 1;
+    const r = { x: x0, y: 0, w: Math.max(x1 - x0, 1), h: H };
+    const fill = colors.cat[s.slot];
+    const g = svgEl('g', { class: 'pot', role: 'button', tabindex: 0, 'aria-label': s.aria, 'aria-pressed': s.pot.id === state.pot, 'data-pot': s.pot.id });
+    g.style.setProperty('--ink', inkOn(fill, colors.paper, colors.ink));
+    g.append(svgEl('rect', { x: r.x, y: r.y, width: r.w, height: r.h, fill, rx: 2 }));
+    g.append(svgEl('rect', { class: 'pot-sel', x: r.x + 1.5, y: 1.5, width: Math.max(r.w - 3, 0.5), height: H - 3, rx: 1 }));
+    svg.append(g);
+    labelCell(g, r, s.pot.label, money(s.pot.value_m), false);
+    g.addEventListener('click', () => onSelect(s.pot.id));
+    g.addEventListener('keydown', press(() => onSelect(s.pot.id)));
+  }
+  const legend = document.createElement('ul');
+  legend.className = 'legend pot-legend';
+  for (const s of segs) {
+    const li = document.createElement('li');
+    const sw = document.createElement('span');
+    sw.className = 'swatch';
+    sw.style.background = colors.cat[s.slot];
+    li.append(sw, s.pot.label);
+    legend.append(li);
+  }
+  el.append(legend);
+  return {
+    select(potId) {
+      svg.querySelectorAll('.pot').forEach((g) => g.setAttribute('aria-pressed', String(g.dataset.pot === potId)));
+    },
+  };
+}
+
+// One map (el.dataset.side is "in" or "out"): heading, crumbs, header, treemap and its list twin.
+// handlers = {onActivate(side, node, {from, slot}), onUp(side, depth)}. colors as for renderPots.
+export function render(el, state, tree, colors, handlers) {
+  const side = el.dataset.side;
+  const path = state[side];
+  const node = path[path.length - 1];
+  const sel = state.selected?.side === side ? state.selected.node : null;
+  el.replaceChildren();
+
+  const h = document.createElement('h3');
+  h.className = 'map-title';
+  h.textContent = side === 'in' ? 'Money in' : 'Money out';
+  const nav = document.createElement('p');
+  nav.className = 'crumbs';
+  for (const c of crumbs(path)) {
+    if (c.depth) {
+      const sep = document.createElement('span');
+      sep.className = 'crumb-sep';
+      sep.setAttribute('aria-hidden', 'true');
+      sep.textContent = ' › ';
+      nav.append(sep);
+    }
+    if (c.current) {
+      const cur = document.createElement('span');
+      cur.className = 'crumb-cur';
+      cur.setAttribute('aria-current', 'location');
+      cur.textContent = c.name;
+      nav.append(cur);
+    } else {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'crumb';
+      b.textContent = c.name;
+      b.addEventListener('click', () => handlers.onUp(side, c.depth));
+      nav.append(b);
+    }
+  }
+  const head = document.createElement('p');
+  head.className = 'map-head';
+  const hf = headerFigure(node, tree);
+  head.append(hf.prefix);
+  if (hf.source?.url) {
+    const f = document.createElement('span');
+    f.className = 'figure';
+    f.dataset.srcDoc = hf.source.doc;
+    f.dataset.srcPage = hf.source.page ?? '';
+    f.dataset.srcUrl = hf.source.url;
+    f.textContent = hf.amount;
+    head.append(f, hf.ours ? ' (our arithmetic)' : '');
+  } else {
+    head.append(hf.amount);
+  }
+  el.append(h, nav, head);
+
+  const W = Math.max(240, Math.round(el.getBoundingClientRect().width || 320));
+  const H = Math.round(Math.min(340, Math.max(240, W * 0.82)));
+  const box = document.createElement('div');
+  box.className = 'map-box';
+  const svg = svgEl('svg', { class: 'map', viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: 'group', 'aria-label': `${node.name}: map of ${kids(node).length} boxes` });
+  box.append(svg);
+  el.append(box);
+
+  const cells = cellModels(node, tree);
+  const rects = layout(cells.map((c) => c.node), 0, 0, W, H);
+  cells.forEach((c, k) => {
+    const r0 = rects[k];
+    if (!(r0.w > 0 && r0.h > 0)) return;
+    // 2px surface gap between boxes: inset each side by up to 1px, never to zero.
+    const ix = Math.min(1, r0.w / 4);
+    const iy = Math.min(1, r0.h / 4);
+    const r = { x: r0.x + ix, y: r0.y + iy, w: r0.w - 2 * ix, h: r0.h - 2 * iy };
+    const fill = colors.cat[c.slot % colors.cat.length];
+    const g = svgEl('g', { class: 'cell', role: 'button', tabindex: 0, 'aria-label': c.aria, 'data-slot': c.slot, 'data-opens': c.opens });
+    if (sel === c.node) g.setAttribute('aria-pressed', 'true');
+    g.style.setProperty('--ink', inkOn(fill, colors.paper, colors.ink));
+    g.append(svgEl('rect', { x: r.x, y: r.y, width: r.w, height: r.h, fill, rx: Math.min(2, r.w / 4, r.h / 4) }));
+    const ring = Math.min(1.5, r.w / 4, r.h / 4);
+    g.append(svgEl('rect', { class: 'cell-ring', x: r.x + ring, y: r.y + ring, width: Math.max(r.w - 2 * ring, 0.1), height: Math.max(r.h - 2 * ring, 0.1) }));
+    svg.append(g);
+    labelCell(g, r, c.node.name, money(c.node.value_m), c.opens);
+    const go = () => handlers.onActivate(side, c.node, { from: 'map', slot: c.slot });
+    g.addEventListener('click', go);
+    g.addEventListener('keydown', press(go));
+  });
+
+  // The list twin: every child, tiny ones included, with the same activation.
+  const det = document.createElement('details');
+  det.className = 'maplist';
+  det.open = el.dataset.listOpen ? el.dataset.listOpen === '1' : window.matchMedia('(max-width: 639.98px)').matches;
+  // Remember only the reader's own choice: the toggle event that follows the default open state is not one.
+  const initial = det.open;
+  det.addEventListener('toggle', () => {
+    if (det.open === initial && !el.dataset.listOpen) return;
+    el.dataset.listOpen = det.open ? '1' : '0';
+  });
+  const sum = document.createElement('summary');
+  sum.textContent = 'This map as a list';
+  const ul = document.createElement('ul');
+  const items = listModel(node);
+  kids(node).forEach((child, slot) => {
+    const it = items[slot];
+    const li = document.createElement('li');
+    const sw = document.createElement('span');
+    sw.className = 'swatch';
+    sw.style.background = colors.cat[slot % colors.cat.length];
+    sw.setAttribute('aria-hidden', 'true');
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'list-item';
+    b.dataset.slot = slot;
+    if (sel === child) b.setAttribute('aria-pressed', 'true');
+    b.textContent = it.name;
+    if (it.opens) {
+      const m = document.createElement('span');
+      m.className = 'opens';
+      m.textContent = ' ⊕';
+      m.setAttribute('aria-hidden', 'true');
+      const sr = document.createElement('span');
+      sr.className = 'sr-only';
+      sr.textContent = ', opens further';
+      b.append(m, sr);
+    }
+    b.addEventListener('click', () => handlers.onActivate(side, child, { from: 'list', slot }));
+    const src = resolve(tree, child.src ?? null);
+    const amt = document.createElement('span');
+    amt.className = 'list-amt';
+    if (src?.url) {
+      const f = document.createElement('span');
+      f.className = 'figure';
+      f.dataset.srcDoc = src.doc;
+      f.dataset.srcPage = src.page ?? '';
+      f.dataset.srcUrl = src.url;
+      f.textContent = money(it.value_m);
+      amt.append(f);
+      if (isOurs(src)) amt.append(' (our arithmetic)');
+    } else {
+      amt.textContent = money(it.value_m);
+    }
+    li.append(sw, b, amt);
+    ul.append(li);
+  });
+  det.append(sum, ul);
+  el.append(det);
 }
