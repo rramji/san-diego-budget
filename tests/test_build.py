@@ -166,12 +166,12 @@ def test_structural_deficit_merges_gf_expenditure(tmp_path):
     assert sorted(markers) == [2011, 2025, 2026, 2028]
     assert markers[2011]["label"] == "2010: temporary sales tax measure fails"
     assert markers[2025]["label"] == "2024: sales tax measure fails"
-    assert markers[2028]["label"].endswith("per KPBS")
+    assert markers[2028]["label"] == "FY2028 outlook: city $9.5M, IBA $32.9M"
     for fy in (2011, 2025, 2026):
         src = markers[fy]["source"]["source"]
         assert src["url"].startswith("https://") and src["page"] in (3, 77)
-    assert markers[2028]["source"]["value"] == 30
-    assert "kpbs.org" in markers[2028]["source"]["source"]["url"]
+    assert [f["value"] for f in markers[2028]["figures"]] == [9.5, 32.9]
+    assert "source" not in markers[2028]
 
 
 def test_structural_deficit_rejects_unsourced_figure(tmp_path):
@@ -435,10 +435,10 @@ def test_gap_gets_cuttable_from_funnel(tmp_path):
     funnel = curated.load(CURATED, "funnel")
     assert gap["cuttable_m"] == funnel["bar3"]["everything_else_m"]
     assert "cuttable_m" not in json.loads((CURATED / "gap.json").read_text())
-    for k in ("pre_cut_m", "post_cut_city_m", "post_cut_iba_m", "skipped_reserve_m",
-              "fy2028_projection_m", "population", "households", "sales_tax_1pct_m"):
+    for k in ("pre_cut_m", "post_cut_city_m", "post_cut_with_reserve_m", "skipped_reserve_m",
+              "population", "households", "sales_tax_1pct_m"):
         assert gap[k]["value"] > 0 and gap[k]["source"]["url"].startswith("https://"), k
-    assert round(gap["post_cut_city_m"]["value"] + gap["skipped_reserve_m"]["value"], 1) == gap["post_cut_iba_m"]["value"]
+    assert round(gap["post_cut_city_m"]["value"] + gap["skipped_reserve_m"]["value"], 1) == gap["post_cut_with_reserve_m"]["value"]
 
 
 def test_curated_glossary_terms():
@@ -467,12 +467,34 @@ def test_curated_homelessness_states_gf_share_and_tot():
     assert "hotel-tax (TOT) revenue, including Measure C funds" in h["finding"]
 
 
-def test_curated_trash_fee_settlement_is_conditional():
+def test_curated_trash_fee_settlement_is_approved():
+    import re
     t = next(c for c in _claims_curated() if c["id"] == "trash-fee")
-    assert "tentatively approved" in t["finding"] and "would lower" in t["finding"] and "if it is finally approved" in t["finding"]
-    assert " lowers the fee" not in t["finding"]
-    news = next(s for s in t["sources"] if "10News" in s["doc"])
-    assert "early May 2026, before the May 20 tentative approval" in news["doc"]
+    assert "June 8, 2026" in t["finding"] and "tentative" not in t["finding"]
+    assert "July 2027" in t["finding"] and "$10.8 million" in t["finding"]
+    assert len(re.split(r"(?<=[.!?])\s+", t["finding"].strip())) <= 4
+    assert any(s["url"].endswith("reduced-trash-collection-fees-for-city-of-san-diego-customers-effective-july-1-2027.pdf") for s in t["sources"])
+
+
+def test_v2_corrections(tmp_path):
+    out, _ = _build(tmp_path)
+    f = json.loads((out / "funnel.json").read_text())
+    assert f["bar3"]["pension_adc_m"]["value"] == 396.3
+    assert f["bar3"]["pension_adc_m"]["source"]["page"] == 30
+    assert f["bar3"]["everything_else_m"]["value"] == 1785.4
+    g = json.loads((out / "gap.json").read_text())
+    assert "post_cut_iba_m" not in g and "fy2028_projection_m" not in g
+    w = g["post_cut_with_reserve_m"]
+    assert w["value"] == 103.2 and w["source"]["doc"].startswith("our arithmetic: 23.1 + 80.1")
+    assert g["cuttable_m"]["value"] == 1785.4
+    sd = json.loads((out / "structural_deficit.json").read_text())
+    m28 = next(m for m in sd["markers"] if m["fy"] == 2028)
+    assert [x["value"] for x in m28["figures"]] == [9.5, 32.9]
+    assert m28["figures"][0]["source"]["page"] == 36 and m28["figures"][1]["source"]["page"] == 43
+    claims = {c["id"]: c for c in json.loads((out / "claims.json").read_text())}
+    assert "396.3" in claims["pensions"]["finding"] and "396.1" not in claims["pensions"]["finding"]
+    assert "proposed budget" in claims["pensions"]["finding"]  # the 17.7% share is labelled as proposed-basis
+    assert "June 8, 2026" in claims["trash-fee"]["finding"] and "tentative" not in claims["trash-fee"]["finding"]
 
 
 def _break_flows(cur):

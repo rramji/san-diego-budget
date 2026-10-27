@@ -61,11 +61,9 @@ def build_series(rows: list[dict], vintage: dict | None = None) -> dict:
 
 
 DEFICIT_CONVENTION = "positive = size of General Fund structural gap, $ millions"
-KPBS_2026_06_09 = (
-    "https://www.kpbs.org/news/politics/2026/06/09/"
-    "san-diego-city-council-looks-to-close-15-3-million-gap-going-into-tuesdays-budget-vote"
-)
 _IBA_26_11 = "https://www.sandiego.gov/sites/default/files/2026-04/iba-report-26-11-review-of-the-fiscal-year-2027-proposed-budget_0.pdf"
+_CBO_FY27 = "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1cbo.pdf"
+_IBA_26_15 = "https://www.sandiego.gov/sites/default/files/2026-05/26-15-recommended-city-council-modifications-to-the-mayors-proposed-fy-2027-budget-and-review-of-the-may-revision.pdf"
 DEFICIT_MARKERS = [
     {"fy": 2011, "label": "2010: temporary sales tax measure fails", "source": {"source": {
         "doc": "IBA Report 26-11, Key Citywide Issues: Structural Budget Deficit (2010 temporary five-year sales tax measure failed to pass)",
@@ -78,15 +76,15 @@ DEFICIT_MARKERS = [
         "page": 3, "url": _IBA_26_11}}},
     {
         "fy": 2028,
-        "label": "IBA projects ~$30M gap, per KPBS",
-        "source": {
-            "value": 30,
-            "source": {
-                "doc": "KPBS, 2026-06-09: the structural deficit 'will grow to around $30 million next year, according to' IBA Charles Modica",
-                "page": None,
-                "url": KPBS_2026_06_09,
-            },
-        },
+        "label": "FY2028 outlook: city $9.5M, IBA $32.9M",
+        "figures": [
+            {"value": 9.5, "source": {
+                "doc": "FY2027 Adopted Budget Vol. I, Citywide Budget Overview, Table 10 (the city's updated Five-Year Financial Outlook: FY2028 shortfall)",
+                "page": 36, "url": _CBO_FY27}},
+            {"value": 32.9, "source": {
+                "doc": "IBA Report 26-15, Recommended City Council Modifications to the Mayor's Proposed FY 2027 Budget (projected FY2028 deficit of $32.9M, excluding reserve deposits)",
+                "page": 43, "url": _IBA_26_15}},
+        ],
     },
 ]
 
@@ -134,7 +132,11 @@ def build_structural_deficit(entries: list[dict], series: dict) -> dict:
         fy_totals = gf.get(str(e["fy"])) or gf.get(e["fy"])
         years.append({**e, "gf_expenditure_adopted_m": fy_totals["expense_m"] if fy_totals else None})
     for i, m in enumerate(DEFICIT_MARKERS):
-        _check_source((m.get("source") or {}).get("source"), f"markers[{i}].source")
+        if "figures" in m:
+            for j, fig in enumerate(m["figures"]):
+                curated.validate_figure(fig, f"markers[{i}].figures[{j}]")
+        else:
+            _check_source((m.get("source") or {}).get("source"), f"markers[{i}].source")
     return {"convention": DEFICIT_CONVENTION, "years": years, "markers": DEFICIT_MARKERS}
 
 

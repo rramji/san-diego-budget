@@ -2,11 +2,11 @@
   "fy": 2027,
   "bar3": {
     "pension_adc_m": {
-      "value": 396.1,
+      "value": 396.3,
       "source": {
-        "doc": "IBA Report 26-11, Review of the FY 2027 Proposed Budget (General Fund share of Actuarially Determined Contribution)",
-        "page": 75,
-        "url": "https://www.sandiego.gov/sites/default/files/2026-04/iba-report-26-11-review-of-the-fiscal-year-2027-proposed-budget_0.pdf"
+        "doc": "FY2027 Adopted Budget Vol. I, Citywide Budget Overview, Table 8 (Retirement ADC, General Fund $396,300,918)",
+        "page": 30,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1cbo.pdf"
       }
     },
     "debt_service_m": {
@@ -18,7 +18,7 @@
       }
     },
     "everything_else_m": {
-      "value": 1785.6,
+      "value": 1785.4,
       "source": {
         "doc": "derived: general_fund_m − pension_adc_m − debt_service_m",
         "page": 4,

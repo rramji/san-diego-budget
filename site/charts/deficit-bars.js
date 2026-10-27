@@ -83,7 +83,7 @@ export function prepare(input) {
     peak_share: peak ? peak.share : null,
     peak_expense_m: peak ? peak.expense_m : null,
   };
-  return { bars, scale, markers: markers.map((m) => ({ fy: m.fy, label: m.label, source: m.source || null })), stats };
+  return { bars, scale, markers: markers.map((m) => ({ fy: m.fy, label: m.label, source: m.source || null, figures: m.figures || null })), stats };
 }
 
 const NS = 'http://www.w3.org/2000/svg';
@@ -257,8 +257,24 @@ export function render(el, data, colors) {
     lab.textContent = letters[i];
     li.append(lab);
     const t = document.createElement('span');
-    t.textContent = `${mk.label} (FY${mk.fy})`;
-    if (mk.source) { srcAttrs(t, mk.source); if (mk.source.value == null) t.className = 'cite'; }
+    if (mk.figures) {
+      // Each stated amount in the label becomes its own sourced .figure span.
+      let rest = mk.label;
+      const parts = [];
+      for (const f of mk.figures) {
+        const token = `$${f.value}M`;
+        const at = rest.indexOf(token);
+        if (at < 0) continue;
+        parts.push(rest.slice(0, at));
+        const s = document.createElement('span'); srcAttrs(s, f); s.textContent = token; parts.push(s);
+        rest = rest.slice(at + token.length);
+      }
+      parts.push(rest);
+      t.append(...parts);
+    } else {
+      t.textContent = `${mk.label} (FY${mk.fy})`;
+      if (mk.source) { srcAttrs(t, mk.source); if (mk.source.value == null) t.className = 'cite'; }
+    }
     li.append(t);
     ol.append(li);
   });

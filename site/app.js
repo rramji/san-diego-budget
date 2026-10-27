@@ -84,10 +84,6 @@ function renderChapter1(data) {
     const b = prep.bars.find((x) => x.fy === Number(sp.dataset.fyTop));
     sp.replaceWith(figureSpan(b.top_figure, money(b.top_m)));
   }
-  for (const sp of document.querySelectorAll('[data-marker-fig]')) {
-    const mk = prep.markers.find((x) => x.fy === Number(sp.dataset.markerFig));
-    sp.replaceWith(figureSpan(mk.source, money(mk.source.value)));
-  }
   const chart = document.getElementById('ch1-chart');
   const dig = document.getElementById('ch1-dig-chart');
   deficitBars.renderNotes(document.getElementById('ch1-notes'), prep);

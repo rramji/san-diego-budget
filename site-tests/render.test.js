@@ -35,6 +35,11 @@ test('prepare marks the two bases and the scale line has no zero-fill', () => {
   assert.deepEqual(p.markers.map((m) => m.fy), [2011, 2025, 2026, 2028]);
 });
 
+test('FY2028 marker carries the city and IBA figures', () => {
+  const mk = prepare(data).markers.find((m) => m.fy === 2028);
+  assert.deepEqual(mk.figures.map((f) => f.value), [9.5, 32.9]);
+});
+
 test('prepare stacks: components when present, direct fields otherwise, no double count', () => {
   const p = prepare(data);
   const s12 = p.bars.find((b) => b.fy === 2012).stack;
@@ -75,7 +80,7 @@ import { prepare as funnelPrepare } from '../site/charts/funnel.js';
 
 const fig = (value) => ({ value, source: { doc: 'test', page: 1, url: 'https://example.org/x' } });
 const hl = { fy: 2027, total_budget_m: fig(6486.9), general_fund_m: fig(2256.7), enterprise_m: fig(1915.1), special_revenue_m: fig(1207.9), internal_service_m: fig(225.7), capital_project_m: fig(23.5), cip_m: fig(858.1) };
-const fn = { fy: 2027, bar3: { pension_adc_m: fig(396.1), debt_service_m: fig(75), everything_else_m: fig(1700) }, bar4: [{ dept: 'Police', amount_m: fig(718.3) }, { dept: 'All other', amount_m: fig(1538.4) }], gap_m: fig(118) };
+const fn = { fy: 2027, bar3: { pension_adc_m: fig(396.3), debt_service_m: fig(75), everything_else_m: fig(1700) }, bar4: [{ dept: 'Police', amount_m: fig(718.3) }, { dept: 'All other', amount_m: fig(1538.4) }], gap_m: fig(118) };
 
 test('test_funnel_gap_ratio', () => {
   const p = funnelPrepare(hl, fn);

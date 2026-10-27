@@ -10,7 +10,7 @@ const OPTIONS = [
 const HEADINGS = {
   Both: "The city's budget office and the IBA",
   'City budget office': "The city's budget office",
-  'Independent Budget Analyst': "Counted the IBA's way",
+  'Our arithmetic': 'Counting the skipped reserve deposit too (our arithmetic)',
 };
 
 const derived = (how, src) => ({ source: { doc: `derived: ${how}`, page: src.page ?? null, url: src.url } });
@@ -27,7 +27,7 @@ function column(f, gap) {
   h.textContent = HEADINGS[f.framing] || f.framing;
   const big = document.createElement('p');
   big.className = 'gap-amount';
-  const amt = num({ source: f.sources.amount }, gapMoney(f.amount_m));
+  const amt = num({ source: f.sources.amount }, f.approx ? `about ${money(f.amount_m)}` : gapMoney(f.amount_m));
   big.append(amt, ' a year');
   col.append(h, big);
   const s = f.sources;
