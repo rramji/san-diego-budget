@@ -1,8 +1,9 @@
+import copy
 import csv
 from pathlib import Path
 import pytest
 from pipeline import curated
-from pipeline.build import build_gf_revenue, build_cip
+from pipeline.build import build_gf_revenue, build_cip, build_labels
 ROOT = Path(__file__).parent.parent
 CUR = ROOT / "data" / "curated"
 
@@ -102,3 +103,68 @@ def test_cip_named_sources_over_total_names_path():
     d["sources"][0]["amount_m"]["value"] += 100
     with pytest.raises(ValueError, match="sources"):
         build_cip(d)
+
+
+def test_labels_cover_pots_and_links():
+    d = build_labels(curated.load(CUR, "labels"))
+    assert set(d["pots"]) == {"general_fund", "utilities", "purpose", "cip", "internal"}
+    assert d["nodes"]["Property Tax"]["link"] == "#why-short"
+    assert d["nodes"]["Stormwater"]["link"] == "#infrastructure"
+    assert d["categories"]["Pension payment"]["link"] == "#pension"
+    assert d["categories"]["_everything_else"]["text"]
+
+
+_SRC = {"doc": "Test doc", "page": 1, "url": "https://example.org/x.pdf"}
+_DETAIL = ("The detail below is from last year's budget (FY{detail_fy}), because this year's "
+           "line-by-line data isn't published yet.")
+
+
+def _valid_labels():
+    pots = {}
+    for pid in ("general_fund", "utilities", "purpose", "cip", "internal"):
+        pots[pid] = {k: {"text": f"{k} text.", "source": dict(_SRC)}
+                     for k in ("what", "money_from", "committed_to", "who_decides")}
+        if pid in ("utilities", "purpose", "internal"):
+            pots[pid]["what"]["text"] = "What it is. " + _DETAIL
+    return {"pots": pots,
+            "nodes": {"Police": {"text": "One sentence. Two sentences.", "source": dict(_SRC), "link": None}},
+            "categories": {"Pension payment": {"text": "Yearly pension payment.", "link": "#pension"}}}
+
+
+def test_labels_valid_synthetic_passes():
+    assert build_labels(_valid_labels())["nodes"]["Police"]["link"] is None
+
+
+def test_labels_reject_three_sentences_and_unknown_link():
+    d = _valid_labels()
+    d["nodes"]["Police"]["text"] = "One. Two. Three."
+    with pytest.raises(ValueError, match="Police"):
+        build_labels(d)
+    d = _valid_labels()
+    d["categories"]["Pension payment"]["link"] = "#nowhere"
+    with pytest.raises(ValueError, match="Pension payment"):
+        build_labels(d)
+
+
+@pytest.mark.parametrize("edit, where", [
+    (lambda d: d["pots"].pop("cip"), "cip"),
+    (lambda d: d["pots"]["general_fund"].pop("who_decides"), "general_fund"),
+    (lambda d: d["pots"]["general_fund"]["what"].update(text="  "), "general_fund"),
+    (lambda d: d["pots"]["internal"]["money_from"]["source"].update(url="http://x"), "internal"),
+    (lambda d: d["pots"]["utilities"]["what"].update(text="No detail-year sentence."), "utilities"),
+    (lambda d: d["pots"]["cip"]["what"].update(text="One. Two. Three. Four."), "cip"),
+    (lambda d: d["nodes"]["Police"].pop("source"), "Police"),
+    (lambda d: d["categories"]["Pension payment"].update(source=dict(_SRC)), "Pension payment"),
+])
+def test_labels_reject_bad_pot_answers_and_sources(edit, where):
+    d = _valid_labels()
+    edit(d)
+    with pytest.raises(ValueError, match=where):
+        build_labels(d)
+
+
+def test_labels_input_not_mutated():
+    d = _valid_labels()
+    before = copy.deepcopy(d)
+    build_labels(d)
+    assert d == before

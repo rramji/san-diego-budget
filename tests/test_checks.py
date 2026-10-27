@@ -35,7 +35,9 @@ def _tree():
         offsets=[{"name": "Other costs", "value_m": -5.0}])
     gf_in = _node("General Fund money in", 100.0, fy=2027, children=[
         _node("Property Tax", 100.5, fy=2027, children=[_node("Secured Property Tax", 80.0)])])
-    return {"bar_fy": 2027, "detail_fy": 2026, "sources": {"s0": {}}, "pots": [
+    descs = {k: {"text": f"{k} text.", "src": "s0", "link": None}
+             for k in ("Property Tax", "Salaries & other pay", "_no_fund")}
+    return {"bar_fy": 2027, "detail_fy": 2026, "sources": {"s0": {}}, "descs": descs, "pots": [
         {"id": "general_fund", "in": gf_in, "out": _node("General Fund money out", 0.0, fy=2027)},
         {"id": "utilities", "in": _node("Utilities money in", 0.0), "out": out}]}
 
@@ -129,3 +131,22 @@ def test_budget_tree_missing_reported(out):
     (out / "budget_tree.json").unlink()
     msgs = checks.run(out)
     assert len(msgs) == 1 and "budget_tree" in msgs[0]
+
+
+def test_budget_tree_level1_children_need_descriptions(out):
+    _edit(out, "budget_tree", lambda d: d["descs"].pop("Property Tax"))
+    _edit(out, "budget_tree", lambda d: d["descs"]["Salaries & other pay"].update(text=" "))
+    msgs = checks.run(out)
+    assert len(msgs) == 1 and "descs" in msgs[0]
+    assert "Property Tax" in msgs[0] and "Salaries & other pay" in msgs[0]
+
+
+def test_budget_tree_no_fund_description_required(out):
+    _edit(out, "budget_tree", lambda d: d["descs"].pop("_no_fund"))
+    msgs = checks.run(out)
+    assert len(msgs) == 1 and "_no_fund" in msgs[0]
+
+
+def test_budget_tree_deeper_nodes_need_no_description(out):
+    # "Secured Property Tax" (level 2) and "Salaried Wages" (level 2) have no descs entry
+    assert checks.run(out) == []

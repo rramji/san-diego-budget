@@ -2,6 +2,7 @@
 import copy
 import json
 import os
+import re
 import shutil
 import sys
 import tempfile
@@ -355,6 +356,79 @@ def build_cip(d: dict) -> dict:
     return d
 
 
+LABEL_POTS = ("general_fund", "utilities", "purpose", "cip", "internal")
+LABEL_CSV_POTS = ("utilities", "purpose", "internal")   # maps drawn from the operating-budget CSV
+LABEL_ANSWERS = ("what", "money_from", "committed_to", "who_decides")
+LABEL_LINKS = {"#why-short", "#gap", "#reserves", "#infrastructure", "#pension", "#how-long", "#claims", None}
+# {detail_fy} is filled in by the tree builder with the CSV detail year (2026 today).
+LABEL_DETAIL_SENTENCE = ("The detail below is from last year's budget (FY{detail_fy}), because this year's "
+                         "line-by-line data isn't published yet.")
+ANSWER_MAX_SENTENCES = 3
+DESC_MAX_SENTENCES = 2
+_SENTENCE_END = re.compile(r"[.!?][\"'\u2019\u201d)\]]*(?=\s|$)")
+
+
+def _sentences(text: str) -> int:
+    """Sentence count: a ., ! or ? (optionally followed by a closing quote or bracket) at a space or the end.
+    Decimals such as $1.59B do not count. Text with no end mark counts as one sentence."""
+    return len(_SENTENCE_END.findall(text.strip())) or 1
+
+
+def _label_text(entry, path: str, max_sentences: int) -> str:
+    if not isinstance(entry, dict):
+        raise ValueError(f"{path}: object required")
+    text = entry.get("text")
+    if not isinstance(text, str) or not text.strip():
+        raise ValueError(f"{path}.text: required non-empty string")
+    n = _sentences(text)
+    if n > max_sentences:
+        raise ValueError(f"{path}.text: {n} sentences, at most {max_sentences} allowed")
+    return text
+
+
+def _label_link(entry: dict, path: str) -> None:
+    if entry.get("link") not in LABEL_LINKS:
+        raise ValueError(f"{path}.link: {entry.get('link')!r} is not one of {sorted(k for k in LABEL_LINKS if k)} or null")
+
+
+def build_labels(d: dict) -> dict:
+    """Plain copy for the budget maps: four sourced answers for each of the five pots, a cited
+    description per named box (nodes), and one shared, unsourced definition per category."""
+    d = copy.deepcopy(d)
+    pots, nodes, cats = d.get("pots"), d.get("nodes"), d.get("categories")
+    if not all(isinstance(x, dict) for x in (pots, nodes, cats)):
+        raise ValueError("labels: pots, nodes and categories must be objects")
+    if set(pots) != set(LABEL_POTS):
+        missing, extra = sorted(set(LABEL_POTS) - set(pots)), sorted(set(pots) - set(LABEL_POTS))
+        raise ValueError(f"pots: missing {missing}, unknown {extra}")
+    for pid in LABEL_POTS:
+        if not isinstance(pots[pid], dict):
+            raise ValueError(f"pots.{pid}: object required")
+        for k in LABEL_ANSWERS:
+            path = f"pots.{pid}.{k}"
+            a = pots[pid].get(k)
+            text = _label_text(a, path, ANSWER_MAX_SENTENCES)
+            _check_source(a.get("source"), f"{path}.source")
+            if k == "what" and pid in LABEL_CSV_POTS and not text.rstrip().endswith(LABEL_DETAIL_SENTENCE):
+                raise ValueError(f"{path}.text: must end with the detail-year sentence {LABEL_DETAIL_SENTENCE!r}")
+    for key, n in nodes.items():
+        path = f"nodes[{key!r}]"
+        if not key.strip():
+            raise ValueError(f"{path}: blank key")
+        _label_text(n, path, DESC_MAX_SENTENCES)
+        _check_source(n.get("source"), f"{path}.source")
+        _label_link(n, path)
+    for key, c in cats.items():
+        path = f"categories[{key!r}]"
+        if not key.strip():
+            raise ValueError(f"{path}: blank key")
+        _label_text(c, path, DESC_MAX_SENTENCES)
+        if "source" in c:
+            raise ValueError(f"{path}.source: categories are shared definitions and carry no source")
+        _label_link(c, path)
+    return d
+
+
 class BuildCheckError(RuntimeError):
     """checks.run reported failures on the freshly built files; out_dir was left untouched."""
 
@@ -424,7 +498,7 @@ def _build_into(raw_dir: Path, curated_dir: Path, out_dir: Path) -> list[str]:
             funnel=curated.load(curated_dir, "funnel"),
             gf_revenue=build_gf_revenue(curated.load(curated_dir, "gf_revenue_fy2027")),
             cip=build_cip(curated.load(curated_dir, "cip_fy2027")),
-            labels=curated.load(curated_dir, "labels"),
+            labels=build_labels(curated.load(curated_dir, "labels")),
             unmatched=unmatched_rows(raw_dir))),
     ]
     return [_write(out_dir, name, fn()).name for name, fn in steps]

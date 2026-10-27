@@ -13,6 +13,10 @@ MAX_BYTES = 300_000
 TREE_MAX_BYTES = 130_000
 TREE_SUM_TOLERANCE = 0.01      # same-year children (plus offsets) vs. their parent
 TREE_ROUNDING_SLACK_M = 0.0005  # per summed value: build output is rounded to 3 decimals
+# Boxes that must have a description (descs[key]): the top level of these maps, plus the no-fund box.
+# Construction projects and Internal services boxes may fall back to their category text.
+DESC_REQUIRED = {"general_fund": ("in", "out"), "utilities": ("out",), "purpose": ("out",)}
+DESC_ALWAYS = ("_no_fund",)
 
 
 def _load(out_dir: Path, name: str) -> dict:
@@ -32,7 +36,23 @@ def _tree_nodes(tree: dict):
     while stack:
         path, n = stack.pop()
         yield path, n
-        stack.extend((f"{path} > {c['name']}", c) for c in n["children"] or [])
+        stack.extend((f"{path} > {c['name']}", c) for c in n.get("children") or [])
+
+
+def _check_descs(tree: dict, failures: list[str]) -> None:
+    descs = tree.get("descs") or {}
+
+    def has(key):
+        return bool(str((descs.get(key) or {}).get("text") or "").strip())
+    missing = []
+    for p in tree["pots"]:
+        for side in DESC_REQUIRED.get(p["id"], ()):
+            root = p[side]
+            missing += [f"{root['name']} > {c['name']} (key {c['key']!r})"
+                        for c in root.get("children") or [] if not has(c["key"])]
+    missing += [repr(k) for k in DESC_ALWAYS if not has(k)]
+    if missing:
+        failures.append(f"budget_tree descs missing for {len(missing)} item(s): " + "; ".join(missing))
 
 
 def check_budget_tree(out_dir: Path, failures: list[str]) -> None:
@@ -43,15 +63,16 @@ def check_budget_tree(out_dir: Path, failures: list[str]) -> None:
         if size >= TREE_MAX_BYTES:
             failures.append(f"budget_tree.json size {size} bytes exceeds {TREE_MAX_BYTES:,} byte limit")
         for where, n in _tree_nodes(tree):
-            kids = n["children"]
+            kids = n.get("children")
             # Children from a different year are detail (FY2026 lines under an FY2027 box), not a sum.
             if not kids or any(c["fy"] != n["fy"] for c in kids):
                 continue
-            parts = [c["value_m"] for c in kids] + [o["value_m"] for o in n["offsets"] or []]
+            parts = [c["value_m"] for c in kids] + [o["value_m"] for o in n.get("offsets") or []]
             s = sum(parts)
             if abs(s - n["value_m"]) > TREE_SUM_TOLERANCE * abs(n["value_m"]) + TREE_ROUNDING_SLACK_M * len(parts):
                 failures.append(f"budget_tree {where}: children and offsets sum to {s:.3f}, "
                                 f"not within {TREE_SUM_TOLERANCE:.0%} of {n['value_m']}")
+        _check_descs(tree, failures)
     except (OSError, KeyError, TypeError, ValueError) as e:
         failures.append(f"budget_tree.json check could not run: {e!r}")
 

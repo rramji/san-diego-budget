@@ -1,1 +1,695 @@
-{"pots": {}, "nodes": {}, "categories": {}}
+{
+  "pots": {
+    "general_fund": {
+      "what": {
+        "text": "The city's main operating fund (General Fund). It pays for police, fire-rescue, streets and storm drains, parks and recreation, libraries, and the offices that support them.",
+        "source": {
+          "doc": "FY2027 Adopted Budget Vol. I, Citywide Budget Overview, Expenditure Overview by Fund Type: General Fund",
+          "page": 24,
+          "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1cbo.pdf"
+        }
+      },
+      "money_from": {
+        "text": "Mostly taxes: property tax ($881.0M of $2,256.6M), sales tax ($386.7M), hotel tax ($169.7M) and fees utility companies pay to use city streets (franchise fees, $105.7M). The other large piece is charges for services ($374.7M), which includes the cost of central services billed to city departments.",
+        "source": {
+          "doc": "FY2027 Adopted Budget Vol. I, General Fund Revenues, Table 2, FY2027 General Fund Revenues by category (p.57); Charges for Current Services (p.77)",
+          "page": 57,
+          "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1generalfundrevenues.pdf"
+        }
+      },
+      "committed_to": {
+        "text": "Much of it is spoken for before any choices are made: the required yearly pension payment (actuarially determined contribution) is $396.3M in FY2027. It also makes yearly payments on bonds sold to build and repair city facilities (lease revenue bonds), and by law the budget must balance.",
+        "source": {
+          "doc": "FY2027 Adopted Budget, full document, Vol. I: Citywide Budget Overview, Table 8, Retirement ADC, General Fund $396,300,918 (p.30); Debt Obligations, Table 2, General Fund lease revenue bonds (pp.112-113); Fiscal Policies, Balanced Budget, Charter Section 69 (p.92)",
+          "page": 30,
+          "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_full.pdf"
+        }
+      },
+      "who_decides": {
+        "text": "The Mayor proposes the budget by April 15, and the City Council adopts it by June 15. The Council then passes a yearly spending law (appropriation ordinance) that sets the legal spending limit for each fund and department.",
+        "source": {
+          "doc": "FY2027 Adopted Budget Vol. I, Fiscal Policies: Balanced Budget, Charter Section 69 (p.92); Legal Authority (Appropriation Ordinance) (p.91)",
+          "page": 92,
+          "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1fiscalpolicies.pdf"
+        }
+      }
+    },
+    "utilities": {
+      "what": {
+        "text": "City services that charge their customers directly (enterprise funds): water, sewer, trash pickup, recycling, the city landfill, building permits, golf courses and airports. The detail below is from last year's budget (FY{detail_fy}), because this year's line-by-line data isn't published yet.",
+        "source": {
+          "doc": "FY2027 Adopted Budget Vol. I, Citywide Budget Overview, Expenditure Overview by Fund Type: Enterprise Funds",
+          "page": 24,
+          "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1cbo.pdf"
+        }
+      },
+      "money_from": {
+        "text": "Mostly fees paid by the people and businesses that use each service (user fees), such as water and sewer bills. These funds are typically meant to pay for themselves, without help from the General Fund.",
+        "source": {
+          "doc": "FY2027 Adopted Budget Vol. I, Citywide Budget Overview, Expenditure Overview by Fund Type: Enterprise Funds",
+          "page": 24,
+          "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1cbo.pdf"
+        }
+      },
+      "committed_to": {
+        "text": "They carry large debts repaid from their own revenues: in FY2027 the water system owes $139.2M and the sewer system $107.1M in bond and loan payments. Their share of the city's required pension payment is $106.0M.",
+        "source": {
+          "doc": "FY2027 Adopted Budget, full document, Vol. I: Debt Obligations, Table 4, Summary of Enterprise Fund Debt Obligations (sewer total p.114, water total p.115; revenue bonds are payable from enterprise revenues, p.111); Citywide Budget Overview, Table 8, Retirement ADC, Enterprise Funds $106,011,172 (p.30)",
+          "page": 114,
+          "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_full.pdf"
+        }
+      },
+      "who_decides": {
+        "text": "The Mayor proposes and the City Council adopts these funds' budgets each year, together with the rest of the city budget. The Council's yearly spending law (appropriation ordinance) sets the legal spending limit for each fund.",
+        "source": {
+          "doc": "FY2027 Adopted Budget Vol. I, Fiscal Policies: Legal Authority (Appropriation Ordinance), Charter Section 69 (p.91); Balanced Budget, Charter Section 69 (p.92)",
+          "page": 91,
+          "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1fiscalpolicies.pdf"
+        }
+      }
+    },
+    "purpose": {
+      "what": {
+        "text": "Funds that hold money the city receives for a specific purpose (special revenue funds). The largest are for engineering, putting power lines underground, the hotel tax, ambulance service and information technology. The detail below is from last year's budget (FY{detail_fy}), because this year's line-by-line data isn't published yet.",
+        "source": {
+          "doc": "FY2027 Adopted Budget Vol. I, Citywide Budget Overview, Expenditure Overview by Fund Type: Special Revenue Funds (five largest funds)",
+          "page": 24,
+          "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1cbo.pdf"
+        }
+      },
+      "money_from": {
+        "text": "In last year's detail (FY2026), the biggest sources were charges for services ($443.7M), much of it paid by other city departments; other local taxes ($192.6M), mostly SDG&E franchise payments and state gas taxes; and the hotel tax ($157.8M).",
+        "source": {
+          "doc": "City of San Diego open data: operating budget CSV, FY2026 adopted, Special Revenue Funds revenue by account type (largest accounts: Reimbursements Between Funds/Depts $164.3M, Service To Other Depts $131.5M, Franchise Tax - SDG&E $109.6M, four Gas Tax accounts $69.7M)",
+          "page": null,
+          "url": "https://seshat.datasd.org/operating_budget/budget_operating_datasd.csv"
+        }
+      },
+      "committed_to": {
+        "text": "Each fund holds money meant for one purpose. City law, for example, splits the 10.5-cent base hotel tax: 5.5 cents for general government, 4 cents to promote San Diego to visitors and 1 cent for uses the Mayor and City Council approve. These funds' share of the city's required pension payment is $47.2M.",
+        "source": {
+          "doc": "FY2027 Adopted Budget, full document: Vol. II, Transient Occupancy Tax fund page (p.552); Vol. I, Citywide Budget Overview, Special Revenue Funds (p.24) and Table 8, Retirement ADC, Special Revenue Funds $47,210,165 (p.30)",
+          "page": 552,
+          "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_full.pdf"
+        }
+      },
+      "who_decides": {
+        "text": "The Mayor proposes and the City Council adopts these funds' budgets each year, together with the rest of the city budget. The Council's yearly spending law (appropriation ordinance) sets the legal spending limit for each fund.",
+        "source": {
+          "doc": "FY2027 Adopted Budget Vol. I, Fiscal Policies: Legal Authority (Appropriation Ordinance), Charter Section 69 (p.91); Balanced Budget, Charter Section 69 (p.92)",
+          "page": 91,
+          "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1fiscalpolicies.pdf"
+        }
+      }
+    },
+    "cip": {
+      "what": {
+        "text": "The city's budget for repairing, improving and adding to its long-lasting assets, such as pipes, streets and buildings (Capital Improvements Program). FY2027 adds $858.1M on top of $2.7B approved in earlier years that carries forward.",
+        "source": {
+          "doc": "FY2027 Adopted Budget Vol. I, Citywide Budget Overview, Capital Improvements Program",
+          "page": 25,
+          "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1cbo.pdf"
+        }
+      },
+      "money_from": {
+        "text": "Mostly water and sewer customers: the Sewer Funds put in $306.3M and the Water Fund $283.7M, paid from rates and grants. Borrowing for General Fund projects (lease revenue bonds) adds $89.0M, and the rest comes from smaller sources such as the undergrounding fund, TransNet and fees on new development.",
+        "source": {
+          "doc": "FY2027 Adopted Budget Vol. III, Capital Improvements Program, Table 1, Fiscal Year 2027 Adopted CIP Budget (p.4); Funding Sources: Bond Financing, Development Impact Fees (p.57), Sewer Funds (p.60), Water Fund (p.61)",
+          "page": 4,
+          "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v3.pdf"
+        }
+      },
+      "committed_to": {
+        "text": "Most of it is tied to its source: according to the IBA, water and wastewater money can only be used on water and wastewater systems, and General Fund borrowing is the city's only capital funding with few limits. Projects such as streetlights, parks, fire stations and libraries often can't use the restricted money and compete for that small pool.",
+        "source": {
+          "doc": "IBA Report 26-06, Review of the FY 2027-2031 Five-Year Capital Infrastructure Planning Outlook (projected funding: water and wastewater funds can only be used for water and wastewater infrastructure; General Fund financing has minimal use restrictions)",
+          "page": 5,
+          "url": "https://www.sandiego.gov/sites/default/files/2026-03/26-06-iba-review-of-the-mayor-s-fy-2027-2031-five-year-capital-infrastructure-planning-outlook.pdf"
+        }
+      },
+      "who_decides": {
+        "text": "City staff committees review departments' requests and recommend a plan to the Mayor, who releases it by April 15. The City Council holds hearings in May, can change the plan and approves it in June.",
+        "source": {
+          "doc": "FY2027 Adopted Budget Vol. III, Capital Improvements Program, CIP budget process, October-June timeline (pp.29-30)",
+          "page": 30,
+          "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v3.pdf"
+        }
+      }
+    },
+    "internal": {
+      "what": {
+        "text": "Funds that provide shared services to other city departments, such as the vehicle fleet (internal service funds), plus funds set aside for major buildings and other facilities (capital project funds). The detail below is from last year's budget (FY{detail_fy}), because this year's line-by-line data isn't published yet.",
+        "source": {
+          "doc": "FY2027 Adopted Budget Vol. I, Citywide Budget Overview, Expenditure Overview by Fund Type: Internal Service Funds and Capital Project Funds",
+          "page": 25,
+          "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1cbo.pdf"
+        }
+      },
+      "money_from": {
+        "text": "City departments pay these funds back for the services they use (cost-reimbursable). The capital project funds hold money set aside for building major facilities, such as Capital Outlay and TransNet Extension money.",
+        "source": {
+          "doc": "FY2027 Adopted Budget Vol. I, Citywide Budget Overview, Expenditure Overview by Fund Type: Internal Service Funds and Capital Project Funds",
+          "page": 25,
+          "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1cbo.pdf"
+        }
+      },
+      "committed_to": {
+        "text": "Capital project funds are set aside for buying or building major facilities, plus related operating costs; only that operating part is shown here, and their construction spending is in Construction projects. The internal service funds' share of the city's required pension payment is $10.8M.",
+        "source": {
+          "doc": "FY2027 Adopted Budget Vol. I, Citywide Budget Overview: Capital Project Funds (p.25); Table 8, Retirement ADC, Internal Service Funds $10,771,424 (p.30)",
+          "page": 25,
+          "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1cbo.pdf"
+        }
+      },
+      "who_decides": {
+        "text": "The Mayor proposes and the City Council adopts these funds' budgets each year, together with the rest of the city budget. The Council's yearly spending law (appropriation ordinance) sets the legal spending limit for each fund.",
+        "source": {
+          "doc": "FY2027 Adopted Budget Vol. I, Fiscal Policies: Legal Authority (Appropriation Ordinance), Charter Section 69 (p.91); Balanced Budget, Charter Section 69 (p.92)",
+          "page": 91,
+          "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1fiscalpolicies.pdf"
+        }
+      }
+    }
+  },
+  "nodes": {
+    "Property Tax": {
+      "text": "The city's biggest source of money: its share of the 1% yearly tax on the assessed value of property, which the County collects. Across San Diego County, cities get on average $17.80 of every $100 of this tax (a countywide average for cities, not San Diego's own share).",
+      "source": {
+        "doc": "FY2027 Adopted Budget Vol. I, General Fund Revenues, Property Tax",
+        "page": 62,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1generalfundrevenues.pdf"
+      },
+      "link": "#why-short"
+    },
+    "Sales Tax": {
+      "text": "Of the 7.75% sales tax charged in San Diego, the city gets 1 cent of each dollar of taxable sales. The rest goes to the state, the county, the regional TransNet transportation tax and a half-cent for local public safety.",
+      "source": {
+        "doc": "FY2027 Adopted Budget Vol. I, General Fund Revenues, Sales Tax; Figure 9, City of San Diego Sales Tax Rate (7.75 percent)",
+        "page": 67,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1generalfundrevenues.pdf"
+      },
+      "link": "#why-short"
+    },
+    "Charges for Current Services": {
+      "text": "Payments for services the city provides, both to the public and to other city funds. In the General Fund this includes the cost of central services billed to city departments (General Government Services Billing) and hotel-tax money that repays visitor-related costs.",
+      "source": {
+        "doc": "FY2027 Adopted Budget Vol. I, General Fund Revenues, Charges for Current Services",
+        "page": 77,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1generalfundrevenues.pdf"
+      },
+      "link": null
+    },
+    "Transient Occupancy Tax": {
+      "text": "Hotel guests pay 10.5 cents per dollar of room rent for stays under a month (transient occupancy tax), and city law sends 5.5 of those cents to the General Fund. Of the rest, 4 cents go to promoting San Diego to visitors and 1 cent to uses the City Council approves.",
+      "source": {
+        "doc": "FY2027 Adopted Budget Vol. I, General Fund Revenues, General Fund Transient Occupancy Tax (TOT)",
+        "page": 69,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1generalfundrevenues.pdf"
+      },
+      "link": "#why-short"
+    },
+    "Transfers In": {
+      "text": "Money moved into this fund from other city funds. For the General Fund this includes 1 cent of the hotel tax, the public-safety sales tax and gas tax money.",
+      "source": {
+        "doc": "FY2027 Adopted Budget Vol. I, General Fund Revenues, Transfers In",
+        "page": 78,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1generalfundrevenues.pdf"
+      },
+      "link": null
+    },
+    "Franchise Fees": {
+      "text": "Payments from private utility companies, such as SDG&E and cable companies, for using city streets and other public land (rights-of-way), plus fees from private trash haulers. SDG&E is the largest payer.",
+      "source": {
+        "doc": "FY2027 Adopted Budget Vol. I, General Fund Revenues, Franchise Fees",
+        "page": 72,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1generalfundrevenues.pdf"
+      },
+      "link": null
+    },
+    "Revenue from Money and Property": {
+      "text": "Mostly rent and concession payments for city land such as Mission Bay Park, Balboa Park, the city's Pueblo Lands and Torrey Pines Golf Course, plus interest and dividend earnings.",
+      "source": {
+        "doc": "FY2027 Adopted Budget Vol. I, General Fund Revenues, Revenue from Money and Property",
+        "page": 76,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1generalfundrevenues.pdf"
+      },
+      "link": null
+    },
+    "Licenses & Permits": {
+      "text": "Fees that cover the cost of regulating activities, plus business and rental-unit certificate fees, parking meter money, alarm permits and special event permits.",
+      "source": {
+        "doc": "FY2027 Adopted Budget Vol. I, General Fund Revenues, Licenses and Permits",
+        "page": 75,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1generalfundrevenues.pdf"
+      },
+      "link": null
+    },
+    "Fines, Forfeitures, and Penalties": {
+      "text": "Money from breaking laws or rules, such as traffic and parking tickets, city code violations and court awards (litigation awards).",
+      "source": {
+        "doc": "FY2027 Adopted Budget Vol. I, General Fund Revenues, Fines, Forfeitures, and Penalties",
+        "page": 76,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1generalfundrevenues.pdf"
+      },
+      "link": null
+    },
+    "Property Transfer Taxes": {
+      "text": "A tax when property is sold: the County collects $1.10 per $1,000 of the sale price and credits the city with half ($0.55).",
+      "source": {
+        "doc": "FY2027 Adopted Budget Vol. I, General Fund Revenues, Property Transfer Tax",
+        "page": 74,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1generalfundrevenues.pdf"
+      },
+      "link": null
+    },
+    "Police": {
+      "text": "The San Diego Police Department: neighborhood patrols, traffic enforcement, investigations, records, permits and licensing, and laboratory services. It works from a headquarters, nine area commands and a traffic division.",
+      "source": {
+        "doc": "FY2027 Adopted Budget, full document (Volumes I-III), Vol. II, Police, Description",
+        "page": 441,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_full.pdf"
+      },
+      "link": null
+    },
+    "Fire-Rescue": {
+      "text": "Firefighting, emergency medical care and ambulance transport, rescues, lifeguards and the city's two 911 communications centers. It runs 52 fire stations, an air operations base and ten permanent lifeguard stations.",
+      "source": {
+        "doc": "FY2027 Adopted Budget, full document (Volumes I-III), Vol. II, Fire-Rescue, Description",
+        "page": 269,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_full.pdf"
+      },
+      "link": null
+    },
+    "All other": {
+      "text": "The City Attorney ($102.8M) plus the many smaller departments the budget groups under Other ($284.3M), such as the City Council, the Department of Finance, Environmental Services and General Services.",
+      "source": {
+        "doc": "FY2027 Adopted Budget Vol. I, General Fund Expenditures, Figure 2, FY2027 General Fund Expenditures by Department, and its note listing the Other category",
+        "page": 89,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1generalfundexpenditures.pdf"
+      },
+      "link": null
+    },
+    "Citywide Program Expenditures": {
+      "text": "Costs that serve the whole city rather than one department, run by the Department of Finance. The largest FY2027 items are payments on bonds for repair and construction work the city had put off (deferred capital debt service, $67.4M) and transfers to cover injury and damage claims and insurance (public liability).",
+      "source": {
+        "doc": "FY2027 Adopted Budget, full document (Volumes I-III), Vol. II, Citywide Program Expenditures, Description (p.96) and General Fund Department Expenditures table",
+        "page": 97,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_full.pdf"
+      },
+      "link": null
+    },
+    "Parks & Recreation": {
+      "text": "Runs the city's beaches, parks, regional parks and open space, recreation centers and programs, and special events and filming. Its land includes over 443 parks, among them Balboa Park and Mission Bay Park.",
+      "source": {
+        "doc": "FY2027 Adopted Budget, full document (Volumes I-III), Vol. II, Parks & Recreation, Description",
+        "page": 385,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_full.pdf"
+      },
+      "link": null
+    },
+    "Transportation": {
+      "text": "Maintains streets, alleys, sidewalks, streetlights, traffic signals and signs, and manages parking citywide. It also runs the program that moves overhead utility lines underground and the city's street tree (urban forestry) program.",
+      "source": {
+        "doc": "FY2027 Adopted Budget, full document (Volumes I-III), Vol. II, Transportation, Description (pp.563-564)",
+        "page": 563,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_full.pdf"
+      },
+      "link": "#infrastructure"
+    },
+    "Library": {
+      "text": "The San Diego Public Library: the Central Library, 36 branch libraries and an adult literacy program, with nearly 4 million items.",
+      "source": {
+        "doc": "FY2027 Adopted Budget, full document (Volumes I-III), Vol. II, Library, Description",
+        "page": 338,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_full.pdf"
+      },
+      "link": null
+    },
+    "Stormwater": {
+      "text": "Builds and maintains the city's storm drain system to reduce flooding, and cuts pollution in runoff to keep water and beaches clean (water quality).",
+      "source": {
+        "doc": "FY2027 Adopted Budget, full document (Volumes I-III), Vol. II, Stormwater, Description",
+        "page": 532,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_full.pdf"
+      },
+      "link": "#infrastructure"
+    },
+    "Homelessness Strategies & Solutions": {
+      "text": "Leads the city's work on homelessness, with programs such as emergency shelters, Safe Sleeping and Safe Parking sites, storage facilities and outreach.",
+      "source": {
+        "doc": "FY2027 Adopted Budget, full document (Volumes I-III), Vol. II, Homelessness Strategies and Solutions, Description",
+        "page": 320,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_full.pdf"
+      },
+      "link": null
+    },
+    "Water Utility Operating Fund": {
+      "text": "Runs the city's water system for about 1.4 million retail customers, plus wholesale and recycled-water customers, including the dams and reservoirs that store water (Public Utilities Department).",
+      "source": {
+        "doc": "FY2027 Adopted Budget, full document (Volumes I-III), Vol. II, Public Utilities, Description",
+        "page": 465,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_full.pdf"
+      },
+      "link": null
+    },
+    "Metropolitan Sewer Utility Fund": {
+      "text": "The part of the sewer system that treats and disposes of the wastewater (sewage) from San Diego and 12 other nearby cities and districts (Public Utilities Department).",
+      "source": {
+        "doc": "FY2027 Adopted Budget, full document (Volumes I-III), Vol. II, Public Utilities, Description",
+        "page": 465,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_full.pdf"
+      },
+      "link": null
+    },
+    "Municipal Sewer Revenue Fund": {
+      "text": "The part of the sewer system that collects the city's sewage (wastewater) and carries it away (Public Utilities Department).",
+      "source": {
+        "doc": "FY2027 Adopted Budget, full document (Volumes I-III), Vol. II, Public Utilities, Description (Municipal sub-system: sewage collection and conveyance for the City's residents)",
+        "page": 465,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_full.pdf"
+      },
+      "link": null
+    },
+    "Development Services Fund": {
+      "text": "Reviews building plans, issues permits, inspects construction and enforces building and land-use codes for private and public projects (Development Services Department).",
+      "source": {
+        "doc": "FY2027 Adopted Budget, full document (Volumes I-III), Vol. II, Development Services, Description",
+        "page": 156,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_full.pdf"
+      },
+      "link": null
+    },
+    "Solid Waste Management Fund": {
+      "text": "Pays for trash, recycling and organic waste pickup for eligible households. Its money comes from the trash fee allowed after voters passed Measure B, billed with property taxes.",
+      "source": {
+        "doc": "FY2027 Adopted Budget Vol. III, Capital Improvements Program, Funding Sources: Solid Waste Management",
+        "page": 60,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v3.pdf"
+      },
+      "link": "#why-short"
+    },
+    "Refuse Disposal Fund": {
+      "text": "Runs the city's Miramar Landfill and maintains its closed (inactive) landfills.",
+      "source": {
+        "doc": "FY2027 Adopted Budget Vol. III, Capital Improvements Program, Funding Sources: Refuse Disposal Fund",
+        "page": 59,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v3.pdf"
+      },
+      "link": null
+    },
+    "Golf Course Fund": {
+      "text": "Runs the city's three golf courses, Balboa Park, Mission Bay and Torrey Pines, using money the courses earn.",
+      "source": {
+        "doc": "FY2027 Adopted Budget Vol. III, Capital Improvements Program, Funding Sources: Golf Course Enterprise Funds",
+        "page": 58,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v3.pdf"
+      },
+      "link": null
+    },
+    "Recycling Fund": {
+      "text": "Pays for the city's recycling programs and facilities, using fees tied to recycling.",
+      "source": {
+        "doc": "FY2027 Adopted Budget Vol. III, Capital Improvements Program, Funding Sources: Recycling Fund",
+        "page": 59,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v3.pdf"
+      },
+      "link": null
+    },
+    "Airports Fund": {
+      "text": "Runs the city's two airports, Montgomery-Gibbs Executive Airport and Brown Field, both reliever airports that help prevent delays at San Diego International (Economic Development Department).",
+      "source": {
+        "doc": "FY2027 Adopted Budget, full document (Volumes I-III), Vol. II, Economic Development, Description",
+        "page": 178,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_full.pdf"
+      },
+      "link": null
+    },
+    "Engineering & Capital Projects Fund": {
+      "text": "The city's engineering department (Engineering & Capital Projects): about 735 engineers, surveyors and support staff who plan, design and manage construction of city capital projects and inspect work in public streets (rights-of-way).",
+      "source": {
+        "doc": "FY2027 Adopted Budget, full document (Volumes I-III), Vol. II, Engineering and Capital Projects, Description",
+        "page": 213,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_full.pdf"
+      },
+      "link": null
+    },
+    "Transient Occupancy Tax Fund": {
+      "text": "The fund that collects the city's 10.5% base hotel tax. City law splits it: 5.5 cents for general government, 4 cents to promote San Diego to visitors and 1 cent for uses the Mayor and City Council approve.",
+      "source": {
+        "doc": "FY2027 Adopted Budget, full document (Volumes I-III), Vol. II, Transient Occupancy Tax, Description",
+        "page": 552,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_full.pdf"
+      },
+      "link": "#why-short"
+    },
+    "Fire/Emergency Medical Services Transport Program Fund": {
+      "text": "The city's emergency ambulance program (emergency medical transport). Most of its money comes from charges for the service, and it pays for ambulance contracts and repays the General Fund for eligible emergency medical costs.",
+      "source": {
+        "doc": "FY2027 Adopted Budget, full document (Volumes I-III), Vol. II, Fire-Rescue, Fire/Emergency Medical Services Transport Program Fund revenue and expense statement (p.289) and Budget Adjustments (p.283)",
+        "page": 289,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_full.pdf"
+      },
+      "link": null
+    },
+    "Information Technology Fund": {
+      "text": "A Department of Information Technology fund whose largest cost is citywide fixed technology expenses (Citywide IT Fixed Expenses). Nearly all of its money comes from charges for services.",
+      "source": {
+        "doc": "FY2027 Adopted Budget, full document (Volumes I-III), Vol. II, Department of Information Technology, Information Technology Fund Department Expenditures (p.140) and revenue and expense statement (p.153)",
+        "page": 140,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_full.pdf"
+      },
+      "link": null
+    },
+    "Underground Surcharge Fund": {
+      "text": "Holds the undergrounding fees SDG&E pays the city (budgeted at $90.7M for FY2027) to move overhead electric lines underground along city streets.",
+      "source": {
+        "doc": "FY2027 Adopted Budget Vol. I, General Fund Revenues, Franchise Fees (SDG&E undergrounding utility franchise fee revenue, budgeted in the Underground Surcharge Fund)",
+        "page": 73,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1generalfundrevenues.pdf"
+      },
+      "link": null
+    },
+    "Gas Tax Fund": {
+      "text": "The city's share of state taxes on gasoline and diesel, set by a formula based on vehicle registrations, property values and population. It pays for street repairs, streetlights, traffic signals, signs and other work in public streets.",
+      "source": {
+        "doc": "FY2027 Adopted Budget, full document (Volumes I-III), Vol. II, Gas Tax Fund, Description",
+        "page": 291,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_full.pdf"
+      },
+      "link": null
+    },
+    "Road Maintenance and Rehabilitation Fund": {
+      "text": "State road-repair money from an extra 14.7-cent-a-gallon gas tax, a 24.5-cent diesel tax, a transportation fee on new vehicles and a $100 registration fee on zero-emission vehicles. The city receives it only if it meets the state's minimum road-funding standards.",
+      "source": {
+        "doc": "FY2027 Adopted Budget, full document (Volumes I-III), Vol. II, Gas Tax Fund, Description (Road Maintenance and Rehabilitation Fund)",
+        "page": 291,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_full.pdf"
+      },
+      "link": null
+    },
+    "Low & Moderate Income Housing Asset Fund": {
+      "text": "Holds the affordable-housing assets the city received from its former Redevelopment Agency and manages them under state law.",
+      "source": {
+        "doc": "FY2027 Adopted Budget, full document (Volumes I-III), Vol. II, Low & Moderate Income Housing Asset Fund, Description",
+        "page": 351,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_full.pdf"
+      },
+      "link": null
+    },
+    "OneSD Support Fund": {
+      "text": "Pays for the city's enterprise resource planning program (OneSD), which runs payroll, vendor and customer payments, budgeting and accounting for city departments.",
+      "source": {
+        "doc": "FY2027 Adopted Budget, full document (Volumes I-III), Vol. II, Department of Information Technology, Enterprise Resource Planning (p.130); OneSD Support Fund Department Expenditures (p.146)",
+        "page": 130,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_full.pdf"
+      },
+      "link": null
+    },
+    "Public Utilities": {
+      "text": "The department that runs the city's water system and its sewage collection and treatment, for San Diego and regional partners (Public Utilities Department).",
+      "source": {
+        "doc": "FY2027 Adopted Budget, full document (Volumes I-III), Vol. II, Public Utilities, Description",
+        "page": 465,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_full.pdf"
+      },
+      "link": null
+    },
+    "Sewer Funds": {
+      "text": "Sewer-rate money, plus grants, for the city's two sewer systems (enterprise funds). Projects are paid with cash, bonds or state revolving fund loans.",
+      "source": {
+        "doc": "FY2027 Adopted Budget Vol. III, Capital Improvements Program, Funding Sources: Sewer Funds",
+        "page": 60,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v3.pdf"
+      },
+      "link": null
+    },
+    "Water Fund": {
+      "text": "Water-rate money, plus grants, for the city's water system (an enterprise fund). Projects are paid with cash, bonds, short-term notes (commercial paper) or state revolving fund loans.",
+      "source": {
+        "doc": "FY2027 Adopted Budget Vol. III, Capital Improvements Program, Funding Sources: Water Fund",
+        "page": 61,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v3.pdf"
+      },
+      "link": null
+    },
+    "Bond Financing": {
+      "text": "Borrowing for General Fund projects such as fire stations, libraries, parks, roads and storm drains, through lease revenue bonds. Short-term notes (commercial paper) can cover costs until the bonds are sold.",
+      "source": {
+        "doc": "FY2027 Adopted Budget Vol. III, Capital Improvements Program, Funding Sources: Bond Financing",
+        "page": 57,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v3.pdf"
+      },
+      "link": null
+    },
+    "Utilities Undergrounding Program Fund": {
+      "text": "Money SDG&E, AT&T and cable companies give the city, to be used only for moving overhead electric lines underground.",
+      "source": {
+        "doc": "FY2027 Adopted Budget Vol. III, Capital Improvements Program, Funding Sources: Utilities Undergrounding Program Fund (pp.60-61)",
+        "page": 60,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v3.pdf"
+      },
+      "link": null
+    },
+    "Fleet Operations Replacement Fund": {
+      "text": "Buys new and replacement vehicles for city departments, following the city's vehicle replacement schedule (Department of General Services).",
+      "source": {
+        "doc": "FY2027 Adopted Budget, full document (Volumes I-III), Vol. II, General Services, Fleet Replacement Funds, Budget Adjustments",
+        "page": 314,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_full.pdf"
+      },
+      "link": null
+    },
+    "Fleet Operations Operating Fund": {
+      "text": "Repairs, maintains and fuels the city's fleet of over 5,100 vehicles and pieces of equipment (Department of General Services).",
+      "source": {
+        "doc": "FY2027 Adopted Budget, full document (Volumes I-III), Vol. II, General Services, Description",
+        "page": 297,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_full.pdf"
+      },
+      "link": null
+    },
+    "_no_fund": {
+      "text": "The city's data lists this spending under Citywide Other/Special Funds with no fund, so we can't tell which pot it belongs to. We show it here rather than leave it out.",
+      "source": {
+        "doc": "City of San Diego open data: operating budget CSV (rows with department Citywide Other/Special Funds and a blank fund)",
+        "page": null,
+        "url": "https://seshat.datasd.org/operating_budget/budget_operating_datasd.csv"
+      },
+      "link": null
+    }
+  },
+  "categories": {
+    "Salaries & other pay": {
+      "text": "Wages and other pay, such as shift pay, for city employees. It also subtracts the savings the city expects from jobs that sit empty for part of the year (vacancy savings), so some lines are negative.",
+      "link": null
+    },
+    "Overtime": {
+      "text": "Pay for hours worked beyond a regular schedule.",
+      "link": null
+    },
+    "Pension payment": {
+      "text": "The city's required yearly payment into the employee pension fund (actuarially determined contribution). It covers benefits employees earn this year plus a payment toward the shortfall built up in past years.",
+      "link": "#pension"
+    },
+    "Workers' comp": {
+      "text": "Costs of the city's program for employees hurt on the job (workers' compensation).",
+      "link": null
+    },
+    "Health & other benefits": {
+      "text": "Health and flexible benefits, Medicare, retiree health care, disability and unemployment insurance, and retirement savings plans other than the pension payment.",
+      "link": null
+    },
+    "Vehicles": {
+      "text": "Buying, renting and fueling city vehicles, including charges from the city's own fleet.",
+      "link": null
+    },
+    "Contracts & services": {
+      "text": "Work the city pays others to do, both outside companies and other city departments (one department paying another).",
+      "link": null
+    },
+    "Supplies": {
+      "text": "Materials the city buys and uses up. For the water utility this includes the water the city buys from wholesale suppliers (water purchases).",
+      "link": null
+    },
+    "Energy & utilities": {
+      "text": "Electricity, water, natural gas and fuel for city operations, including power for streetlights and traffic signals.",
+      "link": null
+    },
+    "Information technology": {
+      "text": "Computers, software, networks and the technology services departments are charged for.",
+      "link": null
+    },
+    "Debt payments": {
+      "text": "Principal and interest paid directly from this fund, mostly for things bought on credit (financed purchases). Many funds pay their bonds through transfers instead (see Transfers to other funds).",
+      "link": null
+    },
+    "Transfers to other funds": {
+      "text": "Money this fund sends to another city fund. Much of it pays debts: the water and sewer funds, for example, send their bond principal and interest payments this way.",
+      "link": null
+    },
+    "Equipment & construction": {
+      "text": "Equipment and other long-lasting purchases (capital expenditures) paid from the operating budget.",
+      "link": null
+    },
+    "Other costs": {
+      "text": "Spending the city files under other account groups. Citywide in FY2026, most of it ($53.1M of $81.9M) was the Underground Surcharge Fund's spending on moving overhead power lines underground (account Taxes-UU Surcharge Construction).",
+      "link": null
+    },
+    "_everything_else": {
+      "text": "Smaller items combined into one box so the map stays readable. When the box can be opened, it lists them.",
+      "link": null
+    },
+    "_unnamed": {
+      "text": "Spending the city's data lists without a department name.",
+      "link": null
+    },
+    "Other projects": {
+      "text": "This department's projects that aren't listed by name here. The amount is the department total minus the listed projects (our arithmetic).",
+      "link": null
+    },
+    "Other Revenue": {
+      "text": "Money that doesn't fit the city's other revenue types, such as donations and reimbursements. In the utilities, most of it is borrowed money (loans and short-term notes issued).",
+      "link": null
+    },
+    "Licenses and Permits": {
+      "text": "Fees for licenses and permits, such as building permits and plan checks.",
+      "link": null
+    },
+    "Revenue from the Use of Money and Property": {
+      "text": "Interest on the city's cash, plus rent and other payments for using city property.",
+      "link": null
+    },
+    "Fines Forfeitures and Penalties": {
+      "text": "Money from fines and penalties for breaking laws or rules.",
+      "link": null
+    },
+    "Revenue from Other Agencies": {
+      "text": "Money from other governments and public agencies, such as grants and reimbursements.",
+      "link": null
+    },
+    "Revenue from Federal Agencies": {
+      "text": "Money from the federal government, such as grants.",
+      "link": null
+    },
+    "Revenue from Federal and Other Agencies": {
+      "text": "Money from the federal government and other public agencies, such as grants and reimbursements.",
+      "link": null
+    },
+    "Other Local Taxes": {
+      "text": "Taxes and fees the city files as other local taxes. In the funds tied to a purpose, they are mostly SDG&E franchise payments and the city's share of state gas taxes.",
+      "link": null
+    },
+    "Transient Occupancy Taxes": {
+      "text": "Hotel tax money (transient occupancy tax) held outside the General Fund.",
+      "link": "#why-short"
+    },
+    "Property Tax Revenue": {
+      "text": "Property tax money that goes to funds outside the General Fund.",
+      "link": null
+    },
+    "Sales Taxes": {
+      "text": "Sales tax money that goes to funds outside the General Fund, such as the regional half-cent transportation tax (TransNet).",
+      "link": null
+    }
+  }
+}

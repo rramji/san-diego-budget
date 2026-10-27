@@ -3,7 +3,9 @@
 The FY2027 adopted budget is split into five pots. Each pot has a "money in" map and a
 "money out" map. Every map is a tree of nodes:
 
-    Node = {name, key, value_m, fy, src, children: [Node] | None, offsets: [{name, value_m}] | None}
+    Node = {name, key, value_m, fy, src, children: [Node], offsets: [{name, value_m}]}
+
+children, offsets and src are omitted when null (ruling R11: absent means null), to keep the file small.
 
 Where the numbers come from:
 
@@ -359,21 +361,48 @@ def _unmatched_summary(unmatched, rows: list[dict], detail_fy: int) -> dict:
     return {"rows": len(keep), "value_m": _m(sum(u["amount"] for u in keep) / 1e6)}
 
 
-def _descs(labels: dict, reg: _Sources) -> dict:
+DETAIL_FY_PLACEHOLDER = "{detail_fy}"
+
+
+def _fill(text: str, detail_fy: int) -> str:
+    """Copy may say {detail_fy} where the CSV detail year belongs (e.g. "FY{detail_fy}")."""
+    return text.replace(DETAIL_FY_PLACEHOLDER, str(detail_fy))
+
+
+def _no_nulls(d: dict) -> dict:
+    return {k: v for k, v in d.items() if v is not None}
+
+
+def _descs(labels: dict, reg: _Sources, detail_fy: int) -> dict:
+    """descs entries omit a null src or link (absent means null)."""
     out = {}
     for key, c in (labels.get("categories") or {}).items():
-        out[key] = {"text": c["text"], "src": None, "link": c.get("link")}
+        out[key] = _no_nulls({"text": _fill(c["text"], detail_fy), "link": c.get("link")})
     for key, n in (labels.get("nodes") or {}).items():
-        out[key] = {"text": n["text"], "src": reg(n["source"]) if n.get("source") else None,
-                    "link": n.get("link")}
+        out[key] = _no_nulls({"text": _fill(n["text"], detail_fy),
+                              "src": reg(n["source"]) if n.get("source") else None,
+                              "link": n.get("link")})
     return out
 
 
-def _answers(labels: dict, pot_id: str, reg: _Sources):
+def _answers(labels: dict, pot_id: str, reg: _Sources, detail_fy: int):
     a = (labels.get("pots") or {}).get(pot_id)
     if not a:
         return None
-    return {k: {"text": a[k]["text"], "src": reg(a[k]["source"])} for k in ANSWER_KEYS}
+    return {k: {"text": _fill(a[k]["text"], detail_fy), "src": reg(a[k]["source"])} for k in ANSWER_KEYS}
+
+
+NULLABLE_NODE_FIELDS = ("children", "offsets", "src")
+
+
+def _compact(node: dict) -> dict:
+    """Ruling R11: a node omits children, offsets or src when null (absent means null)."""
+    for f in NULLABLE_NODE_FIELDS:
+        if node.get(f) is None:
+            node.pop(f, None)
+    for c in node.get("children") or []:
+        _compact(c)
+    return node
 
 
 def _pot_value(headline: dict, field: str | None, reg: _Sources) -> tuple[float, str]:
@@ -438,7 +467,8 @@ def build_budget_tree(rows, fund_names: dict[str, str], headline, funnel, gf_rev
             root_out = b.expand(b.csv_node(out_name, pot_id, exp, []),
                                 [r for r in exp if r["fund_type"]], [fund, CATEGORY, ACCOUNT], extra_out)
         pots.append({"id": pot_id, "label": label, "value_m": value, "src": src,
-                     "answers": _answers(labels, pot_id, reg), "in": root_in, "out": root_out})
+                     "answers": _answers(labels, pot_id, reg, detail_fy),
+                     "in": _compact(root_in), "out": _compact(root_out)})
 
     nf_exp = [r for r in detail if r["fund_type"] == "" and _is_expense(r)]
     unassigned = None
@@ -451,7 +481,7 @@ def build_budget_tree(rows, fund_names: dict[str, str], headline, funnel, gf_rev
         "detail_fy": detail_fy,
         "total_m": headline["total_budget_m"],
         "sources": reg.table,
-        "descs": _descs(labels, reg),
+        "descs": _descs(labels, reg, detail_fy),
         "unassigned": unassigned,
         "unmatched": _unmatched_summary(unmatched, rows, detail_fy),
         "pots": pots,
