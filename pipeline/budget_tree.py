@@ -29,8 +29,10 @@ Rules for every map:
   categories at FUND_DEPT_CATEGORY_MIN_M, a category into accounts at ACCOUNT_LEVEL_MIN_M, and
   a CSV "Everything else" box into its rolled boxes at EVERYTHING_ELSE_OPEN_MIN_M. Below that
   it is a leaf; its value still counts in full.
-- A child smaller than OMIT_BELOW_M either way (after rounding) is neither drawn nor listed
-  as an offset; its parent's value still includes it.
+- A child smaller than OMIT_BELOW_M either way (after rounding) is not listed by itself. Such
+  lines are folded into "Everything else" (or one "Everything else" offset if they net
+  negative); only a fold under OMIT_BELOW_M either way is dropped, so a parent's children and
+  offsets match its value within OMIT_BELOW_M.
 - Blank names never reach the page: a blank department is "Not named in the city's data".
 - Every source is stored once in `sources` and cited by key (s0, s1, ...).
 """
@@ -48,7 +50,7 @@ MAX_CHILDREN = 10            # boxes per level, counting "Everything else"
 ACCOUNT_LEVEL_MIN_M = 50.0         # a category opens into accounts only at or above this size
 FUND_DEPT_CATEGORY_MIN_M = 15.0    # a fund or department opens into categories at or above this
 EVERYTHING_ELSE_OPEN_MIN_M = 50.0  # a CSV "Everything else" box opens at or above this
-OMIT_BELOW_M = 0.05                # ruling R10: |value| below this is not listed (parent keeps it)
+OMIT_BELOW_M = 0.05                # ruling R10: lines below this either way fold into Everything else
 UNMAPPED_GF_REVENUE_MAX_M = 5.0   # ruling R8: above this, stop rather than file it under Other Revenue
 
 FUNNEL_TO_CSV_DEPT = {"Citywide Program Expenditures": "Citywide Expenses"}
@@ -121,22 +123,44 @@ class _Builder:
 
     def arrange(self, kids: list[dict], fy: int, curated: bool) -> tuple[list | None, list | None]:
         """Split kids into drawn children (value > 0, largest first, trimmed) and offsets.
-        Kids under OMIT_BELOW_M either way are left out of both (the parent's value keeps them)."""
+
+        Ruling R10 (amended): kids under OMIT_BELOW_M either way are not listed one by one.
+        Their net sum is folded into "Everything else" (added to it and to each nested one on
+        the way down, or a new leaf where there is none); a net negative fold is one
+        "Everything else" offset; a net fold under OMIT_BELOW_M either way is dropped."""
+        tiny = [k for k in kids if abs(k["value_m"]) < OMIT_BELOW_M]
         kids = [k for k in kids if abs(k["value_m"]) >= OMIT_BELOW_M]
         pos = sorted((k for k in kids if k["value_m"] > 0), key=lambda k: (-k["value_m"], k["name"]))
         neg = sorted((k for k in kids if k["value_m"] <= 0), key=lambda k: (k["value_m"], k["name"]))
-        offsets = [{"name": k["name"], "value_m": k["value_m"]} for k in neg] or None
-        return (self.trim(pos, fy, curated) or None), offsets
+        folded = 0.0 if curated else sum(k["value_m"] for k in tiny)   # curated rows have 1 decimal
+        children, extra = self.trim(pos, fy, curated, folded)
+        offsets = [{"name": k["name"], "value_m": k["value_m"]} for k in neg] + (extra or [])
+        offsets.sort(key=lambda o: (o["value_m"], o["name"]))
+        return (children or None), (offsets or None)
 
-    def trim(self, kids: list[dict], fy: int, curated: bool) -> list[dict]:
-        if len(kids) <= MAX_CHILDREN:
-            return kids
+    def trim(self, kids: list[dict], fy: int, curated: bool, folded: float = 0.0) -> tuple[list, list | None]:
+        """At most MAX_CHILDREN boxes; the rest roll into a nested "Everything else". Returns
+        (children, extra offsets for the owner of these children)."""
+        folded = _m(folded)
+        leaf = folded >= OMIT_BELOW_M
+        if len(kids) <= MAX_CHILDREN - (1 if leaf else 0):
+            if leaf:
+                return kids + [_node(EVERYTHING_ELSE, EVERYTHING_ELSE_KEY, folded, fy, self.csv_src)], None
+            if folded <= -OMIT_BELOW_M:
+                return kids, [{"name": EVERYTHING_ELSE, "value_m": folded}]
+            return kids, None
         keep, rest = kids[:MAX_CHILDREN - 1], kids[MAX_CHILDREN - 1:]
-        total = sum(k["value_m"] for k in rest)
+        listed = sum(k["value_m"] for k in rest)
+        extra = None
+        if _m(listed + folded) <= 0:   # a credit fold larger than the roll-up: keep it as an offset
+            extra = [{"name": EVERYTHING_ELSE, "value_m": folded}]
+            folded = 0.0
+        total = listed + folded
         src = self._rollup_src(rest, total) if curated else self.csv_src
-        opens = curated or _m(total) >= EVERYTHING_ELSE_OPEN_MIN_M
-        return keep + [_node(EVERYTHING_ELSE, EVERYTHING_ELSE_KEY, total, fy, src,
-                             children=self.trim(rest, fy, curated) if opens else None)]
+        ee = _node(EVERYTHING_ELSE, EVERYTHING_ELSE_KEY, total, fy, src)
+        if curated or _m(total) >= EVERYTHING_ELSE_OPEN_MIN_M:
+            ee["children"], ee["offsets"] = self.trim(rest, fy, curated, folded)
+        return keep + [ee], extra
 
     def _rollup_src(self, rest: list[dict], total: float) -> str:
         first = self.reg.table[rest[0]["src"]]

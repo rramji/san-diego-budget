@@ -15,6 +15,7 @@ FUND_NAMES = {
     "100000": "General Fund",
     "700000": "Water Fund",
     "700100": "Sewer Fund",
+    "700200": "Pipe Fund",
     "600000": "Fleet Fund",
     "400000": "Capital Outlay Fund",
     **{f"2000{i:02d}": f"Purpose Fund {i}" for i in range(14)},
@@ -60,6 +61,8 @@ def synthetic_rows(fy=2026):
         gf_rev("Lighting District Assessment", "Special Assessments", "Special Assessments", 0.4, fy=fy),
         *[gf_rev(f"Service Charge {i}", "Charges for Current Services", "Charges for Current Services",
                  5.0 + i, dept="Police", fy=fy) for i in range(25)],
+        *[gf_rev(f"Tiny Charge {i}", "Charges for Current Services", "Charges for Current Services",
+                 0.04, dept="Police", fy=fy) for i in range(10)],
         # Utilities: Water Fund (vacancy line and contingency credit)
         row("Enterprise Funds", "700000", "Public Utilities", "Salaried Wages", "Salaries", "Personnel", 100.0, fy=fy),
         row("Enterprise Funds", "700000", "Public Utilities", "Vacancy Factor", "Other Personnel Expenditures",
@@ -72,6 +75,17 @@ def synthetic_rows(fy=2026):
             0.04, fy=fy),
         row("Enterprise Funds", "700100", "Public Utilities", "Small Refund", "Contingencies", "Non-Personnel",
             -0.03, fy=fy),
+        # Pipe Fund: many sub-$50k lines under one category (folded into "Everything else", ruling R10)
+        row("Enterprise Funds", "700200", "Public Utilities", "Pipe Contract", "External Contracts & Services",
+            "Non-Personnel", 60.0, fy=fy),
+        *[row("Enterprise Funds", "700200", "Public Utilities", f"Small Contract {i}",
+              "External Contracts & Services", "Non-Personnel", 0.04, fy=fy) for i in range(30)],
+        *[row("Enterprise Funds", "700200", "Public Utilities", f"Small Credit {i}",
+              "External Contracts & Services", "Non-Personnel", -0.03, fy=fy) for i in range(5)],
+        row("Enterprise Funds", "700200", "Public Utilities", "Pipe Supplies", "Supplies",
+            "Non-Personnel", 55.0, fy=fy),
+        *[row("Enterprise Funds", "700200", "Public Utilities", f"Supply Credit {i}", "Supplies",
+              "Non-Personnel", -0.04, fy=fy) for i in range(30)],
         row("Enterprise Funds", "700000", "Public Utilities", "Water Sales", "Charges for Current Services",
             "Charges for Current Services", 180.0, fy=fy),
         # Money tied to a purpose: 14 funds
@@ -256,8 +270,12 @@ def test_everything_else_rolls_up_and_nests(tree_from_rows):
     inner = kids[-1]
     assert inner["name"] == "Everything else" and inner["fy"] == 2026
     assert len(inner["children"]) == MAX_CHILDREN and inner["children"][-1]["key"] == "_everything_else"
-    # 25 accounts: 9 + (9 + 7)
-    assert len(inner["children"][-1]["children"]) == 7
+    # 25 accounts: 9 + (9 + 7); the 10 tiny lines (0.4) fold into each Everything else on the way down
+    innermost = inner["children"][-1]
+    assert innermost["value_m"] == round(sum(5.0 + i for i in range(7)) + 0.4, 3)
+    assert [c["name"] for c in innermost["children"]][-1] == "Everything else"
+    assert len(innermost["children"]) == 8 and innermost["children"][-1]["value_m"] == 0.4
+    assert kids[-1]["value_m"] == round(sum(5.0 + i for i in range(16)) + 0.4, 3)
     assert all(k["key"] == "Charges for Current Services" for k in kids[:-1])
 
 
@@ -276,7 +294,7 @@ def test_csv_roots_carry_detail_year_and_net_sum(tree_from_rows):
     t = tree_from_rows.tree
     assert t["bar_fy"] == 2027 and t["detail_fy"] == 2026
     util = t["pots"][1]
-    assert util["out"]["fy"] == 2026 and util["out"]["value_m"] == 115.01   # 65 + 50.01, bar is 1915.1
+    assert util["out"]["fy"] == 2026 and util["out"]["value_m"] == 229.86   # 65 + 50.01 + 114.85; bar 1915.1
     assert util["out"]["name"] == "Utilities money out" and util["in"]["name"] == "Utilities money in"
     assert util["value_m"] == 1915.1
     internal = t["pots"][4]
@@ -350,13 +368,44 @@ def test_opening_thresholds(tree_from_rows):
     assert ee["key"] == "_everything_else" and ee["value_m"] == 21.0 and ee["children"] is None
 
 
-def test_tiny_lines_are_not_listed_but_still_counted(tree_from_rows):
+def test_tiny_lines_net_under_threshold_are_dropped(tree_from_rows):
+    # +0.04 and -0.03 fold to 0.01, under 0.05: not listed, still counted in the fund
     sewer = tree_from_rows.find("utilities", "out", "Sewer Fund")
-    assert sewer["value_m"] == 50.01   # 50 + 0.04 - 0.03
+    assert sewer["value_m"] == 50.01
     assert [c["name"] for c in sewer["children"]] == ["Salaries & other pay"]
     assert sewer["offsets"] is None
-    names = {n["name"] for n in walk(tree_from_rows.tree)}
-    assert "Supplies" not in names
+
+
+def _sum_gap(n):
+    s = sum(c["value_m"] for c in n["children"] or []) + sum(o["value_m"] for o in n["offsets"] or [])
+    return abs(s - n["value_m"])
+
+
+def test_many_tiny_lines_fold_into_everything_else(tree_from_rows):
+    pipe = tree_from_rows.find("utilities", "out", "Pipe Fund")
+    contracts = next(c for c in pipe["children"] if c["name"] == "Contracts & services")
+    assert contracts["value_m"] == 61.05          # 60 + 30 x 0.04 - 5 x 0.03
+    assert [c["name"] for c in contracts["children"]] == ["Pipe Contract", "Everything else"]
+    ee = contracts["children"][-1]
+    assert ee["key"] == "_everything_else" and ee["value_m"] == 1.05 and ee["children"] is None
+    assert contracts["offsets"] is None
+    assert _sum_gap(contracts) <= 0.05
+    # credits that fold to a net negative are one "Everything else" offset, never $0.0 lines
+    supplies = next(c for c in pipe["children"] if c["name"] == "Supplies")
+    assert supplies["value_m"] == 53.8 and [c["name"] for c in supplies["children"]] == ["Pipe Supplies"]
+    assert supplies["offsets"] == [{"name": "Everything else", "value_m": -1.2}]
+    assert _sum_gap(supplies) <= 0.05
+    for n in walk(tree_from_rows.tree):
+        assert all(abs(o["value_m"]) >= 0.05 for o in n["offsets"] or [])
+
+
+def test_folded_tree_sums_within_005(tree_from_rows):
+    # every CSV node's children + offsets match it within 0.05 (tiny lines are folded);
+    # curated FY2027 rows are printed, rounded figures and may not foot (CIP 858.0 vs 858.1)
+    fy = tree_from_rows.tree["detail_fy"]
+    for n in walk(tree_from_rows.tree):
+        if n["fy"] == fy and n["children"] and all(c["fy"] == fy for c in n["children"]):
+            assert _sum_gap(n) <= 0.05, n["name"]
 
 
 def test_cip_maps(tree):
