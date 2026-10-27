@@ -247,6 +247,17 @@ export function potSegments(tree) {
   });
 }
 
+// The short line the status element reads out after an action: "Overtime, $45.3M, FY2026" (plus "opened" when the
+// box opened into the map, and "our arithmetic" when the amount is our own sum). A pot reads its bar value and year.
+export function statusText(pot, node, tree, opened = false) {
+  if (pot) {
+    const ours = isOurs(resolve(tree, pot.src ?? null)) ? ' (our arithmetic)' : '';
+    return `${pot.label}, ${money(pot.value_m)}${ours}, FY${tree.bar_fy}`;
+  }
+  const ours = isOurs(resolve(tree, node.src ?? null)) ? ' (our arithmetic)' : '';
+  return `${node.name}, ${money(node.value_m)}${ours}, FY${node.fy}${opened ? ', opened' : ''}`;
+}
+
 // One map level ready to draw: largest first (squarify needs descending input), colour slot = the child's place in
 // the tree's own order, so colour follows the item, not its rank.
 export function cellModels(node, tree) {
@@ -395,6 +406,40 @@ const press = (fn) => (e) => {
   if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') { e.preventDefault(); fn(); }
 };
 
+const ringRect = (cls, r, inset) => {
+  const i = Math.min(inset, r.w / 3, r.h / 3);
+  return svgEl('rect', { class: cls, x: r.x + i, y: r.y + i, width: Math.max(r.w - 2 * i, 0.1), height: Math.max(r.h - 2 * i, 0.1) });
+};
+
+// Selected state: two 2px rings inside the box, --surface then --text. On every fill one of the two clears 3:1 in
+// both themes (WCAG 1.4.11), so the state never rests on a single colour against an unknown fill.
+function selectionRings(g, r) {
+  g.append(ringRect('sel-a', r, 1), ringRect('sel-b', r, 3));
+}
+
+// Keyboard focus: one overlay per SVG, drawn outside the focused box (inner 2px --surface hugging the fill, outer
+// 2px --text on the page background), so it never covers the label, shows on tiny boxes, and reads apart from the
+// selection rings. Only for :focus-visible, so a tap or click draws nothing.
+function focusOverlay(svg) {
+  const o = svgEl('g', { class: 'focus-ring', 'aria-hidden': 'true', display: 'none' });
+  const inner = svgEl('rect', { class: 'fr-inner' });
+  const outer = svgEl('rect', { class: 'fr-outer' });
+  o.append(inner, outer);
+  svg.append(o);
+  return (g, r) => {
+    g.addEventListener('focus', () => {
+      if (!g.matches(':focus-visible')) return;
+      for (const [rect, d] of [[inner, 1], [outer, 3]]) {
+        rect.setAttribute('x', r.x - d); rect.setAttribute('y', r.y - d);
+        rect.setAttribute('width', r.w + 2 * d); rect.setAttribute('height', r.h + 2 * d);
+      }
+      svg.append(o); // keep it above every box
+      o.removeAttribute('display');
+    });
+    g.addEventListener('blur', () => o.setAttribute('display', 'none'));
+  };
+}
+
 // The pots bar plus its legend. colors = {cat: [hex…], ink, paper}. onSelect(potId). Returns {select(potId)}.
 export function renderPots(el, tree, state, colors, onSelect) {
   el.replaceChildren();
@@ -403,6 +448,7 @@ export function renderPots(el, tree, state, colors, onSelect) {
   const svg = svgEl('svg', { class: 'potbar', viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: 'group', 'aria-label': 'The five pots of the city budget' });
   el.append(svg);
   const segs = potSegments(tree);
+  const wireFocus = focusOverlay(svg);
   for (const s of segs) {
     const x0 = s.slot === 0 ? 0 : s.x0 * W + 1;
     const x1 = s.slot === segs.length - 1 ? W : s.x1 * W - 1;
@@ -411,9 +457,10 @@ export function renderPots(el, tree, state, colors, onSelect) {
     const g = svgEl('g', { class: 'pot', role: 'button', tabindex: 0, 'aria-label': s.aria, 'aria-pressed': s.pot.id === state.pot, 'data-pot': s.pot.id });
     g.style.setProperty('--ink', inkOn(fill, colors.paper, colors.ink));
     g.append(svgEl('rect', { x: r.x, y: r.y, width: r.w, height: r.h, fill, rx: 2 }));
-    g.append(svgEl('rect', { class: 'pot-sel', x: r.x + 1.5, y: 1.5, width: Math.max(r.w - 3, 0.5), height: H - 3, rx: 1 }));
-    svg.append(g);
+    selectionRings(g, r);
+    svg.insertBefore(g, svg.lastChild);
     labelCell(g, r, s.pot.label, money(s.pot.value_m), false);
+    wireFocus(g, r);
     g.addEventListener('click', () => onSelect(s.pot.id));
     g.addEventListener('keydown', press(() => onSelect(s.pot.id)));
   }
@@ -442,13 +489,10 @@ export function render(el, state, tree, colors, handlers) {
   const path = state[side];
   const node = path[path.length - 1];
   const sel = state.selected?.side === side ? state.selected.node : null;
-  el.replaceChildren();
-
-  const h = document.createElement('h3');
-  h.className = 'map-title';
-  h.textContent = side === 'in' ? 'Money in' : 'Money out';
-  const nav = document.createElement('p');
-  nav.className = 'crumbs';
+  const { nav, head, box, ul } = mapSlots(el, side);
+  nav.replaceChildren();
+  head.replaceChildren();
+  ul.replaceChildren();
   for (const c of crumbs(path)) {
     if (c.depth) {
       const sep = document.createElement('span');
@@ -472,8 +516,6 @@ export function render(el, state, tree, colors, handlers) {
       nav.append(b);
     }
   }
-  const head = document.createElement('p');
-  head.className = 'map-head';
   const hf = headerFigure(node, tree);
   head.append(hf.prefix);
   if (hf.source?.url) {
@@ -487,15 +529,12 @@ export function render(el, state, tree, colors, handlers) {
   } else {
     head.append(hf.amount);
   }
-  el.append(h, nav, head);
 
   const W = Math.max(240, Math.round(el.getBoundingClientRect().width || 320));
   const H = Math.round(Math.min(340, Math.max(240, W * 0.82)));
-  const box = document.createElement('div');
-  box.className = 'map-box';
   const svg = svgEl('svg', { class: 'map', viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: 'group', 'aria-label': `${node.name}: map of ${kids(node).length} boxes` });
-  box.append(svg);
-  el.append(box);
+  box.replaceChildren(svg);
+  const wireFocus = focusOverlay(svg);
 
   const cells = cellModels(node, tree);
   const rects = layout(cells.map((c) => c.node), 0, 0, W, H);
@@ -511,28 +550,16 @@ export function render(el, state, tree, colors, handlers) {
     if (sel === c.node) g.setAttribute('aria-pressed', 'true');
     g.style.setProperty('--ink', inkOn(fill, colors.paper, colors.ink));
     g.append(svgEl('rect', { x: r.x, y: r.y, width: r.w, height: r.h, fill, rx: Math.min(2, r.w / 4, r.h / 4) }));
-    const ring = Math.min(1.5, r.w / 4, r.h / 4);
-    g.append(svgEl('rect', { class: 'cell-ring', x: r.x + ring, y: r.y + ring, width: Math.max(r.w - 2 * ring, 0.1), height: Math.max(r.h - 2 * ring, 0.1) }));
-    svg.append(g);
+    selectionRings(g, r);
+    svg.insertBefore(g, svg.lastChild);
     labelCell(g, r, c.node.name, money(c.node.value_m), c.opens);
+    wireFocus(g, r);
     const go = () => handlers.onActivate(side, c.node, { from: 'map', slot: c.slot });
     g.addEventListener('click', go);
     g.addEventListener('keydown', press(go));
   });
 
   // The list twin: every child, tiny ones included, with the same activation.
-  const det = document.createElement('details');
-  det.className = 'maplist';
-  det.open = el.dataset.listOpen ? el.dataset.listOpen === '1' : window.matchMedia('(max-width: 639.98px)').matches;
-  // Remember only the reader's own choice: the toggle event that follows the default open state is not one.
-  const initial = det.open;
-  det.addEventListener('toggle', () => {
-    if (det.open === initial && !el.dataset.listOpen) return;
-    el.dataset.listOpen = det.open ? '1' : '0';
-  });
-  const sum = document.createElement('summary');
-  sum.textContent = 'This map as a list';
-  const ul = document.createElement('ul');
   const items = listModel(node);
   kids(node).forEach((child, slot) => {
     const it = items[slot];
@@ -576,6 +603,29 @@ export function render(el, state, tree, colors, handlers) {
     li.append(sw, b, amt);
     ul.append(li);
   });
+}
+
+// A map column's parts, created once. Re-renders refill them and never touch other children of the column (on a
+// phone the details panel sits between the map and its list), and the list keeps whatever open state the reader set.
+function mapSlots(el, side) {
+  if (el.bmSlots) return el.bmSlots;
+  const h = document.createElement('h3');
+  h.className = 'map-title';
+  h.textContent = side === 'in' ? 'Money in' : 'Money out';
+  const nav = document.createElement('p');
+  nav.className = 'crumbs';
+  const head = document.createElement('p');
+  head.className = 'map-head';
+  const box = document.createElement('div');
+  box.className = 'map-box';
+  const det = document.createElement('details');
+  det.className = 'maplist';
+  det.open = window.matchMedia('(max-width: 639.98px)').matches; // open by default on a phone
+  const sum = document.createElement('summary');
+  sum.textContent = 'This map as a list';
+  const ul = document.createElement('ul');
   det.append(sum, ul);
-  el.append(det);
+  el.replaceChildren(h, nav, head, box, det);
+  el.bmSlots = { nav, head, box, det, ul };
+  return el.bmSlots;
 }

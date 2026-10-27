@@ -232,10 +232,13 @@ main { padding-bottom: 80px; }
   .map .cell:hover > rect:first-child { opacity: 0.82; }
 }
 @media (prefers-reduced-motion: no-preference) { .pot { transition: opacity 0.15s; } }
-.pot-sel, .cell-ring { fill: none; stroke: none; stroke-width: 3; pointer-events: none; }
-.pot[aria-pressed="true"] .pot-sel, .cell[aria-pressed="true"] .cell-ring { stroke: var(--text); }
-.pot:focus-visible .pot-sel, .cell:focus-visible .cell-ring { stroke: var(--link); stroke-dasharray: 5 3; }
-.pot[aria-pressed="true"]:focus-visible .pot-sel, .cell[aria-pressed="true"]:focus-visible .cell-ring { stroke: var(--text); }
+/* Two-tone rings: on every category fill, one of --surface / --text clears 3:1 in both themes (WCAG 1.4.11).
+   Selected = two rings inside the box; keyboard focus = an overlay outside it (budget-map.js focusOverlay). */
+.sel-a, .sel-b, .focus-ring rect { fill: none; stroke: none; stroke-width: 2; pointer-events: none; }
+[aria-pressed="true"] > .sel-a { stroke: var(--surface); }
+[aria-pressed="true"] > .sel-b { stroke: var(--text); }
+.focus-ring .fr-inner { stroke: var(--surface); }
+.focus-ring .fr-outer { stroke: var(--text); }
 .pot-legend { margin: 8px 0 0; }
 .pot-legend .swatch { width: 10px; height: 10px; border-radius: 2px; }
 

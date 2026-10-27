@@ -201,20 +201,38 @@ export function renderWhat(data) {
     if (box && box.nextElementSibling !== panel) box.after(panel);
   };
 
-  const showPanel = (announce) => {
-    if (announce) panel.setAttribute('aria-live', 'polite'); // never on load (v1 Sankey rule)
+  // Ruling R13: announcements go through one stationary, visually hidden status element that is never moved (a
+  // live region that was just re-inserted is often not announced, and the panel moves on phones). It becomes a
+  // polite live region only on the first user action, and its first text is written a moment later so the region
+  // exists before its content changes. The panel itself carries no aria-live.
+  const status = document.getElementById('s1-status');
+  let statusTimer = 0;
+  const announce = (text) => {
+    if (!status) return;
+    const first = !status.hasAttribute('aria-live');
+    if (first) status.setAttribute('aria-live', 'polite');
+    clearTimeout(statusTimer);
+    statusTimer = setTimeout(() => { status.textContent = text; }, first ? 150 : 0);
+  };
+
+  const showPanel = (speak) => {
     const pot = tree.pots.find((p) => p.id === state.pot);
     panel.style.setProperty('--pot', colors.cat[tree.pots.indexOf(pot)]);
     let body;
-    if (!state.selected) body = potPanelBody(tree, pot);
-    else {
+    let said;
+    if (!state.selected) {
+      body = potPanelBody(tree, pot);
+      said = bm.statusText(pot, null, tree);
+    } else {
       const { side, node } = state.selected;
       const path = state[side];
       const top = path[path.length - 1];
       body = nodePanelBody(tree, node, top === node ? (path[path.length - 2] ?? null) : top);
+      said = bm.statusText(null, node, tree, top === node);
     }
     panel.replaceChildren(...body);
     mountPopovers(panel);
+    if (speak) announce(said);
   };
 
   const drawSide = (side) => {

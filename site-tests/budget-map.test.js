@@ -418,3 +418,11 @@ test('isOurs flags our-arithmetic sources only', () => {
   assert.equal(bm.isOurs(tree.sources[pot('general_fund').src]), false);
   assert.equal(bm.isOurs(null), false);
 });
+
+test('statusText: short spoken summary for a pot, a box and an opened box', () => {
+  assert.equal(bm.statusText(pot('general_fund'), null, tree), 'General Fund, $2.26B, FY2027');
+  assert.equal(bm.statusText(pot('internal'), null, tree), 'Internal services & other, $249M (our arithmetic), FY2027');
+  const police = byName(pot('general_fund').out, 'Police');
+  assert.equal(bm.statusText(null, police, tree, true), 'Police, $718M, FY2027, opened');
+  assert.equal(bm.statusText(null, byName(police, 'Overtime'), tree), 'Overtime, $45.3M, FY2026');
+});

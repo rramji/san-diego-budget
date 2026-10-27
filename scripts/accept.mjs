@@ -83,12 +83,23 @@ async function section1(chromium) {
         pressed: [...document.querySelectorAll('#s1-pots .pot[aria-pressed="true"]')].map((g) => g.dataset.pot),
         segs: document.querySelectorAll('#s1-pots .pot[role="button"][tabindex="0"]').length,
         live: document.getElementById('s1-panel').getAttribute('aria-live'),
+        statusLive: document.getElementById('s1-status')?.getAttribute('aria-live'),
+        statusText: document.getElementById('s1-status')?.textContent,
+        statusParent: document.getElementById('s1-status')?.parentElement.id,
         hlFigs: document.querySelectorAll('[data-hl-fig]').length,
       }));
       if (load.segs !== 5) fail(`expected 5 pot buttons, got ${load.segs}`);
       if (load.pressed.join() !== 'general_fund') fail(`selected pot on load is ${load.pressed.join() || 'none'}`);
       if ((await title()) !== 'General Fund') fail(`panel on load is "${await title()}"`);
-      if (load.live) fail('panel is a live region before any user action');
+      if (load.live) fail('panel has aria-live (announcements go through #s1-status, ruling R13)');
+      if (load.statusParent !== 'what') fail(`#s1-status missing or not a direct child of #what (${load.statusParent})`);
+      if (load.statusLive || load.statusText) fail('status is live or speaks before any user action');
+      const status = () => page.$eval('#s1-status', (e) => [e.getAttribute('aria-live'), e.textContent]);
+      const waitStatus = async (re) => {
+        await page.waitForFunction((src) => new RegExp(src).test(document.getElementById('s1-status').textContent), re.source, { timeout: 2000 }).catch(() => {});
+        const [live, text] = await status();
+        if (live !== 'polite' || !re.test(text)) fail(`status is ${live}/"${text}", expected polite ${re}`);
+      };
       if (load.hlFigs) fail(`${load.hlFigs} [data-hl-fig] placeholder(s) not filled`);
 
       // Utilities: both maps reset to one step and state their own detail year.
@@ -97,7 +108,7 @@ async function section1(chromium) {
       if (uc.length !== 2 || uc.some((c) => c.includes('›'))) fail(`utilities crumbs not one step: ${JSON.stringify(uc)}`);
       const uh = await heads();
       if (uh.length !== 2 || !uh.every((h) => /FY2026 detail/.test(h))) fail(`utilities headers: ${JSON.stringify(uh)}`);
-      if ((await page.$eval('#s1-panel', (e) => e.getAttribute('aria-live'))) !== 'polite') fail('panel not polite after a user action');
+      await waitStatus(/^Utilities, \$1\.92B, FY2027$/);
 
       // General Fund, then Police in money out.
       await page.click('#s1-pots .pot[data-pot="general_fund"]');
@@ -105,6 +116,22 @@ async function section1(chromium) {
       const pc = await crumbs();
       if (pc[1] !== 'General Fund money out › Police') fail(`crumb after Police: "${pc[1]}"`);
       if ((await title()) !== 'Police') fail(`panel after Police: "${await title()}"`);
+      await waitStatus(/^Police, \$718M, FY2027, opened$/);
+      // On a phone the panel sits under the map just used; at desktop width it stays below both maps.
+      const where = await page.evaluate(() => {
+        const p = document.getElementById('s1-panel');
+        return { parent: p.parentElement.dataset.side || p.parentElement.id, prev: p.previousElementSibling?.className, live: p.getAttribute('aria-live') };
+      });
+      const want = width < 640 ? { parent: 'out', prev: 'map-box' } : { parent: 'what', prev: 'chart' };
+      if (where.parent !== want.parent || where.prev !== want.prev) fail(`panel placed at ${JSON.stringify(where)}, expected ${JSON.stringify(want)}`);
+      if (where.live) fail('panel has aria-live after an action');
+      // Re-rendering the same map must not detach the panel (ruling R13).
+      await page.evaluate(() => {
+        window.__panelDetached = 0;
+        const p = document.getElementById('s1-panel');
+        new MutationObserver((ms) => { for (const m of ms) for (const n of m.removedNodes) if (n === p) window.__panelDetached += 1; })
+          .observe(document.getElementById('what'), { childList: true, subtree: true });
+      });
       const focusedFirst = await page.evaluate(() => {
         const a = document.activeElement;
         return !!a && a === document.querySelector('#s1-maps .map-col[data-side="out"] .cell');
@@ -121,6 +148,15 @@ async function section1(chromium) {
       if (JSON.stringify(lc) !== JSON.stringify(pc)) fail(`crumbs changed on a leaf: ${JSON.stringify(lc)}`);
       const kept = await page.evaluate((n) => document.activeElement?.getAttribute('aria-label')?.startsWith(`${n},`), leafName);
       if (!kept) fail('focus left the leaf box after Enter');
+      await waitStatus(new RegExp(`^${leafName.replace(/[.*+?^${}()|[\]\\$]/g, '\\$&')}, \\$`));
+      if (width < 640 && (await page.evaluate(() => window.__panelDetached))) fail('the panel was detached by a re-render of its own map');
+      // Keyboard focus shows the two-tone overlay outside the box; a click does not.
+      await page.keyboard.press('Tab');
+      const ring = await page.evaluate(() => {
+        const o = document.querySelector('#s1-maps .map-col[data-side="out"] .focus-ring');
+        return !!o && !o.hasAttribute('display') && document.activeElement.classList.contains('cell');
+      });
+      if (!ring) fail('no focus ring overlay after Tab to the next box');
 
       // A crumb link goes back up.
       await page.click('#s1-maps .map-col[data-side="out"] .crumb');

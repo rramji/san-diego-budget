@@ -36,6 +36,8 @@ Rules for every map:
   negative); only a fold under OMIT_BELOW_M either way is dropped, so a parent's children and
   offsets match its value within OMIT_BELOW_M.
 - Blank names never reach the page: a blank department is "Not named in the city's data".
+- No box opens into a copy of itself (ruling R12): a node left with exactly one drawn child and
+  no offsets takes that child's children (and offsets) as its own, or becomes a leaf.
 - Every source is stored once in `sources` and cited by key (s0, s1, ...).
 """
 import sys
@@ -395,6 +397,22 @@ def _answers(labels: dict, pot_id: str, reg: _Sources, detail_fy: int):
 NULLABLE_NODE_FIELDS = ("children", "offsets", "src")
 
 
+def _collapse_single(node: dict) -> dict:
+    """Ruling R12: a box marked as opening must open into more than a copy of itself.
+
+    While a node has exactly one drawn child and no offsets: if that child has children, they
+    (and the child's offsets) move up to the node; otherwise the node becomes a leaf. Then the
+    same rule runs on each remaining child. The node keeps its own name, value, year and source,
+    so a same-year parent still matches its (hoisted) children within the existing tolerance."""
+    while len(node.get("children") or []) == 1 and not node.get("offsets"):
+        only = node["children"][0]
+        node["children"] = only.get("children") or None
+        node["offsets"] = only.get("offsets") or None
+    for c in node.get("children") or []:
+        _collapse_single(c)
+    return node
+
+
 def _compact(node: dict) -> dict:
     """Ruling R11: a node omits children, offsets or src when null (absent means null)."""
     for f in NULLABLE_NODE_FIELDS:
@@ -468,7 +486,7 @@ def build_budget_tree(rows, fund_names: dict[str, str], headline, funnel, gf_rev
                                 [r for r in exp if r["fund_type"]], [fund, CATEGORY, ACCOUNT], extra_out)
         pots.append({"id": pot_id, "label": label, "value_m": value, "src": src,
                      "answers": _answers(labels, pot_id, reg, detail_fy),
-                     "in": _compact(root_in), "out": _compact(root_out)})
+                     "in": _compact(_collapse_single(root_in)), "out": _compact(_collapse_single(root_out))})
 
     nf_exp = [r for r in detail if r["fund_type"] == "" and _is_expense(r)]
     unassigned = None

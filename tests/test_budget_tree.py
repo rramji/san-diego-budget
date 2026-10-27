@@ -4,7 +4,7 @@ from types import SimpleNamespace
 import pytest
 
 from pipeline import curated
-from pipeline.budget_tree import CSV_URL, MAX_CHILDREN, _gf_match, build_budget_tree
+from pipeline.budget_tree import CSV_URL, MAX_CHILDREN, _collapse_single, _gf_match, build_budget_tree
 from pipeline.build import build_cip, build_gf_revenue
 
 ROOT = Path(__file__).parent.parent
@@ -55,6 +55,7 @@ def synthetic_rows(fy=2026):
         gf_rev("Property Tax Refunds", "Property Taxes", "Property Tax Revenue", -2.0, fy=fy),
         gf_rev("Sales Tax", "Sales Tax", "Sales Taxes", 367.0, fy=fy),
         gf_rev("Franchise Tax - SDG&E", "SDG&E", "Other Local Taxes", 66.3, fy=fy),
+        gf_rev("Franchise Tax - Cable", "Cable", "Other Local Taxes", 9.1, fy=fy),
         gf_rev("Property Transfer Tax", "Property Transfer Tax", "Other Local Taxes", 11.0, fy=fy),
         gf_rev("Documentary Recording", "Property Transfer Tax", "Other Local Taxes", 0.5, fy=fy),
         gf_rev("Misc Revenue", "Other Revenue", "Other Revenue", 2.0, fy=fy),
@@ -244,7 +245,9 @@ def test_unassigned_and_unmatched_details(tree_from_rows):
     assert t["unassigned"] == {"value_m": 82.4, "dept_name": "Citywide Other/Special Funds"}
     assert t["unmatched"] == {"rows": 1, "value_m": 0.5}   # only the detail-year row counts
     nf = tree_from_rows.find("internal", "out", "Not assigned to a fund in the city's data")
-    assert {c["name"] for c in nf.get("children")} == {"Contracts & services"}
+    # Its only category (Contracts & services) would open into a copy of itself, so its accounts move up (R12).
+    assert {c["key"] for c in nf.get("children")} == {"Contracts & services"}
+    assert all(c["name"] != "Contracts & services" for c in nf.get("children"))
     unnamed = find_in(tree_from_rows.find("general_fund", "out", "All other"), "Not named in the city's data")
     assert unnamed["key"] == "_unnamed" and unnamed["value_m"] == 19.6
 
@@ -318,7 +321,7 @@ def test_gf_in_matches_accounts_by_name_or_group(tree_from_rows):
     assert not _gf_match(m, {**by_group, "account_group": "SDG&E"})
     assert not _gf_match({**m, "include": None, "exclude": "Transfer"}, by_group)
     franchise = tree_from_rows.find("general_fund", "in", "Franchise Fees")
-    assert [c["name"] for c in franchise.get("children")] == ["Franchise Tax - SDG&E"]
+    assert [c["name"] for c in franchise.get("children")] == ["Franchise Tax - SDG&E", "Franchise Tax - Cable"]
     prop = tree_from_rows.find("general_fund", "in", "Property Tax")
     assert prop.get("offsets") == [{"name": "Property Tax Refunds", "value_m": -2.0}]
     assert all(c["key"] == "Property Tax" for c in prop.get("children"))
@@ -343,7 +346,8 @@ def test_gf_out_all_other_and_citywide(tree_from_rows):
     assert "Small Dept 0" not in names   # it sits in an Everything else box under the open threshold
     assert "Police" not in names and "Citywide Expenses" not in names and "Major Revenues" not in names
     citywide = tree_from_rows.find("general_fund", "out", "Citywide Program Expenditures")
-    assert [c["name"] for c in citywide.get("children")] == ["Contracts & services"]
+    # one category with one account: R12 makes it a leaf rather than a box that opens into itself
+    assert citywide.get("children") is None and citywide["value_m"] == 214.8
     police = tree_from_rows.find("general_fund", "out", "Police")
     cats = {c["name"]: c["value_m"] for c in police.get("children")}
     assert cats == {"Salaries & other pay": 280.0, "Overtime": 45.0, "Pension payment": 160.0}
@@ -355,9 +359,9 @@ def test_opening_thresholds(tree_from_rows):
     # Purpose funds hold one salaries line of 2..15M each: under 15M a fund has no categories
     assert tree_from_rows.find("purpose", "out", "Purpose Fund 12").get("children") is None
     big = tree_from_rows.find("purpose", "out", "Purpose Fund 13")
-    # 15M opens into categories, but a 15M category is under the 50M account level
-    assert [c["name"] for c in big.get("children")] == ["Salaries & other pay"]
-    assert big.get("children")[0].get("children") is None
+    # 15M opens into categories, but its only category (15M, under the 50M account level) would be a
+    # copy of the fund, so R12 makes the fund a leaf
+    assert big.get("children") is None and big["value_m"] == 15.0
     police = tree_from_rows.find("general_fund", "out", "Police")
     sal = next(c for c in police.get("children") if c["name"] == "Salaries & other pay")
     assert [a["name"] for a in sal.get("children")] == ["Salaried Wages"]
@@ -372,8 +376,8 @@ def test_tiny_lines_net_under_threshold_are_dropped(tree_from_rows):
     # +0.04 and -0.03 fold to 0.01, under 0.05: not listed, still counted in the fund
     sewer = tree_from_rows.find("utilities", "out", "Sewer Fund")
     assert sewer["value_m"] == 50.01
-    assert [c["name"] for c in sewer.get("children")] == ["Salaries & other pay"]
-    assert sewer.get("offsets") is None
+    # its one category (one account) would repeat the fund, so R12 leaves the fund a leaf
+    assert sewer.get("children") is None and sewer.get("offsets") is None
 
 
 def _sum_gap(n):
@@ -421,7 +425,7 @@ def test_cip_maps(tree):
     assert tree["sources"][other["src"]]["doc"].startswith("our arithmetic")
     assert find_in(cip["out"], "Parks & Recreation").get("children") is None   # no listed projects
     citywide = find_in(cip["out"], "Citywide")
-    assert [c["name"] for c in citywide.get("children")] == ["Convention Center Improvements"]
+    assert citywide.get("children") is None   # its one listed project would repeat it (R12)
 
 
 def test_sources_registry_and_keys(tree):
@@ -475,3 +479,45 @@ def test_detail_fy_placeholder_is_filled():
     fy = t["detail_fy"]
     assert t["pots"][1]["answers"]["what"]["text"] == f"From FY{fy}."
     assert t["descs"]["Overtime"]["text"] == f"In FY{fy} data."
+
+
+# ---- ruling R12: no box opens into a copy of itself ----
+
+def _n(name, value, fy=2026, children=None, offsets=None):
+    return {"name": name, "key": name, "value_m": value, "fy": fy, "src": "s0",
+            "children": children, "offsets": offsets}
+
+
+def test_single_leaf_child_collapses_to_leaf():
+    sales = _n("Sales Tax", 386.7, fy=2027, children=[_n("Sales Taxes", 367.0)])   # cross-year, like GF Sales Tax
+    root = _collapse_single(_n("root", 500.0, fy=2027, children=[sales, _n("Other", 113.3, fy=2027)]))
+    assert sales["children"] is None and sales["offsets"] is None
+    assert sales["value_m"] == 386.7 and sales["fy"] == 2027 and len(root["children"]) == 2
+
+
+def test_single_child_with_children_is_hoisted():
+    accts = [_n("Consultant", 50.0), _n("Rent", 32.4)]
+    nf = _n("No fund", 82.4, children=[_n("Contracts & services", 82.4, children=accts)])
+    _collapse_single(nf)
+    assert [c["name"] for c in nf["children"]] == ["Consultant", "Rent"]
+    assert nf["name"] == "No fund" and nf["value_m"] == 82.4
+
+
+def test_single_child_chain_and_offsets():
+    # a -> b -> c -> {d, e}, c carrying an offset: everything below a lands on a, offsets included
+    c = _n("c", 10.0, children=[_n("d", 7.0), _n("e", 5.0)], offsets=[{"name": "credit", "value_m": -2.0}])
+    a = _n("a", 10.0, children=[_n("b", 10.0, children=[c])])
+    _collapse_single(a)
+    assert [k["name"] for k in a["children"]] == ["d", "e"]
+    assert a["offsets"] == [{"name": "credit", "value_m": -2.0}]
+    # a chain ending in one leaf collapses to a leaf
+    z = _collapse_single(_n("x", 4.0, children=[_n("y", 4.0, children=[_n("z", 4.0)])]))
+    assert z["children"] is None
+    # one child plus offsets keeps its child: the panel lists the credits, so it is not a copy
+    k = _collapse_single(_n("k", 8.0, children=[_n("j", 9.0)], offsets=[{"name": "credit", "value_m": -1.0}]))
+    assert [q["name"] for q in k["children"]] == ["j"]
+
+
+def test_no_single_child_without_offsets_in_tree(tree):
+    for n in walk(tree):
+        assert not (len(n.get("children") or []) == 1 and not n.get("offsets")), n["name"]
