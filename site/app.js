@@ -201,19 +201,12 @@ export function renderWhat(data) {
     if (box && box.nextElementSibling !== panel) box.after(panel);
   };
 
-  // Ruling R13: announcements go through one stationary, visually hidden status element that is never moved (a
-  // live region that was just re-inserted is often not announced, and the panel moves on phones). It becomes a
-  // polite live region only on the first user action, and its first text is written a moment later so the region
-  // exists before its content changes. The panel itself carries no aria-live.
+  // Rulings R13/R13a: announcements go through one stationary, visually hidden status element that is never moved
+  // (a live region that was just re-inserted is often not announced, and the panel moves on phones). It is polite
+  // from page load (index.html) and stays empty until the first user action, so nothing is read on load. The panel
+  // itself carries no aria-live.
   const status = document.getElementById('s1-status');
-  let statusTimer = 0;
-  const announce = (text) => {
-    if (!status) return;
-    const first = !status.hasAttribute('aria-live');
-    if (first) status.setAttribute('aria-live', 'polite');
-    clearTimeout(statusTimer);
-    statusTimer = setTimeout(() => { status.textContent = text; }, first ? 150 : 0);
-  };
+  const announce = (text) => { if (status) status.textContent = text; };
 
   const showPanel = (speak) => {
     const pot = tree.pots.find((p) => p.id === state.pot);

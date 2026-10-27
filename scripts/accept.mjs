@@ -93,7 +93,8 @@ async function section1(chromium) {
       if ((await title()) !== 'General Fund') fail(`panel on load is "${await title()}"`);
       if (load.live) fail('panel has aria-live (announcements go through #s1-status, ruling R13)');
       if (load.statusParent !== 'what') fail(`#s1-status missing or not a direct child of #what (${load.statusParent})`);
-      if (load.statusLive || load.statusText) fail('status is live or speaks before any user action');
+      if (load.statusLive !== 'polite') fail(`#s1-status should be polite from load (R13a), is ${load.statusLive}`);
+      if (load.statusText) fail(`status speaks before any user action: "${load.statusText}"`);
       const status = () => page.$eval('#s1-status', (e) => [e.getAttribute('aria-live'), e.textContent]);
       const waitStatus = async (re) => {
         await page.waitForFunction((src) => new RegExp(src).test(document.getElementById('s1-status').textContent), re.source, { timeout: 2000 }).catch(() => {});
