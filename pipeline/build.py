@@ -76,13 +76,13 @@ DEFICIT_MARKERS = [
         "page": 3, "url": _IBA_26_11}}},
     {
         "fy": 2028,
-        "label": "FY2028 outlook: city $9.5M, IBA $32.9M",
+        "label": "FY2028 outlook: city $9.5M (adopted budget), IBA $32.9M (estimated at the proposed budget)",
         "figures": [
             {"value": 9.5, "source": {
                 "doc": "FY2027 Adopted Budget Vol. I, Citywide Budget Overview, Table 10 (the city's updated Five-Year Financial Outlook: FY2028 shortfall)",
                 "page": 36, "url": _CBO_FY27}},
             {"value": 32.9, "source": {
-                "doc": "IBA Report 26-15, Recommended City Council Modifications to the Mayor's Proposed FY 2027 Budget (projected FY2028 deficit of $32.9M, excluding reserve deposits)",
+                "doc": "IBA Report 26-15, Recommended City Council Modifications to the Mayor's Proposed FY 2027 Budget (projected FY2028 deficit of $32.9M \"as estimated at the time of the Proposed Budget\", excluding reserve deposits)",
                 "page": 43, "url": _IBA_26_15}},
         ],
     },

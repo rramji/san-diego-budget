@@ -166,7 +166,8 @@ def test_structural_deficit_merges_gf_expenditure(tmp_path):
     assert sorted(markers) == [2011, 2025, 2026, 2028]
     assert markers[2011]["label"] == "2010: temporary sales tax measure fails"
     assert markers[2025]["label"] == "2024: sales tax measure fails"
-    assert markers[2028]["label"] == "FY2028 outlook: city $9.5M, IBA $32.9M"
+    assert markers[2028]["label"] == "FY2028 outlook: city $9.5M (adopted budget), IBA $32.9M (estimated at the proposed budget)"
+    assert "as estimated at the time of the Proposed Budget" in markers[2028]["figures"][1]["source"]["doc"]
     for fy in (2011, 2025, 2026):
         src = markers[fy]["source"]["source"]
         assert src["url"].startswith("https://") and src["page"] in (3, 77)
