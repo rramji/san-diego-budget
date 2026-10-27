@@ -1,6 +1,6 @@
 // Browser acceptance checks. Run from anywhere:
 //   node scripts/accept.mjs --smoke   load the page at 375/1200 px, light and dark; no errors, no horizontal scroll
-//   node scripts/accept.mjs           smoke plus the section checks below (sections 1, 2 and 3) and their screenshots
+//   node scripts/accept.mjs           smoke plus the section checks below (sections 1 to 4) and their screenshots
 // Not part of `npm test` (needs a browser). Override the playwright path with PLAYWRIGHT_CORE.
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
@@ -447,6 +447,139 @@ async function section3(chromium) {
   return failures;
 }
 
+// Section 4: reserves meter, asset bars, PCI line, pension bars, payer bar, and the three dig deepers.
+// Checks at 375 and 1200; screenshots of the whole section, every dig deeper open, at 375 light and dark.
+async function section4(chromium) {
+  const failures = [];
+  const browser = await chromium.launch();
+  try {
+    for (const [width, scheme, shot] of [[375, 'light', 'v2-s4-375'], [375, 'dark', 'v2-s4-375-dark'], [1200, 'light', null]]) {
+      const label = `s4 ${width}px ${scheme}`;
+      const fail = (m) => failures.push(`${label}: ${m}`);
+      const ctx = await browser.newContext({ viewport: { width, height: 900 }, colorScheme: scheme });
+      const page = await ctx.newPage();
+      const errors = [];
+      page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
+      page.on('console', (m) => { if (m.type() === 'error') errors.push(`console: ${m.text()}`); });
+      await page.goto(`${BASE}/site/`, { waitUntil: 'networkidle' });
+      await page.waitForSelector('#s4-roads svg.pci', { timeout: 10000 }).catch(() => {});
+      await page.evaluate(() => document.querySelectorAll('#piles details.dig').forEach((d) => { d.open = true; }));
+      await page.waitForTimeout(150);
+      const r = await page.evaluate(() => {
+        const sec = document.getElementById('piles');
+        const inside = (el, box) => { const a = el.getBoundingClientRect(), b = box.getBoundingClientRect(); return a.left >= b.left - 0.5 && a.right <= b.right + 0.5; };
+        const part = (id) => {
+          const p = document.getElementById(id);
+          const lead = p.querySelector(':scope > .lead');
+          return {
+            h3: p.querySelector(':scope > h3')?.textContent || '',
+            leadFig: lead?.querySelector('.figure')?.textContent,
+            lead: lead?.textContent || '',
+            digFigs: p.querySelectorAll('details.dig .figure').length,
+            digText: p.querySelector('details.dig .dig-body')?.textContent.trim().length || 0,
+          };
+        };
+        const track = sec.querySelector('#s4-reserve .meter-track');
+        const ticks = [...sec.querySelectorAll('#s4-reserve .meter-tick')].map((t) => t.getBoundingClientRect().left);
+        const bal = sec.querySelector('#s4-reserve .meter-seg.is-balance')?.getBoundingClientRect();
+        const rows = [...sec.querySelectorAll('#s4-assets .asset-bars li')];
+        const has651 = [...sec.querySelectorAll('p, li, figcaption')].filter((e) => !e.querySelector('p, li') && /6\.51B/.test(e.textContent));
+        const payerIn = sec.querySelector('#s4-payers .payer-in');
+        return {
+          placeholder: sec.querySelectorAll('[data-lead="placeholder"], [data-pile-fig]').length,
+          sectionLead: sec.querySelector(':scope > .lead')?.textContent || '',
+          parts: [part('reserves'), part('infrastructure'), part('pension')],
+          segs: sec.querySelectorAll('#s4-reserve .meter-seg').length,
+          ticks,
+          balRight: bal ? bal.right : 0,
+          trackOk: !!track && track.getAttribute('role') === 'img' && /unaudited/.test(track.getAttribute('aria-label')),
+          labelsOut: [...sec.querySelectorAll('#s4-reserve .meter-label')].filter((l) => !inside(l, track)).map((l) => l.textContent),
+          rows: rows.map((li) => [li.querySelector('.ab-name').textContent, li.querySelector('.ab-bar').getBoundingClientRect().width, li.classList.contains('is-rest')]),
+          water: /Water and sewer projects/.test(sec.querySelector('#infrastructure').textContent),
+          has651: has651.map((e) => e.textContent),
+          growthOurs: /about \$1\.3B.*our arithmetic/.test(sec.querySelector('#s4-growth')?.textContent || ''),
+          pciPts: sec.querySelectorAll('#s4-roads .pci-pt').length,
+          pciDashed: sec.querySelectorAll('#s4-roads .pci-line.is-proj').length,
+          pciOut: (() => { const svg = sec.querySelector('#s4-roads svg.pci'); if (!svg) return -1; const b = svg.getBoundingClientRect();
+            return [...svg.querySelectorAll('text')].filter((t) => { const a = t.getBoundingClientRect(); return a.left < b.left - 1 || a.right > b.right + 1; }).length; })(),
+          pbRows: sec.querySelectorAll('#s4-pension .pb-row').length,
+          gapSeg: !!sec.querySelector('#s4-pension .pb-seg.is-gap'),
+          gapLabel: sec.querySelector('#s4-pension .pb-gap')?.textContent || '',
+          payerSegs: sec.querySelectorAll('#s4-payers .payer-seg').length,
+          payerIn: payerIn?.textContent,
+          payerInFits: payerIn ? inside(payerIn, payerIn.parentElement) : false,
+          payerCap: sec.querySelector('#s4-payers .chart-cap')?.textContent || '',
+          pensionCopy: sec.querySelector('#s4-pension-copy')?.textContent || '',
+          examples: sec.querySelectorAll('#s4-infra-dig .pile-list li').length,
+          steps: sec.querySelectorAll('#s4-infra-dig .pile-steps li').length,
+          links: [...sec.querySelectorAll('#s4-infra-dig a:not(.gl)')].map((a) => a.getAttribute('href')),
+          ours: [...sec.querySelectorAll('.figure')].filter((f) => f.dataset.srcDoc.startsWith('our arithmetic'))
+            .filter((f) => !/our arithmetic/.test(f.closest('li, p, figcaption')?.textContent || '')).map((f) => f.textContent),
+          unsourced: sec.querySelectorAll('.figure:not([data-src-url])').length,
+          noFn: [...sec.querySelectorAll('[data-src-url]')].filter((e) => !(e.nextElementSibling && e.nextElementSibling.classList.contains('fn'))).length,
+          scroll: document.documentElement.scrollWidth - window.innerWidth,
+        };
+      });
+      if (r.placeholder) fail(`${r.placeholder} placeholder(s) left in #piles`);
+      if (!/pile up/.test(r.sectionLead)) fail(`section lead: "${r.sectionLead}"`);
+      const want = [['rainy-day', '$202.4M'], ['Roads', '$7.82B'], ['pension', '76 cents']];
+      r.parts.forEach((pt, i) => {
+        if (!pt.h3.toLowerCase().includes(want[i][0].toLowerCase())) fail(`part ${i} heading "${pt.h3}"`);
+        if (pt.leadFig !== want[i][1]) fail(`part ${i} lead's first figure is "${pt.leadFig}", expected ${want[i][1]}`);
+        if (!pt.digText) fail(`part ${i} dig deeper is empty`);
+      });
+      if (!/not yet audited/.test(r.parts[0].lead)) fail('reserve lead does not say unaudited');
+      if (!/IBA/.test(r.parts[0].lead)) fail('reserve lead does not say whose target it is');
+      if (r.segs !== 3 || r.ticks.length !== 2) fail(`meter: ${r.segs} segments, ${r.ticks.length} ticks`);
+      if (!(r.balRight < r.ticks[0] && r.ticks[0] < r.ticks[1])) fail(`meter order: balance ${r.balRight}, ticks ${r.ticks}`);
+      if (!r.trackOk) fail('meter has no image role/label naming it unaudited');
+      if (r.labelsOut.length) fail(`meter labels outside the track: ${r.labelsOut}`);
+      if (r.rows.length !== 9 || r.rows[0][0] !== 'Stormwater' || r.rows[8][0] !== 'Everything else' || !r.rows[8][2]) fail(`asset rows: ${JSON.stringify(r.rows.map((x) => x[0]))}`);
+      if (r.rows.slice(0, 8).some((x, i) => i && x[1] > r.rows[i - 1][1] + 0.5)) fail('asset bars are not sorted by width');
+      if (!r.water) fail('no sentence on water and sewer counting as fully funded');
+      if (r.has651.length !== 1 || !/our arithmetic/.test(r.has651[0])) fail(`"6.51B" outside the our-arithmetic sentence: ${JSON.stringify(r.has651)}`);
+      if (!r.growthOurs) fail('growth sentence is not "about $1.3B ... our arithmetic"');
+      if (r.pciPts !== 4 || r.pciDashed !== 1) fail(`PCI line: ${r.pciPts} points, ${r.pciDashed} dashed segment(s)`);
+      if (r.pciOut) fail(`${r.pciOut} PCI label(s) outside the chart`);
+      if (r.pbRows !== 2 || !r.gapSeg || !/\$3\.46B.*short/.test(r.gapLabel)) fail(`pension bars: ${r.pbRows} rows, gap ${r.gapSeg}, "${r.gapLabel}"`);
+      if (r.payerSegs !== 5 || r.payerIn !== '70%' || !r.payerInFits) fail(`payer bar: ${r.payerSegs} segments, GF label "${r.payerIn}" fits ${r.payerInFits}`);
+      if (!/budget assigns/.test(r.payerCap)) fail('payer caption does not say "the budget assigns"');
+      if (!/\$573\.2M.*\$493\.4M/.test(r.pensionCopy) || !/2041/.test(r.pensionCopy) || !/\$26\.4M/.test(r.pensionCopy)) fail(`pension copy: "${r.pensionCopy}"`);
+      if (r.examples !== 5 || r.steps !== 4) fail(`infrastructure dig: ${r.examples} examples, ${r.steps} steps`);
+      if (r.links.join() !== '#what,#claim-tab-bike-lanes') fail(`infrastructure dig links: ${r.links}`);
+      if (r.ours.length) fail(`our-arithmetic figures without the words on screen: ${r.ours.join(', ')}`);
+      if (r.unsourced) fail(`${r.unsourced} .figure without data-src-url`);
+      if (r.noFn) fail(`${r.noFn} sourced element(s) without a footnote button`);
+      if (r.scroll > 0) fail(`horizontal scroll (${r.scroll}px)`);
+      // The "Construction projects pot" link opens that pot in section 1.
+      await page.locator('#s4-infra-dig a[href="#what"]').click();
+      await page.waitForTimeout(100);
+      const pot = await page.evaluate(() => document.querySelector('#s1-pots .pot[aria-pressed="true"]')?.dataset.pot);
+      if (pot !== 'cip') fail(`Construction projects link selected pot "${pot}"`);
+
+      if (shot) {
+        await page.goto(`${BASE}/site/`, { waitUntil: 'networkidle' });
+        await page.waitForSelector('#s4-roads svg.pci', { timeout: 10000 }).catch(() => {});
+        await page.evaluate(() => document.querySelectorAll('#piles details.dig').forEach((d) => { d.open = true; }));
+        const clip = () => page.evaluate(() => {
+          const el = document.getElementById('piles').getBoundingClientRect();
+          return { x: el.left + window.scrollX, y: el.top + window.scrollY, width: el.width, height: el.height };
+        });
+        const box = await clip();
+        await page.setViewportSize({ width, height: Math.ceil(box.y + box.height) });
+        await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+        await page.waitForTimeout(150);
+        await page.screenshot({ path: path.join(SHOTS, `${shot}.png`), clip: await clip() });
+      }
+      if (errors.length) fail(errors.join('; '));
+      await ctx.close();
+    }
+  } finally {
+    await browser.close();
+  }
+  return failures;
+}
+
 async function main() {
   const smokeOnly = process.argv.includes('--smoke');
   const { chromium } = await import(process.env.PLAYWRIGHT_CORE || '/home/robert/node_modules/playwright-core/index.mjs');
@@ -457,7 +590,7 @@ async function main() {
   try {
     await waitForServer();
     failures = await smoke(chromium);
-    if (!smokeOnly) failures.push(...(await section1(chromium)), ...(await section2(chromium)), ...(await section3(chromium)));
+    if (!smokeOnly) failures.push(...(await section1(chromium)), ...(await section2(chromium)), ...(await section3(chromium)), ...(await section4(chromium)));
   } finally {
     if (server) server.kill();
   }

@@ -7,11 +7,13 @@ import { prepare as waterfall } from '../site/charts/waterfall.js';
 import { prepare as timeline, layoutY, BREAK_MONTHS } from '../site/charts/gap-timeline.js';
 import { noteParts, stepLabel } from '../site/gapstory.js';
 import { compute } from '../site/gapcalc.js';
+import { prepareReserve, prepareAssets, preparePension, preparePci, EVERYTHING_ELSE } from '../site/charts/piles.js';
 
 const load = (f) => JSON.parse(readFileSync(new URL(`../data/build/${f}.json`, import.meta.url), 'utf8'));
 const why = load('why_short');
 const story = load('gap_story');
 const gap = load('gap');
+const piles = load('piles_up');
 
 test('cents bar segments tile 0..100 and highlight cities', () => {
   const p = cents(why.property_dollar);
@@ -175,4 +177,68 @@ test('timeline layout: proportional to time, long quiet stretches drawn shorter 
   const at = (d) => y.get(p.points.find((x) => x.date === d).t);
   assert.equal(at('2026-04') - at('2025-11'), 50); // five months, drawn to scale
   assert.equal(at('2026-06') - at('2026-04'), 20);
+});
+
+test('assets: top 8 plus everything else, sums to gap', () => {
+  const inf = piles.infrastructure;
+  const rows = prepareAssets(inf.by_asset);
+  assert.equal(rows.length, 9);
+  const top = rows.slice(0, 8);
+  for (let i = 1; i < top.length; i += 1) assert.ok(top[i - 1].value_m >= top[i].value_m, top[i].asset);
+  assert.equal(rows[0].asset, 'Stormwater');
+  assert.equal(rows[0].pct, 100);
+  const rest = rows[8];
+  assert.equal(rest.asset, EVERYTHING_ELSE);
+  assert.equal(rest.rest, true);
+  assert.equal(rest.count, inf.by_asset.length - 8);
+  assert.match(rest.figure.source.doc, /^our arithmetic: /);
+  assert.ok(Math.abs(rows.reduce((t, r) => t + r.value_m, 0) - inf.gap_m.value) <= 1);
+  // the eight named rows keep their own printed figures
+  for (const r of top) assert.ok(!r.figure.source.doc.startsWith('our arithmetic'), r.asset);
+  // n is a parameter, and the input is not mutated
+  const before = JSON.stringify(inf.by_asset);
+  assert.equal(prepareAssets(inf.by_asset, 3).length, 4);
+  assert.equal(JSON.stringify(inf.by_asset), before);
+  // with n >= rows there is no remainder row
+  assert.ok(!prepareAssets(inf.by_asset.slice(0, 5), 8).some((r) => r.rest));
+});
+
+test('pension: GF share is 70%', () => {
+  const p = preparePension(piles.pension);
+  assert.deepEqual(p.bars.map((b) => b.key), ['promised', 'held']);
+  assert.equal(p.bars[0].pct, 100);
+  assert.ok(Math.abs(p.bars[1].pct - (11048.857 / 14513.151) * 100) < 0.01);
+  assert.equal(p.shortfall.figure, piles.pension.shortfall_m);
+  assert.ok(Math.abs(p.shortfall.x0 - p.bars[1].pct) < 1e-9 && p.shortfall.x1 === 100);
+  const gf = p.payers.find((x) => x.label === 'General Fund');
+  assert.equal(Math.round(gf.share * 100), 70);
+  assert.equal(p.payers[0], gf);
+  assert.ok(Math.abs(p.payers.reduce((t, x) => t + x.share, 0) - 1) < 1e-9);
+  for (let i = 1; i < p.payers.length; i += 1) assert.ok(Math.abs(p.payers[i].x0 - p.payers[i - 1].x1) < 1e-9);
+  assert.ok(Math.abs(p.payers[p.payers.length - 1].x1 - 1) < 1e-9);
+});
+
+test('reserve fill below 1 and goal marked', () => {
+  const r = prepareReserve(piles.reserves);
+  assert.ok(r.fill > 0 && r.fill < 1);
+  assert.ok(Math.abs(r.fill - 202.4 / 262.9) < 1e-9);
+  assert.deepEqual(r.segments.map((s) => s.key), ['balance', 'short', 'beyond']);
+  assert.equal(r.segments[0].x0, 0);
+  assert.equal(r.segments[2].x1, 100);
+  for (let i = 1; i < r.segments.length; i += 1) assert.equal(r.segments[i].x0, r.segments[i - 1].x1);
+  assert.ok(Math.abs(r.segments[0].x1 - (10.9 / 16.7) * 100) < 1e-9);
+  assert.deepEqual(r.marks.map((m) => m.key), ['target', 'goal']);
+  const goal = r.marks.find((m) => m.key === 'goal');
+  assert.equal(goal.x, 100);
+  assert.equal(goal.figure, piles.reserves.goal_pct);
+  assert.equal(goal.fy, 2030);
+});
+
+test('pci line: measured years solid, projection dashed, goal a reference', () => {
+  const p = preparePci(piles.infrastructure.roads);
+  assert.deepEqual(p.measured.map((x) => [x.year, x.value]), [[2016, 71], [2023, 63]]);
+  assert.deepEqual(p.projected.map((x) => [x.year, x.value]), [[2027, 63], [2036, 52]]);
+  assert.equal(p.goal.value, 65);
+  assert.equal(p.goal.was, 70);
+  assert.ok(p.domain[0] <= 52 && p.domain[1] >= 71);
 });

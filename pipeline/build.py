@@ -656,6 +656,113 @@ def build_gap_story(d: dict) -> dict:
     return d
 
 
+PILES_SUM_TOLERANCE_M = 0.01  # the Outlook's tables are printed to the dollar; its asset gaps add to Table 23 within $1
+PILES_SHORTFALL_TOLERANCE_M = 1.0
+PILES_PAYER_TOLERANCE_M = 0.001
+_DATE = re.compile(r"\d{4}-\d{2}-\d{2}")
+
+
+def _figs(sec: dict, path: str, keys) -> dict:
+    return {k: _need_value(sec.get(k), f"{path}.{k}") for k in keys}
+
+
+def _obj(v, path: str) -> dict:
+    if not isinstance(v, dict):
+        raise ValueError(f"{path}: object required")
+    return v
+
+
+def build_piles_up(d: dict) -> dict:
+    """Section 4 figures. Checks: the reserve is unaudited and below its target, and the target below the goal;
+    the asset gaps add up to the Outlook's total (within $1M) and needs - funding = gap; the year-on-year growth is
+    labeled our arithmetic and equals gap - prior_gap; the five payers add up to the Table 8 ADC; shortfall =
+    liability - assets (within $1M); dates are YYYY-MM-DD; every example, process step and cite is complete."""
+    d = copy.deepcopy(d)
+    curated._walk(d, "")
+    r = _obj(d.get("reserves"), "reserves")
+    rv = _figs(r, "reserves", ("balance_m", "balance_pct", "target_m", "target_pct", "goal_pct", "draw_m", "skipped_m", "years_to_goal"))
+    if r.get("unaudited") is not True:
+        raise ValueError("reserves.unaudited: must be true (the FY2026 year-end figures are unaudited until the ACFR)")
+    if not isinstance(r.get("goal_fy"), int) or isinstance(r["goal_fy"], bool):
+        raise ValueError("reserves.goal_fy: int required")
+    if not (rv["balance_m"] < rv["target_m"] and rv["balance_pct"] < rv["target_pct"] < rv["goal_pct"]):
+        raise ValueError("reserves: expected balance < target < goal")
+
+    i = _obj(d.get("infrastructure"), "infrastructure")
+    iv = _figs(i, "infrastructure", ("gap_m", "needs_m", "funding_m", "prior_gap_m", "growth_m", "score_points"))
+    if abs(iv["needs_m"] - iv["funding_m"] - iv["gap_m"]) > PILES_SUM_TOLERANCE_M:
+        raise ValueError("infrastructure.gap_m: must equal needs_m - funding_m")
+    _ours(i["growth_m"], "infrastructure.growth_m", True)
+    if abs(iv["gap_m"] - iv["prior_gap_m"] - iv["growth_m"]) > GAP_TOLERANCE_M:
+        raise ValueError("infrastructure.growth_m: must equal gap_m - prior_gap_m")
+    assets = i.get("by_asset")
+    if not isinstance(assets, list) or len(assets) < 9:
+        raise ValueError("infrastructure.by_asset: the full asset table is required")
+    names = set()
+    for j, a in enumerate(assets):
+        path = f"infrastructure.by_asset[{j}]"
+        name = _text(a.get("asset") if isinstance(a, dict) else None, f"{path}.asset")
+        if name in names:
+            raise ValueError(f"{path}.asset: duplicate {name!r}")
+        names.add(name)
+        if _need_value(a.get("gap_m"), f"{path}.gap_m") < 0:
+            raise ValueError(f"{path}.gap_m: negative")
+        _ours(a["gap_m"], f"{path}.gap_m", False)
+    total = sum(a["gap_m"]["value"] for a in assets)
+    if abs(total - iv["gap_m"]) > PILES_SUM_TOLERANCE_M:
+        raise ValueError(f"infrastructure.by_asset: sum {total:.1f} differs from gap_m {iv['gap_m']:.1f}")
+    rd = _obj(i.get("roads"), "infrastructure.roads")
+    _figs(rd, "infrastructure.roads", ("pci_2016", "pci_2023", "poor_share_pct", "funding_share_pct", "goal_old", "goal_new", "pci_2027", "pci_2036"))
+    _text(rd.get("poor_share_text"), "infrastructure.roads.poor_share_text")
+    ex = i.get("examples")
+    if not isinstance(ex, list) or not ex:
+        raise ValueError("infrastructure.examples: non-empty list required")
+    for j, e in enumerate(ex):
+        for k in ("name", "note"):
+            _text(e.get(k) if isinstance(e, dict) else None, f"infrastructure.examples[{j}].{k}")
+        _need_value(e.get("amount_m"), f"infrastructure.examples[{j}].amount_m")
+    f = _obj(i.get("funded"), "infrastructure.funded")
+    _figs(f, "infrastructure.funded", ("cip_m", "water_sewer_pct", "water_main_m", "sewer_main_m"))
+    _ours(f["water_sewer_pct"], "infrastructure.funded.water_sewer_pct", True)
+    steps = i.get("process")
+    if not isinstance(steps, list) or not steps:
+        raise ValueError("infrastructure.process: non-empty list required")
+    for j, st in enumerate(steps):
+        for k in ("step", "text"):
+            _text(st.get(k) if isinstance(st, dict) else None, f"infrastructure.process[{j}].{k}")
+        _check_source(st.get("source"), f"infrastructure.process[{j}].source")
+
+    p = _obj(d.get("pension"), "pension")
+    pv = _figs(p, "pension", ("liability_m", "assets_m", "shortfall_m", "funded_pct", "market_funded_pct", "adc_total_m",
+                              "gf_share_pct", "rise_m", "fy2028_m", "fy2029_m"))
+    if abs(pv["liability_m"] - pv["assets_m"] - pv["shortfall_m"]) > PILES_SHORTFALL_TOLERANCE_M:
+        raise ValueError("pension.shortfall_m: must equal liability_m - assets_m")
+    for k in ("valuation_date", "full_funding_valuation"):
+        if not isinstance(p.get(k), str) or not _DATE.fullmatch(p[k]):
+            raise ValueError(f"pension.{k}: date (YYYY-MM-DD) required")
+    payers = p.get("payers")
+    if not isinstance(payers, list) or len(payers) != 5:
+        raise ValueError("pension.payers: the five Table 8 fund types are required")
+    labels = set()
+    for j, x in enumerate(payers):
+        label = _text(x.get("label") if isinstance(x, dict) else None, f"pension.payers[{j}].label")
+        if label in labels:
+            raise ValueError(f"pension.payers[{j}].label: duplicate {label!r}")
+        labels.add(label)
+        if _need_value(x.get("amount_m"), f"pension.payers[{j}].amount_m") <= 0:
+            raise ValueError(f"pension.payers[{j}].amount_m: must be positive")
+    paid = sum(x["amount_m"]["value"] for x in payers)
+    if abs(paid - pv["adc_total_m"]) > PILES_PAYER_TOLERANCE_M:
+        raise ValueError(f"pension.payers: sum {paid:.6f} differs from adc_total_m {pv['adc_total_m']}")
+
+    cites = d.get("cites")
+    if not isinstance(cites, dict) or not cites:
+        raise ValueError("cites: object required")
+    for k, v in cites.items():
+        _check_source(v, f"cites.{k}")
+    return d
+
+
 class BuildCheckError(RuntimeError):
     """checks.run reported failures on the freshly built files; out_dir was left untouched."""
 
@@ -729,8 +836,7 @@ def _build_into(raw_dir: Path, curated_dir: Path, out_dir: Path) -> list[str]:
             unmatched=unmatched_rows(raw_dir))),
         ("why_short", lambda: build_why_short(curated.load(curated_dir, "why_short"))),
         ("gap_story", lambda: build_gap_story(curated.load(curated_dir, "gap_story"))),
-        # Stub until Task 11 replaces it with a validator; passed through so the page's loadData finds it.
-        ("piles_up", lambda: curated.load(curated_dir, "piles_up")),
+        ("piles_up", lambda: build_piles_up(curated.load(curated_dir, "piles_up"))),
     ]
     return [_write(out_dir, name, fn()).name for name, fn in steps]
 

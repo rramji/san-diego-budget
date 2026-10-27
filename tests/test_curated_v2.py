@@ -4,7 +4,7 @@ import re
 from pathlib import Path
 import pytest
 from pipeline import curated
-from pipeline.build import build_gf_revenue, build_cip, build_labels, build_why_short, build_gap_story
+from pipeline.build import build_gf_revenue, build_cip, build_labels, build_why_short, build_gap_story, build_piles_up
 ROOT = Path(__file__).parent.parent
 CUR = ROOT / "data" / "curated"
 
@@ -323,4 +323,97 @@ def test_gap_story_input_not_mutated():
     raw = curated.load(CUR, "gap_story")
     before = copy.deepcopy(raw)
     build_gap_story(raw)
+    assert raw == before
+
+
+def test_piles_up_values():
+    d = build_piles_up(curated.load(CUR, "piles_up"))
+    r = d["reserves"]
+    assert (r["balance_m"]["value"], r["target_m"]["value"], r["goal_pct"]["value"], r["draw_m"]["value"]) == (202.4, 262.9, 16.7, 4.7)
+    assert (r["goal_fy"], r["unaudited"], r["skipped_m"]["value"], r["years_to_goal"]["value"]) == (2030, True, 80.1, 15)
+    assert (r["balance_pct"]["value"], r["target_pct"]["value"]) == (10.9, 14.1)
+    i = d["infrastructure"]
+    assert (round(i["gap_m"]["value"]), round(i["needs_m"]["value"]), round(i["funding_m"]["value"])) == (7815, 12825, 5010)
+    assert round(i["prior_gap_m"]["value"]) == 6506
+    a = {x["asset"]: round(x["gap_m"]["value"]) for x in i["by_asset"]}
+    assert a["Stormwater"] == 5085 and a["Sidewalks"] == 253
+    assert abs(sum(x["gap_m"]["value"] for x in i["by_asset"]) - i["gap_m"]["value"]) <= 1
+    rd = i["roads"]; assert (rd["pci_2016"]["value"], rd["pci_2023"]["value"], rd["goal_new"]["value"], rd["pci_2036"]["value"]) == (71, 63, 65, 52)
+    assert (rd["goal_old"]["value"], rd["funding_share_pct"]["value"], rd["pci_2027"]["value"], rd["poor_share_text"]) == (70, 32, 63, "nearly 34%")
+    p = d["pension"]
+    assert {x["label"]: x["amount_m"]["value"] for x in p["payers"]} == {
+        "General Fund": 396.300918, "Utilities": 106.011172, "Money tied to a purpose": 47.210165,
+        "Internal services": 10.771424, "Other": 2.905442}
+    assert abs(sum(x["amount_m"]["value"] for x in p["payers"]) - 563.199121) < 1e-6
+    assert all(x["amount_m"]["source"]["page"] == 30 for x in p["payers"])
+    assert (p["funded_pct"]["value"], p["rise_m"]["value"], p["fy2028_m"]["value"], p["fy2029_m"]["value"]) == (76.1, 26.4, 573.2, 493.4)
+    assert (p["valuation_date"], p["full_funding_valuation"]) == ("2025-06-30", "2041-06-30")
+    assert (round(p["liability_m"]["value"], 1), round(p["assets_m"]["value"], 1), round(p["shortfall_m"]["value"], 1)) == (14513.2, 11048.9, 3464.3)
+
+
+def test_piles_up_sources_pages_and_arithmetic():
+    d = build_piles_up(curated.load(CUR, "piles_up"))
+    r, i, p = d["reserves"], d["infrastructure"], d["pension"]
+    # Printed footer pages, checked in the cached pdftotext extracts.
+    assert (r["balance_m"]["source"]["page"], r["target_m"]["source"]["page"], r["draw_m"]["source"]["page"],
+            r["skipped_m"]["source"]["page"], r["years_to_goal"]["source"]["page"], r["goal_pct"]["source"]["page"]) == (20, 37, 12, 5, 38, 3)
+    assert (i["gap_m"]["source"]["page"], i["prior_gap_m"]["source"]["page"]) == (35, 37)
+    pages = {x["asset"]: x["gap_m"]["source"]["page"] for x in i["by_asset"]}
+    assert len(pages) == 22 and pages["Stormwater"] == 61 and pages["Streets and roads, pavement"] == 45 and pages["Parks"] == 53
+    assert all(x["gap_m"]["value"] == 0 for x in i["by_asset"] if x["asset"] in ("Water", "Wastewater", "Pure Water"))
+    rd = i["roads"]
+    assert (rd["pci_2016"]["source"]["page"], rd["pci_2023"]["source"]["page"], rd["poor_share_pct"]["source"]["page"],
+            rd["funding_share_pct"]["source"]["page"], rd["pci_2036"]["source"]["page"]) == (73, 73, 45, 13, 15)
+    assert (p["liability_m"]["source"]["page"], p["rise_m"]["source"]["page"], p["fy2028_m"]["source"]["page"]) == (3, 30, 12)
+    g = i["growth_m"]
+    assert g["source"]["doc"].startswith("our arithmetic: ") and abs(g["value"] - (i["gap_m"]["value"] - i["prior_gap_m"]["value"])) < 0.05
+    assert i["funded"]["water_sewer_pct"]["source"]["doc"].startswith("our arithmetic: ")
+    ours = [k for k, v in r.items() if isinstance(v, dict) and v.get("source", {}).get("doc", "").startswith("our arithmetic")]
+    assert ours == []
+    # Never the $8.21B Vol. III "unidentified funding" measure, and never call Fire Station 51 or San Carlos library funded.
+    text = str(d)
+    assert "8,212" not in text and "8212" not in text and "Station 51" not in text and "San Carlos" not in text
+    assert [e["name"] for e in i["examples"]] and all(e["note"].strip() for e in i["examples"])
+    assert [s["step"] for s in i["process"]][-1].startswith("June")
+
+
+def _set(path, value):
+    def edit(d):
+        node = d
+        for k in path[:-1]:
+            node = node[k]
+        node[path[-1]] = value
+    return edit
+
+
+@pytest.mark.parametrize("edit, where", [
+    (_bump(["infrastructure", "by_asset", 3, "gap_m"]), "by_asset"),
+    (lambda d: d["infrastructure"]["by_asset"].pop(0), "by_asset"),
+    (lambda d: d["infrastructure"]["by_asset"][5].__setitem__("asset", "Stormwater"), "by_asset"),
+    (_bump(["pension", "payers", 0, "amount_m"]), "payers"),
+    (lambda d: d["pension"]["payers"].pop(), "payers"),
+    (lambda d: d["pension"]["shortfall_m"].__setitem__("value", 3470.0), "shortfall_m"),
+    (_bump(["infrastructure", "needs_m"]), "needs_m"),
+    (_set(["reserves", "unaudited"], False), "unaudited"),
+    (_set(["pension", "valuation_date"], "June 2025"), "valuation_date"),
+    (_set(["pension", "full_funding_valuation"], "2041"), "full_funding_valuation"),
+    (lambda d: d["reserves"].pop("target_m"), "reserves.target_m"),
+    (_bump(["infrastructure", "growth_m"]), "growth_m"),
+    (lambda d: d["infrastructure"]["growth_m"]["source"].__setitem__("doc", "IBA"), "growth_m"),
+    (lambda d: d["infrastructure"]["examples"][0].__setitem__("name", " "), "examples"),
+    (lambda d: d["infrastructure"]["process"][0].__setitem__("source", {"doc": "x", "page": 1, "url": "http://x"}), "process"),
+    (_set(["infrastructure", "roads", "poor_share_text"], ""), "poor_share_text"),
+    (lambda d: d["cites"]["full_funding"].__setitem__("url", ""), "cites"),
+])
+def test_piles_up_rejects_bad_input(edit, where):
+    d = copy.deepcopy(curated.load(CUR, "piles_up"))
+    edit(d)
+    with pytest.raises(ValueError, match=where):
+        build_piles_up(d)
+
+
+def test_piles_up_input_not_mutated():
+    raw = curated.load(CUR, "piles_up")
+    before = copy.deepcopy(raw)
+    build_piles_up(raw)
     assert raw == before

@@ -18,6 +18,8 @@ import { renderWhy } from './why.js';
 export { renderWhy };
 import { renderGapStory } from './gapstory.js';
 export { renderGapStory };
+import { renderPiles } from './piles.js';
+export { renderPiles };
 
 const FILES = {
   headline: 'headline', series: 'series', structural: 'structural_deficit', funnel: 'funnel',
@@ -267,6 +269,8 @@ export function renderWhat(data) {
   };
 
   const drawPots = () => { pots = bm.renderPots(potsEl, tree, state, colors, selectPot); place(); };
+  // Links elsewhere on the page (section 4's "Construction projects pot") open a pot by id.
+  document.addEventListener('select-pot', (e) => { if (tree.pots.some((p) => p.id === e.detail)) selectPot(e.detail); });
   observeWidth(potsEl, drawPots);
   observeWidth(cols.in, () => drawSide('in'));
   observeWidth(cols.out, () => drawSide('out'));
@@ -400,6 +404,7 @@ async function main() {
   guarded('section 3: gap calculator', 'ch3-calc', () => renderGapCalc(data));
   guarded('section 3 dig: funnel', 'ch2-funnel', () => renderFunnel(data));
   guarded('section 3 dig: cuts', 'ch2-cuts', () => renderCuts(document.getElementById('ch2-cuts'), data.cuts));
+  guarded('section 4: what piles up', 's4-reserve', () => renderPiles(document.getElementById('piles'), data.pilesUp));
   guarded('section 5: how long', 'ch1-chart', () => renderHowLong(data));
   guarded('section 6: claims', 'ch4-claims', () => renderClaims(data));
   guarded('popovers', null, () => mountPopovers(document));
