@@ -493,6 +493,7 @@ async function section4(chromium) {
           ticks,
           balRight: bal ? bal.right : 0,
           trackOk: !!track && track.getAttribute('role') === 'img' && /unaudited/.test(track.getAttribute('aria-label')),
+          keyRows: [...sec.querySelectorAll('#s4-reserve .pile-key li')].map((li) => [li.querySelector('.pk-name').textContent, li.querySelector('.pk-val').textContent.replace(/¹/g, '')]),
           labelsOut: [...sec.querySelectorAll('#s4-reserve .meter-label')].filter((l) => !inside(l, track)).map((l) => l.textContent),
           rows: rows.map((li) => [li.querySelector('.ab-name').textContent, li.querySelector('.ab-bar').getBoundingClientRect().width, li.classList.contains('is-rest')]),
           water: /Water and sewer projects/.test(sec.querySelector('#infrastructure').textContent),
@@ -533,6 +534,12 @@ async function section4(chromium) {
       if (r.segs !== 3 || r.ticks.length !== 2) fail(`meter: ${r.segs} segments, ${r.ticks.length} ticks`);
       if (!(r.balRight < r.ticks[0] && r.ticks[0] < r.ticks[1])) fail(`meter order: balance ${r.balRight}, ticks ${r.ticks}`);
       if (!r.trackOk) fail('meter has no image role/label naming it unaudited');
+      // The pale stretch is the amount still to save; it carries no number (the target's values sit on the target row).
+      const gapRow = r.keyRows.find((k) => /Still to save/.test(k[0]));
+      const targetRow = r.keyRows.find((k) => /^FY2026 target$/.test(k[0]));
+      if (!gapRow || gapRow[1].trim() !== '') fail(`meter key: still-to-save row ${JSON.stringify(gapRow)}`);
+      if (!targetRow || !/14\.1%.*\$262\.9M/.test(targetRow[1])) fail(`meter key: target row ${JSON.stringify(targetRow)}`);
+      if (r.keyRows.some((k) => /short/i.test(k[0]) && /\$/.test(k[1]))) fail('meter key: a "short" row shows a dollar amount');
       if (r.labelsOut.length) fail(`meter labels outside the track: ${r.labelsOut}`);
       if (r.rows.length !== 9 || r.rows[0][0] !== 'Stormwater' || r.rows[8][0] !== 'Everything else' || !r.rows[8][2]) fail(`asset rows: ${JSON.stringify(r.rows.map((x) => x[0]))}`);
       if (r.rows.slice(0, 8).some((x, i) => i && x[1] > r.rows[i - 1][1] + 0.5)) fail('asset bars are not sorted by width');

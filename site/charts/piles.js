@@ -126,7 +126,7 @@ export function renderReserve(el, prep, { fig }) {
   track.append(tick(target, 'is-target'), tick(goal, 'is-goal'));
   track.setAttribute('role', 'img');
   track.setAttribute('aria-label', `Reserve at the end of FY2026: ${bal.pct.value}% of yearly General Fund income (${m1(bal.amount.value)}, unaudited). `
-    + `FY2026 target: ${target.figure.value}% (${m1(target.amount.value)}). Policy goal: ${goal.figure.value}% by FY${goal.fy}.`);
+    + `FY2026 target: ${target.figure.value}% (${m1(target.amount.value)}); the stretch between the two is still to be saved. Policy goal: ${goal.figure.value}% by FY${goal.fy}.`);
   const above = h('div', 'meter-above');
   const tl = h('span', 'meter-label is-target', 'FY2026 target');
   tl.style.right = `${100 - target.x}%`;
@@ -135,7 +135,8 @@ export function renderReserve(el, prep, { fig }) {
   const key = h('ul', 'pile-key',
     h('li', null, h('span', 'swatch is-balance'), h('span', 'pk-name', 'Saved at the end of FY2026 (unaudited)'),
       h('span', 'pk-val', fig(bal.pct, `${bal.pct.value}%`), ' (', fig(bal.amount, m1(bal.amount.value)), ')')),
-    h('li', null, h('span', 'swatch is-short'), h('span', 'pk-name', 'Short of the FY2026 target'),
+    h('li', 'is-gap-row', h('span', 'swatch is-short'), h('span', 'pk-name', 'Still to save to reach the FY2026 target'), h('span', 'pk-val')),
+    h('li', 'is-target-row', h('span', 'swatch is-tick'), h('span', 'pk-name', 'FY2026 target'),
       h('span', 'pk-val', fig(target.figure, `${target.figure.value}%`), ' (', fig(target.amount, m1(target.amount.value)), ')')),
     h('li', null, h('span', 'swatch is-beyond'), h('span', 'pk-name', `The policy’s goal, by FY${goal.fy}`),
       h('span', 'pk-val', fig(goal.figure, `${goal.figure.value}%`))));
