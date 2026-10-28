@@ -20,6 +20,8 @@ import { renderGapStory } from './gapstory.js';
 export { renderGapStory };
 import { renderPiles } from './piles.js';
 export { renderPiles };
+import { renderMethods } from './methods.js';
+export { renderMethods };
 
 const FILES = {
   headline: 'headline', series: 'series', structural: 'structural_deficit', funnel: 'funnel',
@@ -399,6 +401,7 @@ async function main() {
   // Section order on the page: what, why-short, gap, piles, how-long, claims. Later tasks add their renderers here.
   guarded('section 1: budget maps', 's1-maps', () => renderWhat(data));
   guarded('section 1 dig: money-flow Sankey', 'ch2-sankey', () => renderSankey(data.flows));
+  guarded('section 1 dig: how we built this', 's1-methods', () => renderMethods(document.getElementById('s1-methods'), data.budgetTree));
   guarded('section 2: why a wealthy city is short', 's2-blocks', () => renderWhy(document.getElementById('why-short'), data.whyShort));
   guarded('section 3: the gap', 's3-headlines', () => renderGapStory(document.getElementById('gap'), data.gapStory));
   guarded('section 3: gap calculator', 'ch3-calc', () => renderGapCalc(data));

@@ -40,8 +40,8 @@ The rule is applied in this order, and the first match wins:
    - Equipment & construction: Capital Expenditures.
 4. Other costs. Any account group not listed above, including groups the city
    adds later. Nothing is dropped: it lands here so the total still adds up.
-   (The name "Everything else" is kept for a different purpose, the roll-up of
-   small boxes on the maps.)
+   Other costs is not the same as "Everything else": small items in a map are
+   grouped into an "Everything else" box, whatever their category.
 
 Category sizes come from our sorting of the city's labels. The city does not
 publish these 14 categories itself.

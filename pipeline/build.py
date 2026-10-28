@@ -254,6 +254,8 @@ def build_claims(curated_claims: list[dict], cip_rows: list[dict], series: dict,
             raise ValueError(f"claims[{i}].sources: at least one source required")
         for k, src in enumerate(c["sources"]):
             _check_source(src, f"claims[{i}].sources[{k}]")
+        if "link" in c and not (isinstance(c["link"], str) and c["link"].startswith("#") and len(c["link"]) > 1):
+            raise ValueError(f"claims[{i}].link: an in-page anchor such as \"#infrastructure\"")
         card = {**c, "chart": c.get("chart"), "matched_projects": None}
         if c["id"] == "bike-lanes":
             card["chart"], card["matched_projects"] = _bike_chart(cip_rows)

@@ -130,6 +130,8 @@ function infraDig(el, d) {
   const claim = h('a', null, 'the bike-lane claim');
   claim.href = '#claim-tab-bike-lanes';
   claim.addEventListener('click', openClaim);
+  const chosen = h('h4', null, 'How projects are chosen');
+  chosen.dataset.anchor = 'how-projects-are-chosen'; // the bike-lane claim card links here
   const steps = h('ol', 'pile-steps', ...inf.process.map((s) => h('li', null, h('span', 'ps-when', s.step), ' ', cite(s.source, s.text))));
   el.replaceChildren(
     h('h4', null, 'Some of what isn’t paid for'),
@@ -139,7 +141,7 @@ function infraDig(el, d) {
       fig(f.cip_m, m1(f.cip_m.value)), '. About ', fig(f.water_sewer_pct, `${Math.round(f.water_sewer_pct.value)}%`), ' of it comes from the water and sewer ',
       gl('utility-enterprise-fund', 'utility funds'), ', which can be spent only on those systems. The biggest single items are the yearly programs that replace water mains (',
       fig(f.water_main_m, m1(f.water_main_m.value)), ') and sewer mains (', fig(f.sewer_main_m, m1(f.sewer_main_m.value)), '). ', what, ' shows where the rest goes.'),
-    h('h4', null, 'How projects are chosen'),
+    chosen,
     p('Under a Council rule (Council Policy 800-14), each project gets a score out of ', fig(inf.score_points, `${inf.score_points.value} points`),
       ', for things like legal and safety risk, the condition of what it replaces, and fairness across neighborhoods. ',
       cite(d.cites.restricted, 'Projects compete only with others paid from the same kind of restricted money, so a low-scoring project can still go ahead when it fits money that can’t be spent on anything else.')),

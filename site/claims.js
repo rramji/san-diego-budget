@@ -12,6 +12,8 @@ const CHIP_LABELS = {
   homelessness: 'Homelessness spending',
 };
 const PREFIX = "What this doesn't tell you: ";
+// A card's link elsewhere on the page, named for what it leads to.
+const LINK_TEXT = { 'bike-lanes': 'How projects are chosen ↓' };
 // First use of a glossary term in each card links to its entry.
 const TERMS = [
   [/General Fund/, 'general-fund'],
@@ -29,6 +31,7 @@ export function claimCardModel(claim) {
     chart: claim.chart ?? null,
     matched: claim.matched_projects && claim.matched_projects.length ? claim.matched_projects : null,
     caveatText: PREFIX + claim.caveat,
+    link: claim.link ? { href: claim.link, text: LINK_TEXT[claim.id] || 'Read more ↓' } : null,
     sources: claim.sources.map((s) => ({ text: s.page != null ? `${s.doc}, page ${s.page}` : s.doc, url: s.url })),
   };
 }
@@ -38,6 +41,19 @@ function el(tag, cls, text) {
   if (cls) e.className = cls;
   if (text != null) e.textContent = text;
   return e;
+}
+
+// The bike card's link leads to "How projects are chosen", which sits in that part's Dig deeper: open it and go there.
+// Without the target on the page this is plain anchor navigation.
+function openLinkTarget(e) {
+  const target = document.querySelector(e.currentTarget.getAttribute('href'));
+  const dig = target?.querySelector('details.dig');
+  if (!dig) return;
+  e.preventDefault();
+  dig.open = true;
+  const spot = dig.querySelector('[data-anchor]') || target;
+  const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  spot.scrollIntoView({ block: 'start', behavior: reduced ? 'auto' : 'smooth' });
 }
 
 export function mountClaims(root, claims) {
@@ -84,6 +100,12 @@ export function mountClaims(root, claims) {
       parts.push(d);
     }
     parts.push(el('p', 'claim-caveat', m.caveatText));
+    if (m.link) {
+      const a = el('a', 'read-more', m.link.text);
+      a.href = m.link.href;
+      a.addEventListener('click', openLinkTarget);
+      parts.push(a);
+    }
     const sh = el('h4', 'claim-src-h', 'Sources');
     const ul = el('ul', 'claim-sources');
     m.sources.forEach((s) => {

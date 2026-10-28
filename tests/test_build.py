@@ -541,3 +541,39 @@ def test_build_all_replaces_out_dir_on_success(tmp_path):
     assert not (out / "stale.json").exists()
     assert all(p.parent == out and p.exists() for p in paths)
     assert sorted(p.name for p in tmp_path.iterdir()) == ["build", "curated"]
+
+
+def test_bike_card_links_to_how_projects_are_chosen(tmp_path):
+    claims = {c["id"]: c for c in _claims_curated()}
+    assert claims["bike-lanes"]["link"] == "#infrastructure"
+    assert all("link" not in c for i, c in claims.items() if i != "bike-lanes")
+    out, _ = _build(tmp_path)
+    built = {c["id"]: c for c in json.loads((out / "claims.json").read_text())}
+    assert built["bike-lanes"]["link"] == "#infrastructure"
+
+
+def test_build_claims_rejects_a_link_that_is_not_an_anchor():
+    import pytest
+    from pipeline.build import build_claims
+    bad = [{"id": "x", "claim": "c", "finding": "f.", "caveat": "c.", "chart": None, "link": "https://x.org",
+            "sources": [{"doc": "d", "page": 1, "url": "https://x.org/a.pdf"}]}]
+    with pytest.raises(ValueError, match=r"^claims\[0\]\.link"):
+        build_claims(bad, [], {"gf_by_fy": {}, "gf_dept_by_fy": {}})
+
+
+def test_methods_note_thresholds_match_the_pipeline():
+    """The methods note (site/methods.js) states the tree's opening thresholds and category count; keep them in step."""
+    import re
+    from pipeline import budget_tree
+    from pipeline.categories import EXPENSE_CATEGORIES
+    js = (ROOT / "site" / "methods.js").read_text()
+    m = re.search(r"export const RULES = (\{[^}]*\})", js)
+    assert m, "site/methods.js must export RULES"
+    rules = json.loads(re.sub(r"(\w+):", r'"\1":', m.group(1)))
+    assert rules == {
+        "categories": len(EXPENSE_CATEGORIES),
+        "max_boxes": budget_tree.MAX_CHILDREN,
+        "category_min_m": budget_tree.FUND_DEPT_CATEGORY_MIN_M,
+        "account_min_m": budget_tree.ACCOUNT_LEVEL_MIN_M,
+        "fold_below_m": budget_tree.OMIT_BELOW_M,
+    }

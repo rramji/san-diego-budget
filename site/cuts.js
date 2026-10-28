@@ -19,22 +19,39 @@ function tableBlock(title, intro, heads, rows) {
   const p = document.createElement('p');
   p.className = 'chart-cap';
   p.textContent = intro;
+  // On a phone each row stacks into a block, its cells labeled by their column (data-label, styles.css), so
+  // nothing scrolls sideways. The explicit roles keep it a table for screen readers once CSS changes its display.
   const wrap = document.createElement('div');
-  wrap.className = 'table-wrap';
-  wrap.tabIndex = 0;
-  wrap.setAttribute('role', 'region');
-  wrap.setAttribute('aria-label', `${title} (scrolls sideways on narrow screens)`);
+  wrap.className = 'table-wrap cut-table';
   const table = document.createElement('table');
+  table.setAttribute('role', 'table');
+  table.setAttribute('aria-label', title);
   const tr = document.createElement('tr');
-  for (const t of heads) { const th = document.createElement('th'); th.scope = 'col'; th.textContent = t; tr.append(th); }
-  table.createTHead().append(tr);
+  tr.setAttribute('role', 'row');
+  for (const t of heads) {
+    const th = document.createElement('th');
+    th.scope = 'col';
+    th.setAttribute('role', 'columnheader');
+    th.textContent = t;
+    tr.append(th);
+  }
+  const head = table.createTHead();
+  head.setAttribute('role', 'rowgroup');
+  head.append(tr);
   const body = table.createTBody();
+  body.setAttribute('role', 'rowgroup');
   for (const cells of rows) {
     const r = body.insertRow();
+    r.setAttribute('role', 'row');
     cells.forEach((c, i) => {
       const td = i === 0 ? document.createElement('th') : document.createElement('td');
       if (i === 0) td.scope = 'row';
-      td.append(...[].concat(c));
+      td.setAttribute('role', i === 0 ? 'rowheader' : 'cell');
+      td.dataset.label = heads[i];
+      const v = document.createElement('span');
+      v.className = 'cell-v';
+      v.append(...[].concat(c));
+      td.append(v);
       r.append(td);
     });
   }
