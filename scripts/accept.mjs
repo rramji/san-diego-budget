@@ -1,6 +1,7 @@
 // Browser acceptance checks. Run from anywhere:
 //   node scripts/accept.mjs --smoke   load the page at 375/1200 px, light and dark; no errors, no horizontal scroll
-//   node scripts/accept.mjs           smoke plus the section checks below (sections 1 to 4) and their screenshots
+//   node scripts/accept.mjs           smoke, the section checks below (sections 1 to 4), the page-wide checks, and
+//                                     the screenshots in docs/screenshots/v2-*.png
 // Not part of `npm test` (needs a browser). Override the playwright path with PLAYWRIGHT_CORE.
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
@@ -587,6 +588,135 @@ async function section4(chromium) {
   return failures;
 }
 
+// Page-wide checks (Task 12) at 375 and 1200, light and dark, with every Dig deeper and the bike-lane card open:
+// no errors, no sideways scroll, every figure sourced with a footnote button, no retired v1 numbers on screen,
+// every in-page link lands, sources titled once each, the methods note, the bike card's link, the FY2028 marker and
+// the stacked cut tables. Screenshots: sections 5 and 6, the section 1 Dig deeper, the Sources list.
+const RETIRED = ['$103.2M', '~$30M', '396.1'];
+async function pageWide(chromium) {
+  const failures = [];
+  const browser = await chromium.launch();
+  try {
+    for (const width of [375, 1200]) {
+      for (const scheme of ['light', 'dark']) {
+        const label = `page ${width}px ${scheme}`;
+        const fail = (m) => failures.push(`${label}: ${m}`);
+        const ctx = await browser.newContext({ viewport: { width, height: 900 }, colorScheme: scheme });
+        const page = await ctx.newPage();
+        const errors = [];
+        page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
+        page.on('console', (m) => { if (m.type() === 'error') errors.push(`console: ${m.text()}`); });
+        await page.goto(`${BASE}/site/`, { waitUntil: 'networkidle' });
+        await page.waitForSelector('#ch1-chart svg', { timeout: 10000 }).catch(() => {});
+        await page.waitForSelector('#s1-methods p', { timeout: 3000 }).catch(() => {});
+
+        // The bike card: its link reads "How projects are chosen ↓" and opens that part's Dig deeper.
+        await page.click('#claim-tab-bike-lanes');
+        const link = page.locator('#claim-panel a.read-more');
+        const lt = await link.count() ? [await link.textContent(), await link.getAttribute('href')] : null;
+        if (!lt || lt[0] !== 'How projects are chosen ↓' || lt[1] !== '#infrastructure') fail(`bike card link: ${JSON.stringify(lt)}`);
+        if (lt) {
+          await link.click();
+          await page.waitForFunction(() => {
+            const r = document.querySelector('#infrastructure [data-anchor="how-projects-are-chosen"]')?.getBoundingClientRect();
+            return r && r.top >= -1 && r.top < window.innerHeight;
+          }, null, { timeout: 4000 }).catch(() => {});
+          const there = await page.evaluate(() => {
+            const d = document.querySelector('#infrastructure details.dig');
+            const h = d?.querySelector('[data-anchor="how-projects-are-chosen"]');
+            const r = h?.getBoundingClientRect();
+            return { open: !!d?.open, inView: !!r && r.top >= -1 && r.top < window.innerHeight };
+          });
+          if (!there.open || !there.inView) fail(`bike card link did not open and show "How projects are chosen": ${JSON.stringify(there)}`);
+        }
+        await page.evaluate(() => document.querySelectorAll('details').forEach((d) => { d.open = true; }));
+        await page.waitForTimeout(400);
+
+        const r = await page.evaluate((retired) => {
+          const visible = document.body.innerText;
+          const blocks = [...document.querySelectorAll('p, li, figcaption, dd, td, th, h3, h4, text, span.figure')]
+            .filter((e) => e.getClientRects().length && /6\.51B/.test(e.textContent))
+            .map((e) => e.closest('p, li, figcaption, dd, td') || e);
+          const bad651 = [...new Set(blocks)].filter((b) => !(b.querySelector('#s4-growth') || b.closest('#s4-growth')) || !/our arithmetic/.test(b.textContent));
+          const anchors = [...document.querySelectorAll('a[href^="#"]')].map((a) => a.getAttribute('href')).filter((h) => h.length > 1);
+          const titles = [...document.querySelectorAll('#sources-list li > a')].map((a) => [a.textContent, a.getAttribute('href')]);
+          const methods = document.getElementById('s1-methods');
+          const marker = document.querySelector('#ch1-chart .marker-list')?.textContent || '';
+          const cuts = [...document.querySelectorAll('#ch2-cuts tbody tr')];
+          const host = document.getElementById('ch2-cuts')?.getBoundingClientRect();
+          return {
+            scroll: document.documentElement.scrollWidth - window.innerWidth,
+            unsourced: document.querySelectorAll('.figure:not([data-src-url])').length,
+            noFn: [...document.querySelectorAll('[data-src-url]')].filter((e) => !(e.nextElementSibling && e.nextElementSibling.classList.contains('fn'))).map((e) => e.textContent.slice(0, 40)),
+            retired: retired.filter((t) => visible.includes(t)),
+            n651: (visible.match(/6\.51B/g) || []).length,
+            bad651: bad651.map((b) => b.textContent.slice(0, 80)),
+            badAnchors: [...new Set(anchors.filter((h) => !document.getElementById(decodeURIComponent(h.slice(1)))))],
+            renderErrors: document.querySelectorAll('.render-error').length,
+            titles,
+            methodsH: methods?.querySelector('h3')?.textContent,
+            methodsText: methods?.textContent || '',
+            methodsFigs: [...(methods?.querySelectorAll('.figure') || [])].map((f) => f.textContent),
+            methodsInDig: !!methods?.closest('#what details.dig'),
+            marker,
+            cutRows: cuts.length,
+            cutsStacked: cuts.length > 0 && cuts.every((tr) => getComputedStyle(tr).display === 'block'),
+            cutsOut: host ? [...document.querySelectorAll('#ch2-cuts td, #ch2-cuts th, #ch2-cuts .fn')].filter((e) => e.getClientRects().length && e.getBoundingClientRect().right > host.right + 1).length : -1,
+            cutsTallest: Math.max(0, ...cuts.map((tr) => tr.getBoundingClientRect().height)),
+          };
+        }, RETIRED);
+        if (errors.length) fail(errors.join('; '));
+        if (r.scroll > 0) fail(`horizontal scroll with every panel open (${r.scroll}px)`);
+        if (r.unsourced) fail(`${r.unsourced} .figure without data-src-url`);
+        if (r.noFn.length) fail(`sourced element(s) without a footnote button: ${r.noFn.join(' | ')}`);
+        if (r.retired.length) fail(`retired figures on screen: ${r.retired.join(', ')}`);
+        if (r.bad651.length) fail(`"6.51B" outside the our-arithmetic growth sentence: ${JSON.stringify(r.bad651)}`);
+        if (r.n651 !== 1) fail(`"6.51B" appears ${r.n651} times on screen, expected once (the growth sentence)`);
+        if (r.badAnchors.length) fail(`in-page links with no target: ${r.badAnchors.join(', ')}`);
+        if (r.renderErrors) fail(`${r.renderErrors} .render-error element(s)`);
+        const urls = new Set(r.titles.map((t) => t[1]));
+        const names = new Set(r.titles.map((t) => t[0]));
+        if (urls.size !== r.titles.length || names.size !== r.titles.length) fail('Sources list repeats a document');
+        const badTitles = r.titles.filter(([t, u]) => t === u || /Department Review|our arithmetic|derived:/.test(t) || (t.match(/\(/g) || []).length !== (t.match(/\)/g) || []).length);
+        if (badTitles.length) fail(`badly titled sources: ${JSON.stringify(badTitles)}`);
+        if (!r.titles.some(([t]) => t === 'IBA Report 26-11, Review of the FY 2027 Proposed Budget')) fail('IBA 26-11 is not listed under its own title');
+        if (r.methodsH !== 'How we built this' || !r.methodsInDig) fail(`methods note missing from section 1's Dig deeper (${r.methodsH})`);
+        if (!/FY2027/.test(r.methodsText) || !/FY2026/.test(r.methodsText) || !/Small items in a map are grouped into an "Everything else" box/.test(r.methodsText)
+          || !/our arithmetic/.test(r.methodsText) || !/Internal services & other/.test(r.methodsText)) fail('methods note copy is incomplete');
+        if (r.methodsFigs.join() !== '$82.4M,$83.1M') fail(`methods note figures: ${r.methodsFigs.join()}`);
+        if (!/\$9\.5M/.test(r.marker) || !/\$32\.9M/.test(r.marker)) fail(`FY2028 marker does not show both figures: "${r.marker.slice(0, 160)}"`);
+        if (!r.cutRows) fail('no cut table rows');
+        if (width < 640 && !r.cutsStacked) fail('cut tables do not stack into blocks at phone width');
+        if (r.cutsOut) fail(`${r.cutsOut} cut-table cell(s) clipped past the right edge`);
+
+        if (width === 375) {
+          const shot = async (sel, name) => {
+            await page.evaluate(() => document.activeElement?.blur());
+            const clip = () => page.evaluate((s) => {
+              const e = document.querySelector(s).getBoundingClientRect();
+              return { x: e.left + window.scrollX, y: e.top + window.scrollY, width: e.width, height: e.height };
+            }, sel);
+            const box = await clip();
+            await page.setViewportSize({ width, height: Math.ceil(box.y + box.height) });
+            await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+            await page.waitForTimeout(200);
+            await page.screenshot({ path: path.join(SHOTS, `${name}.png`), clip: await clip() });
+          };
+          const sfx = scheme === 'dark' ? '-dark' : '';
+          await shot('#what details.dig', `v2-s1-dig-375${sfx}`);
+          await shot('#how-long', `v2-s5-375${sfx}`);
+          await shot('#claims', `v2-s6-375${sfx}`);
+          if (scheme === 'light') await shot('#sources', 'v2-sources-375');
+        }
+        await ctx.close();
+      }
+    }
+  } finally {
+    await browser.close();
+  }
+  return failures;
+}
+
 async function main() {
   const smokeOnly = process.argv.includes('--smoke');
   const { chromium } = await import(process.env.PLAYWRIGHT_CORE || '/home/robert/node_modules/playwright-core/index.mjs');
@@ -597,7 +727,7 @@ async function main() {
   try {
     await waitForServer();
     failures = await smoke(chromium);
-    if (!smokeOnly) failures.push(...(await section1(chromium)), ...(await section2(chromium)), ...(await section3(chromium)), ...(await section4(chromium)));
+    if (!smokeOnly) failures.push(...(await section1(chromium)), ...(await section2(chromium)), ...(await section3(chromium)), ...(await section4(chromium)), ...(await pageWide(chromium)));
   } finally {
     if (server) server.kill();
   }
