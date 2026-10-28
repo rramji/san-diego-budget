@@ -14,6 +14,48 @@ export function figureSpan(fig, text) {
   return s;
 }
 
+// Every sum we compute is sourced as "our arithmetic: <the sum>" (one prefix, in data and code alike).
+export const OURS = 'our arithmetic';
+export const OURS_PREFIX = `${OURS}: `;
+export const isOurs = (src) => typeof src?.doc === 'string' && src.doc.startsWith(OURS_PREFIX);
+
+// ---- DOM helpers shared by the section renderers -----------------------------
+// h(tag, cls, ...kids): an element; null/false kids are skipped.
+export function h(tag, cls, ...kids) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  e.append(...kids.filter((k) => k != null && k !== false));
+  return e;
+}
+// A sourced figure; an our-arithmetic source says so on screen, next to the number.
+export function fig(f, text) {
+  const s = figureSpan(f, text);
+  return isOurs(f.source) ? h('span', null, s, ` (${OURS})`) : s;
+}
+// Copy whose source is a document but which states no number of its own.
+export function cite(src, text) {
+  const s = h('span', 'cite', text);
+  srcData(s, src);
+  return s;
+}
+
+// A built file may store each repeated document URL once, in a top-level `urls` table, with its Sources citing it by
+// key (pipeline/build.py share_urls; piles_up.json today). This returns the file with every key replaced by its URL
+// and the table removed, so the rest of the site only ever sees ordinary Sources.
+export function expandUrls(d) {
+  const table = d && !Array.isArray(d) && typeof d === 'object' ? d.urls : null;
+  if (!table) return d;
+  const walk = (v) => {
+    if (Array.isArray(v)) return v.map(walk);
+    if (!v || typeof v !== 'object') return v;
+    const o = {};
+    for (const [k, x] of Object.entries(v)) if (v !== d || k !== 'urls') o[k] = walk(x);
+    if (typeof o.doc === 'string' && typeof o.url === 'string' && Object.hasOwn(table, o.url)) o.url = table[o.url];
+    return o;
+  };
+  return walk(d);
+}
+
 // ---- Popovers ---------------------------------------------------------
 let openPop = null;
 let openBtn = null;
@@ -113,8 +155,8 @@ export function collectSources(data, root) {
   for (const s of found) {
     if (!s.url) continue;
     const e = byUrl.get(s.url) || { url: s.url, docs: new Set(), derived: new Set(), pages: new Set() };
-    // Our own sums ("derived: …", "our arithmetic: …") cite a document but don't name it.
-    if (OURS.test(s.doc)) e.derived.add(s.doc); else if (s.doc) e.docs.add(s.doc);
+    // Our own sums ("our arithmetic: …") cite a document but don't name it.
+    if (isOurs(s)) e.derived.add(s.doc); else if (s.doc) e.docs.add(s.doc);
     if (s.page != null && s.page !== '') e.pages.add(String(s.page));
     byUrl.set(s.url, e);
   }
@@ -145,6 +187,7 @@ export const TITLES = {
     'City of San Diego press release, Reduced Trash Collection Fees for City of San Diego Customers Effective July 1, 2027 (June 8, 2026)',
   'https://sandiego.gov/sites/default/files/2024-08/measure-e-online-posting.pdf': 'Measure E (November 2024): Impartial Analysis, Ballot Title, and Summary',
   'https://www.sandiegocounty.gov/content/dam/sdc/auditor/trb2526/taxallocationchart.pdf': 'County of San Diego Auditor & Controller, 1% Property Tax Allocation of FY 2025-2026 Receivable',
+  [`${SD}2026-08/mayors-message-fy2027-adopted-budget.pdf`]: 'A Message to San Diegans from Mayor Todd Gloria, Fiscal Year 2027 Adopted Budget',
   'https://seshat.datasd.org/operating_budget/budget_operating_datasd.csv': 'City of San Diego open data: operating budget CSV (budget_operating_datasd.csv)',
   'https://data.sandiego.gov/datasets/operating-budget/': 'City of San Diego open data: operating budget dataset',
   'https://data.sandiego.gov/datasets/cip-fy-budget/': 'City of San Diego open data: Capital Improvement Program budget by fiscal year (cip_budget.csv)',
@@ -167,9 +210,9 @@ function tidy(t) {
   if (open > 0 && t.indexOf(')', open) < 0) t = t.slice(0, open);
   return t.replace(/,\s*(Table|Figure) \d+[^,]*$/, '').replace(/[\s,:]+$/, '');
 }
-const OURS = /^(derived|our arithmetic):/;
+const oursDoc = (d) => d.startsWith(OURS_PREFIX);
 export function docTitle(docs, url, derived = []) {
-  return tidy(rawTitle(docs.filter((d) => !OURS.test(d)), url, [...derived, ...docs.filter((d) => OURS.test(d))]));
+  return tidy(rawTitle(docs.filter((d) => !oursDoc(d)), url, [...derived, ...docs.filter(oursDoc)]));
 }
 function rawTitle(docs, url, derived) {
   if (!docs.length) {

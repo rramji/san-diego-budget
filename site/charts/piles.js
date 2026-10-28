@@ -2,9 +2,9 @@
 // plain HTML bars (and one small SVG line) and need a browser. Colour roles: --restricted marks money in hand,
 // --gap marks what is missing; the payer bar shows the General Fund in its section 1 pot colour against greys.
 import { money } from '../format.js';
+import { OURS_PREFIX, h } from '../sources.js';
 
 export const EVERYTHING_ELSE = 'Everything else';
-const OURS = 'our arithmetic';
 
 // ---- pure ----
 
@@ -47,7 +47,7 @@ export function prepareAssets(byAsset, n = 8) {
       zero,
       figure: {
         value,
-        source: { doc: `${OURS}: the other ${others.length} asset types in the Outlook's tables add up to $${value.toFixed(1)}M, from ${src.doc.split(',')[0]}`, page: null, url: src.url },
+        source: { doc: `${OURS_PREFIX}the other ${others.length} asset types in the Outlook's tables add up to $${value.toFixed(1)}M, from ${src.doc.split(',')[0]}`, page: null, url: src.url },
       },
     });
   }
@@ -101,12 +101,6 @@ export function preparePci(roads) {
 export const m1 = (v) => `$${v.toFixed(1)}M`;
 export const bn = (v) => `$${(v / 1000).toFixed(2)}B`;
 
-function h(tag, cls, ...kids) {
-  const e = document.createElement(tag);
-  if (cls) e.className = cls;
-  e.append(...kids.filter((k) => k != null && k !== false));
-  return e;
-}
 const bar = (cls, x0, x1) => {
   const s = h('span', cls);
   s.style.left = `${x0}%`;

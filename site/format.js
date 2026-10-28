@@ -14,6 +14,12 @@ export function money(m) {
   return `${sign}$${trim(a / 1000, 2)}B`;
 }
 
+// A money amount exactly as curated copy writes it: "$9.5M", "$12M" for 12.0 (the shortest round-trip number, as
+// in JavaScript's String(), with no trailing ".0"). pipeline/build.py money_token() writes the same text.
+export function moneyToken(m) {
+  return `$${String(Number(m))}M`;
+}
+
 export function pct(x, digits = 0) {
   return `${(x * 100).toFixed(digits)}%`;
 }
@@ -34,4 +40,4 @@ export function monthly(dollars) {
   return Math.round(dollars * 100) < 1000 ? `$${dollars.toFixed(2)} a month` : `$${Math.round(dollars)} a month`;
 }
 
-export default { money, pct, perPerson, cents, monthly };
+export default { money, moneyToken, pct, perPerson, cents, monthly };

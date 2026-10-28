@@ -12,7 +12,7 @@
     "debt_service_m": {
       "value": 75.0,
       "source": {
-        "doc": "FY2027 Adopted Budget Vol. I, General Fund Expenditures p.88 (Debt category $9.7M) + IBA Report 26-11 p.119 (General Fund LRB debt service in Transfers Out $65.3M)",
+        "doc": "our arithmetic: 9.7 (FY2027 Adopted Budget Vol. I, General Fund Expenditures p.88, Debt category) + 65.3 (IBA Report 26-11 p.119, General Fund lease revenue bond debt service in Transfers Out, proposed budget) = 75.0; combines the adopted and proposed budgets",
         "page": 88,
         "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1generalfundexpenditures.pdf"
       }
@@ -20,7 +20,7 @@
     "everything_else_m": {
       "value": 1785.4,
       "source": {
-        "doc": "derived: general_fund_m − pension_adc_m − debt_service_m",
+        "doc": "our arithmetic: 2,256.7 (General Fund) − 396.3 (pension payment, ADC) − 75.0 (debt service) = 1,785.4",
         "page": 4,
         "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1executivesummary.pdf"
       }
@@ -120,7 +120,7 @@
       "amount_m": {
         "value": 387.1,
         "source": {
-          "doc": "derived: general_fund_m − sum of listed departments (City Attorney $102.8M + Other $284.3M per Figure 2)",
+          "doc": "our arithmetic: 2,256.7 (General Fund) − 1,869.6 (the eight departments listed) = 387.1, i.e. City Attorney 102.8 + Other 284.3 in Figure 2",
           "page": 89,
           "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1generalfundexpenditures.pdf"
         }

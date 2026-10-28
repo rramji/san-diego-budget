@@ -1,28 +1,41 @@
 // Section 3: the gap and how it was closed. noteParts() and stepLabel() are pure (Node-testable);
 // renderGapStory() fills the section's mounts from gap_story.json.
-import { figureSpan, srcData, mountPopovers } from './sources.js';
+import { figureSpan, mountPopovers, h, fig as sourced, cite, OURS, isOurs } from './sources.js';
 import { gapMoney } from './gapui.js';
+import { moneyToken } from './format.js';
 import * as waterfall from './charts/waterfall.js';
 import * as timeline from './charts/gap-timeline.js';
 import { themeColors, observeWidth } from './charts/util.js';
 
-const OURS = 'our arithmetic';
-
 // The "what's coming" note as text and sourced parts: the city's figure becomes a .figure, the forecast date a cite.
+// The build checks the note shows the figure as moneyToken() writes it and contains the cite anchor; if either is
+// missing here the data and code disagree, so this throws (the section's guarded() render then says so on screen).
+export const FORECAST_CITE_ANCHOR = 'A new forecast is due';
 export function noteParts(coming) {
-  const token = `$${coming.city_m.value}M`;
-  const due = 'A new forecast is due';
+  const token = moneyToken(coming.city_m.value);
+  const at = coming.note.indexOf(token);
+  if (at < 0) throw new Error(`coming.note does not show the city's figure as ${token}`);
+  const rest = coming.note.slice(at + token.length);
+  const d = rest.indexOf(FORECAST_CITE_ANCHOR);
+  if (d < 0) throw new Error(`coming.note has no "${FORECAST_CITE_ANCHOR}" after ${token}`);
+  return [
+    coming.note.slice(0, at),
+    { kind: 'figure', text: token, figure: coming.city_m },
+    rest.slice(0, d),
+    { kind: 'cite', text: rest.slice(d), source: coming.forecast_due.source },
+  ].filter((x) => x !== '');
+}
+
+// Copy with named cites: each {text, source} in cites becomes a cite on its first appearance in the text (in order).
+// Throws when a cite's text is missing, as the build checks it is there.
+export function citeParts(text, cites = []) {
   const out = [];
-  let rest = coming.note;
-  const at = rest.indexOf(token);
-  if (at >= 0) {
-    out.push(rest.slice(0, at), { kind: 'figure', text: token, figure: coming.city_m });
-    rest = rest.slice(at + token.length);
-  }
-  const d = rest.indexOf(due);
-  if (d >= 0) {
-    out.push(rest.slice(0, d), { kind: 'cite', text: rest.slice(d), source: coming.forecast_due.source });
-    rest = '';
+  let rest = text;
+  for (const c of cites) {
+    const at = rest.indexOf(c.text);
+    if (at < 0) throw new Error(`cite text ${JSON.stringify(c.text)} not found in ${JSON.stringify(text)}`);
+    out.push(rest.slice(0, at), { kind: 'cite', text: c.text, source: c.source });
+    rest = rest.slice(at + c.text.length);
   }
   out.push(rest);
   return out.filter((x) => x !== '');
@@ -31,23 +44,8 @@ export function noteParts(coming) {
 export const stepLabel = (b) => (b.ourArithmetic ? `${b.label} (${OURS})` : b.label);
 
 // ---- DOM (browser only) ----
-function h(tag, cls, ...kids) {
-  const e = document.createElement(tag);
-  if (cls) e.className = cls;
-  e.append(...kids.filter((k) => k != null));
-  return e;
-}
-// A sourced figure; an our-arithmetic source says so on screen.
-function fig(f, text = gapMoney(f.value)) {
-  const s = figureSpan(f, text);
-  if (!f.source.doc.startsWith(OURS)) return s;
-  return h('span', null, s, ` (${OURS})`);
-}
-function cite(src, text) {
-  const s = h('span', 'cite', text);
-  srcData(s, src);
-  return s;
-}
+// A sourced figure in this section's money format; an our-arithmetic source says so on screen.
+const fig = (f, text = gapMoney(f.value)) => sourced(f, text);
 const OFFICE = { IBA: "The IBA (the Council's independent budget analyst)", City: "The city's budget office (the Mayor's Department of Finance)" };
 
 function headlines(d) {
@@ -63,7 +61,7 @@ function headlines(d) {
   return h('div', 'hl-cards',
     card('', 'How big was it this year?',
       h('p', 'hl-num', fig(ty.value_m)),
-      h('p', 'hl-what', ty.counting)),
+      h('p', 'hl-what', ...citeParts(ty.counting, ty.cites).map((x) => (typeof x === 'string' ? x : cite(x.source, x.text))))),
     card('', 'How bad did it get?',
       h('p', 'hl-num', fig(worst.value_m)),
       h('p', 'hl-sub', `In FY${worst.fy}. Without the skipped deposits: `, fig(worst.without_reserve_m), '.'),
@@ -127,7 +125,7 @@ function waterfallBlock(el, d) {
   const aria = `Step chart. ${prep.bars.map((b, i) => `${i + 1}, ${stepLabel(b)}: ${waterfall.barValue(b, true)}`).join('. ')}.`;
   const draw = () => waterfall.render(plot, prep, themeColors(), {
     label: stepLabel,
-    describe: (b) => (b.figure.source.doc.startsWith(OURS) ? b.figure.source.doc : `Source: ${b.figure.source.doc}`),
+    describe: (b) => (isOurs(b.figure.source) ? b.figure.source.doc : `Source: ${b.figure.source.doc}`),
     ariaLabel: aria,
   });
   observeWidth(plot, draw);
@@ -161,7 +159,7 @@ function timelineBlock(el, d) {
     h('p', null, 'Each dot below is a gap figure that the city’s budget office or the IBA published, placed at the month it came out. Tap a dot, or move to it with the keyboard, to see who measured it, in which document, for which budget year, and what it counts. Where a dot shows two numbers, the second counts the skipped reserve deposit as one-time money.'),
     plot,
     h('p', null, 'The IBA’s own figures that count the skipped deposit are ', fig(r.iba_proposed_m), ' for the proposed budget (April) and ',
-      fig(r.iba_may_m), ' after the Mayor’s May changes (June). The about ', fig(r.with_reserve_m, `$${Math.round(r.with_reserve_m.value)}M`),
+      fig(r.iba_may_m), ' after the Mayor’s May changes (June). The figure of about ', fig(r.with_reserve_m, `$${Math.round(r.with_reserve_m.value)}M`),
       ' above applies the same method to the city’s ', fig(r.ongoing_m), ' for the adopted budget; it is not an IBA figure.'));
   const prep = timeline.prepare(d.timeline);
   observeWidth(plot, (w) => {

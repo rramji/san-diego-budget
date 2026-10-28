@@ -1,5 +1,5 @@
 // Section 2: why a wealthy city is short. rateBars() is pure (Node-testable); renderWhy() fills the section's mounts.
-import { figureSpan, srcData, mountPopovers } from './sources.js';
+import { figureSpan, mountPopovers, h, fig, cite } from './sources.js';
 import * as centsBar from './charts/cents-bar.js';
 import { observeWidth } from './charts/util.js';
 
@@ -17,26 +17,6 @@ const mText = (v) => (v >= 100 && Number.isInteger(v) ? `$${v}M` : `$${v.toFixed
 const votes = (v) => v.toLocaleString('en-US');
 const months = (v) => String(v);
 
-function h(tag, cls, ...kids) {
-  const e = document.createElement(tag);
-  if (cls) e.className = cls;
-  e.append(...kids);
-  return e;
-}
-// A sourced figure; an our-arithmetic source says so on screen.
-function fig(f, text) {
-  const s = figureSpan(f, text);
-  if (!f.source.doc.startsWith('our arithmetic')) return s;
-  const w = document.createElement('span');
-  w.append(s, ' (our arithmetic)');
-  return w;
-}
-// Copy whose source is a document but which states no number of its own.
-function cite(src, text) {
-  const s = h('span', 'cite', text);
-  srcData(s, src);
-  return s;
-}
 const block = (title, ...paras) => h('section', 'why-block', h('h3', null, title), ...paras.map((kids) => h('p', null, ...kids)));
 
 function rateList(d) {
@@ -90,7 +70,7 @@ export function blocks(d) {
         fig(tr.positions, `${tr.positions.value} positions`), ' off the General Fund in FY2026.'],
       [cite(c.settlement, 'A lawsuit settlement the City Council approved on June 8, 2026 lowers the fee from July 2027'),
         ', so the General Fund will again pay part of the cost: about ', fig(tr.settlement_gf_fy2028_m, mText(tr.settlement_gf_fy2028_m.value)),
-        ' in FY2028, by the IBA’s estimate made before the vote.']),
+        ' in FY2028, by an estimate the Council’s Independent Budget Analyst (IBA) made before the vote.']),
     block('Costs grow faster than income',
       ['The IBA projects that the city’s regular General Fund income will grow about ', fig(gr.revenue_pct, pctText(gr.revenue_pct.value)),
         ` a year over ${gr.revenue_period}. Over ${gr.inflation_period}, prices in the San Diego area rose an average of `,

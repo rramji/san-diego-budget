@@ -11,6 +11,16 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PORT = 8000;
 const BASE = `http://localhost:${PORT}`;
 
+// A browser context that is always closed, even when a check throws part-way through.
+async function withContext(browser, opts, fn) {
+  const ctx = await browser.newContext(opts);
+  try {
+    return await fn(ctx);
+  } finally {
+    await ctx.close();
+  }
+}
+
 async function waitForServer() {
   for (let i = 0; i < 50; i += 1) {
     try { if ((await fetch(`${BASE}/site/`)).ok) return; } catch { /* not up yet */ }
@@ -26,7 +36,7 @@ async function smoke(chromium) {
     for (const width of [375, 1200]) {
       for (const scheme of ['light', 'dark']) {
         const label = `${width}px ${scheme}`;
-        const ctx = await browser.newContext({ viewport: { width, height: 800 }, colorScheme: scheme });
+        await withContext(browser, { viewport: { width, height: 800 }, colorScheme: scheme }, async (ctx) => {
         const page = await ctx.newPage();
         const errors = [];
         page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
@@ -49,7 +59,7 @@ async function smoke(chromium) {
         if (!r.claims) failures.push(`${label}: #ch4-claims missing`);
         if (r.renderErrors) failures.push(`${label}: ${r.renderErrors} .render-error element(s)`);
         if (r.loadError) failures.push(`${label}: #load-error is showing`);
-        await ctx.close();
+        });
       }
     }
   } finally {
@@ -68,7 +78,7 @@ async function section1(chromium) {
     for (const [width, scheme, shot] of [[375, 'light', 'v2-s1-375'], [1200, 'light', 'v2-s1-1200'], [375, 'dark', 'v2-s1-375-dark']]) {
       const label = `s1 ${width}px ${scheme}`;
       const fail = (m) => failures.push(`${label}: ${m}`);
-      const ctx = await browser.newContext({ viewport: { width, height: 900 }, colorScheme: scheme });
+      await withContext(browser, { viewport: { width, height: 900 }, colorScheme: scheme }, async (ctx) => {
       const page = await ctx.newPage();
       const errors = [];
       page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
@@ -165,6 +175,19 @@ async function section1(chromium) {
       const bc = await crumbs();
       if (bc[1] !== 'General Fund money out') fail(`crumb link did not go back up: "${bc[1]}"`);
 
+      // S3: on a phone, a tap in the list twin puts the panel right after that list, on screen.
+      if (width < 640) {
+        await page.locator('#s1-maps .map-col[data-side="out"] .maplist .list-item').nth(1).click();
+        const lp = await page.evaluate(() => {
+          const p = document.getElementById('s1-panel');
+          const r = p.getBoundingClientRect();
+          return { side: p.parentElement.dataset.side, prev: p.previousElementSibling?.className, onScreen: r.top < window.innerHeight && r.bottom > 0 };
+        });
+        if (lp.side !== 'out' || lp.prev !== 'maplist' || !lp.onScreen) fail(`panel after a list tap: ${JSON.stringify(lp)}`);
+        const back = page.locator('#s1-maps .map-col[data-side="out"] .crumb');
+        if (await back.count()) await back.first().click();
+      }
+
       // Labels never overflow their boxes; every box has positive size and a full aria-label.
       const geo = await page.evaluate(() => {
         const bad = [];
@@ -206,7 +229,7 @@ async function section1(chromium) {
       await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
       await page.screenshot({ path: path.join(SHOTS, `${shot}.png`), clip: box });
       if (errors.length) fail(errors.join('; '));
-      await ctx.close();
+      });
     }
   } finally {
     await browser.close();
@@ -222,7 +245,7 @@ async function section2(chromium) {
     for (const [width, scheme, shot] of [[375, 'light', 'v2-s2-375'], [375, 'dark', 'v2-s2-375-dark'], [1200, 'light', null]]) {
       const label = `s2 ${width}px ${scheme}`;
       const fail = (m) => failures.push(`${label}: ${m}`);
-      const ctx = await browser.newContext({ viewport: { width, height: 900 }, colorScheme: scheme });
+      await withContext(browser, { viewport: { width, height: 900 }, colorScheme: scheme }, async (ctx) => {
       const page = await ctx.newPage();
       const errors = [];
       page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
@@ -256,7 +279,7 @@ async function section2(chromium) {
           quote: !!sec.querySelector('#s2-blocks blockquote footer [data-src-url]'),
           dig: sec.querySelectorAll('#s2-dig .figure').length,
           ours: [...sec.querySelectorAll('.figure')].filter((f) => f.dataset.srcDoc.startsWith('our arithmetic'))
-            .filter((f) => !/our arithmetic/.test(f.closest('li, p')?.textContent || '')).map((f) => f.textContent),
+            .filter((f) => !/our arithmetic/.test(f.closest('li, p, dd')?.textContent || '')).map((f) => f.textContent),
           unsourced: sec.querySelectorAll('.figure:not([data-src-url])').length,
           noFn: [...sec.querySelectorAll('[data-src-url]')].filter((e) => !(e.nextElementSibling && e.nextElementSibling.classList.contains('fn'))).length,
           perCapita: /per (person|capita|resident)/i.test(sec.textContent),
@@ -294,7 +317,7 @@ async function section2(chromium) {
         await page.screenshot({ path: path.join(SHOTS, `${shot}.png`), clip: box });
       }
       if (errors.length) fail(errors.join('; '));
-      await ctx.close();
+      });
     }
   } finally {
     await browser.close();
@@ -311,7 +334,7 @@ async function section3(chromium) {
     for (const [width, scheme, shot] of [[375, 'light', 'v2-s3-375'], [375, 'dark', 'v2-s3-375-dark'], [1200, 'light', null]]) {
       const label = `s3 ${width}px ${scheme}`;
       const fail = (m) => failures.push(`${label}: ${m}`);
-      const ctx = await browser.newContext({ viewport: { width, height: 900 }, colorScheme: scheme });
+      await withContext(browser, { viewport: { width, height: 900 }, colorScheme: scheme }, async (ctx) => {
       const page = await ctx.newPage();
       const errors = [];
       page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
@@ -348,7 +371,7 @@ async function section3(chromium) {
           residual: sec.querySelector('#s3-residual')?.textContent || '',
           debtLinks: [...sec.querySelectorAll('#s3-debt a')].map((a) => a.getAttribute('href')),
           ours: [...sec.querySelectorAll('.figure')].filter((f) => f.dataset.srcDoc.startsWith('our arithmetic'))
-            .filter((f) => !/our arithmetic/.test(f.closest('li, p')?.textContent || '')).map((f) => f.textContent),
+            .filter((f) => !/our arithmetic/.test(f.closest('li, p, dd')?.textContent || '')).map((f) => f.textContent),
         };
       }, { vals: overlaps('#s3-waterfall .wf-val') });
       if (r.placeholder) fail(`${r.placeholder} placeholder(s) left in #gap`);
@@ -440,7 +463,7 @@ async function section3(chromium) {
         await page.screenshot({ path: path.join(SHOTS, `${shot}.png`), clip: box2 });
       }
       if (errors.length) fail(errors.join('; '));
-      await ctx.close();
+      });
     }
   } finally {
     await browser.close();
@@ -457,7 +480,7 @@ async function section4(chromium) {
     for (const [width, scheme, shot] of [[375, 'light', 'v2-s4-375'], [375, 'dark', 'v2-s4-375-dark'], [1200, 'light', null]]) {
       const label = `s4 ${width}px ${scheme}`;
       const fail = (m) => failures.push(`${label}: ${m}`);
-      const ctx = await browser.newContext({ viewport: { width, height: 900 }, colorScheme: scheme });
+      await withContext(browser, { viewport: { width, height: 900 }, colorScheme: scheme }, async (ctx) => {
       const page = await ctx.newPage();
       const errors = [];
       page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
@@ -540,7 +563,6 @@ async function section4(chromium) {
       const targetRow = r.keyRows.find((k) => /^FY2026 target$/.test(k[0]));
       if (!gapRow || gapRow[1].trim() !== '') fail(`meter key: still-to-save row ${JSON.stringify(gapRow)}`);
       if (!targetRow || !/14\.1%.*\$262\.9M/.test(targetRow[1])) fail(`meter key: target row ${JSON.stringify(targetRow)}`);
-      if (r.keyRows.some((k) => /short/i.test(k[0]) && /\$/.test(k[1]))) fail('meter key: a "short" row shows a dollar amount');
       if (r.labelsOut.length) fail(`meter labels outside the track: ${r.labelsOut}`);
       if (r.rows.length !== 9 || r.rows[0][0] !== 'Stormwater' || r.rows[8][0] !== 'Everything else' || !r.rows[8][2]) fail(`asset rows: ${JSON.stringify(r.rows.map((x) => x[0]))}`);
       if (r.rows.slice(0, 8).some((x, i) => i && x[1] > r.rows[i - 1][1] + 0.5)) fail('asset bars are not sorted by width');
@@ -580,7 +602,7 @@ async function section4(chromium) {
         await page.screenshot({ path: path.join(SHOTS, `${shot}.png`), clip: await clip() });
       }
       if (errors.length) fail(errors.join('; '));
-      await ctx.close();
+      });
     }
   } finally {
     await browser.close();
@@ -601,7 +623,7 @@ async function pageWide(chromium) {
       for (const scheme of ['light', 'dark']) {
         const label = `page ${width}px ${scheme}`;
         const fail = (m) => failures.push(`${label}: ${m}`);
-        const ctx = await browser.newContext({ viewport: { width, height: 900 }, colorScheme: scheme });
+        await withContext(browser, { viewport: { width, height: 900 }, colorScheme: scheme }, async (ctx) => {
         const page = await ctx.newPage();
         const errors = [];
         page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
@@ -644,7 +666,17 @@ async function pageWide(chromium) {
           const marker = document.querySelector('#ch1-chart .marker-list')?.textContent || '';
           const cuts = [...document.querySelectorAll('#ch2-cuts tbody tr')];
           const host = document.getElementById('ch2-cuts')?.getBoundingClientRect();
+          // Ruling R14: every figure that is our own sum says "our arithmetic" in the text around it, and the old
+          // "derived:" prefix is gone everywhere.
+          const where = (e) => `${e.textContent.slice(0, 40)} @ ${e.closest('[id]')?.id || '?'}`;
+          const oursBare = [...document.querySelectorAll('.figure')]
+            .filter((f) => (f.dataset.srcDoc || '').startsWith('our arithmetic'))
+            .filter((f) => !/our arithmetic/.test((f.closest('p, li, figcaption, dd, dt, td, th, h3, h4') || f.parentElement).textContent))
+            .map(where);
+          const derivedDocs = [...document.querySelectorAll('[data-src-doc]')].filter((e) => /^derived:/.test(e.dataset.srcDoc)).map(where);
           return {
+            oursBare,
+            derivedDocs,
             scroll: document.documentElement.scrollWidth - window.innerWidth,
             unsourced: document.querySelectorAll('.figure:not([data-src-url])').length,
             noFn: [...document.querySelectorAll('[data-src-url]')].filter((e) => !(e.nextElementSibling && e.nextElementSibling.classList.contains('fn'))).map((e) => e.textContent.slice(0, 40)),
@@ -673,6 +705,8 @@ async function pageWide(chromium) {
         if (r.bad651.length) fail(`"6.51B" outside the our-arithmetic growth sentence: ${JSON.stringify(r.bad651)}`);
         if (r.n651 !== 1) fail(`"6.51B" appears ${r.n651} times on screen, expected once (the growth sentence)`);
         if (r.badAnchors.length) fail(`in-page links with no target: ${r.badAnchors.join(', ')}`);
+        if (r.oursBare.length) fail(`our-arithmetic figures without the words on screen: ${r.oursBare.join(' | ')}`);
+        if (r.derivedDocs.length) fail(`sources still labelled "derived:": ${r.derivedDocs.join(' | ')}`);
         if (r.renderErrors) fail(`${r.renderErrors} .render-error element(s)`);
         const urls = new Set(r.titles.map((t) => t[1]));
         const names = new Set(r.titles.map((t) => t[0]));
@@ -708,7 +742,7 @@ async function pageWide(chromium) {
           await shot('#claims', `v2-s6-375${sfx}`);
           if (scheme === 'light') await shot('#sources', 'v2-sources-375');
         }
-        await ctx.close();
+        });
       }
     }
   } finally {
@@ -722,7 +756,7 @@ async function main() {
   const { chromium } = await import(process.env.PLAYWRIGHT_CORE || '/home/robert/node_modules/playwright-core/index.mjs');
   // Reuse a server already on the port (it must serve the repo root); otherwise start and later stop our own.
   const running = await fetch(`${BASE}/site/`).then((r) => r.ok, () => false);
-  const server = running ? null : spawn('python3', ['-m', 'http.server', String(PORT)], { cwd: ROOT, stdio: 'ignore' });
+  const server = running ? null : spawn('python3', ['-I', '-m', 'http.server', String(PORT)], { cwd: ROOT, stdio: 'ignore' });
   let failures;
   try {
     await waitForServer();

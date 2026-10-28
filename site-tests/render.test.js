@@ -200,7 +200,7 @@ test('deficit bars stack the skipped reserve deposit on top of the excluding-res
   assert.equal(by[2024].top_figure, null);
   assert.equal(by[2025].top_figure.value, 203.8);
   assert.equal(by[2025].top_figure.source.page, 78);
-  assert.match(by[2025].top_figure.source.doc, /^derived: .*including reserves/);
+  assert.match(by[2025].top_figure.source.doc, /^our arithmetic: .*including reserves/);
   assert.equal(p.stats.max_top_m, 203.8);
   assert.equal(p.stats.peak_top_m, 203.8);
   assert.ok(Math.abs(p.stats.peak_share - 181.4 / 2160.943) < 1e-9);

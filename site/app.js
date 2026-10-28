@@ -4,7 +4,7 @@ import * as funnel from './charts/funnel.js';
 import { renderCuts } from './cuts.js';
 export { renderCuts };
 import { mountGapToggle, gapMoney } from './gapui.js';
-import { figureSpan, srcData, mountPopovers, renderSources } from './sources.js';
+import { figureSpan, srcData, mountPopovers, renderSources, fig, isOurs, OURS_PREFIX, expandUrls } from './sources.js';
 export { mountPopovers, renderSources };
 import { renderGlossary, wireGlossaryLinks } from './glossary.js';
 export { renderGlossary };
@@ -34,7 +34,7 @@ export async function loadData() {
     const entries = await Promise.all(Object.entries(FILES).map(async ([key, file]) => {
       const res = await fetch(`../data/build/${file}.json`);
       if (!res.ok) throw new Error(`${file}.json: HTTP ${res.status}`);
-      return [key, await res.json()];
+      return [key, expandUrls(await res.json())];
     }));
     return Object.fromEntries(entries);
   } catch (err) {
@@ -83,14 +83,19 @@ function renderHeadline(h) {
 function renderHowLong(data) {
   const prep = deficitBars.prepare(data.structural);
   prep.fy27_adopted = data.gap.post_cut_city_m;
+  // The worst year counting the skipped reserve deposit, as the IBA printed it (IBA 26-11 p.78: $203.8M).
+  const worst = data.gapStory?.headlines?.worst;
+  if (worst) prep.peak_top = { fy: worst.fy, figure: worst.value_m };
   for (const sp of document.querySelectorAll('[data-fy-fig]')) {
     const b = prep.bars.find((x) => x.fy === Number(sp.dataset.fyFig));
-    sp.replaceWith(figureSpan(b.figure, money(b.value_m)));
+    sp.replaceWith(fig(b.figure, money(b.value_m)));
   }
-  // Bar top including the skipped reserve deposit (a derived figure, sourced to the IBA's "including reserves" row).
+  // Bar top including the skipped reserve deposit: the printed figure where there is one, else our own sum.
   for (const sp of document.querySelectorAll('[data-fy-top]')) {
-    const b = prep.bars.find((x) => x.fy === Number(sp.dataset.fyTop));
-    sp.replaceWith(figureSpan(b.top_figure, money(b.top_m)));
+    const fy = Number(sp.dataset.fyTop);
+    const b = prep.bars.find((x) => x.fy === fy);
+    if (prep.peak_top?.fy === fy) sp.replaceWith(figureSpan(prep.peak_top.figure, `$${prep.peak_top.figure.value.toFixed(1)}M`));
+    else sp.replaceWith(fig(b.top_figure, money(b.top_m)));
   }
   const chart = document.getElementById('ch1-chart');
   const dig = document.getElementById('ch1-dig-chart');
@@ -126,10 +131,7 @@ function el(tag, cls, text) {
 function amountSpan(src, text) {
   const wrap = el('span', 'amt');
   if (!src?.url) { wrap.textContent = text; return wrap; }
-  const f = el('span', 'figure', text);
-  srcData(f, src);
-  wrap.append(f);
-  if (bm.isOurs(src)) wrap.append(' (our arithmetic)');
+  wrap.append(fig({ source: src }, text));
   return wrap;
 }
 
@@ -193,15 +195,23 @@ export function renderWhat(data) {
   let colors = mapColors();
   let pots = null;
   let lastUsed = null; // null (on load) | 'pots' | 'in' | 'out'
+  let lastFrom = 'map'; // within a map column: 'map' (a box or a crumb) | 'list' (the list twin)
   const narrow = () => window.matchMedia('(max-width: 639.98px)').matches;
 
   // The panel sits below both maps. On a phone, once the reader has used a control, it moves next to that control so
-  // the answer appears where they are looking (the v1 Sankey did the same with its flow panel).
+  // the answer appears where they are looking (the v1 Sankey did the same with its flow panel): under the pots bar,
+  // under the map, or, after a tap in the list twin, right after that list.
   const place = () => {
     if (!narrow() || !lastUsed) { if (mapsEl.nextElementSibling !== panel) mapsEl.after(panel); return; }
     if (lastUsed === 'pots') { if (potsEl.nextElementSibling !== panel) potsEl.after(panel); return; }
-    const box = cols[lastUsed].querySelector('.map-box');
-    if (box && box.nextElementSibling !== panel) box.after(panel);
+    const at = cols[lastUsed].querySelector(lastFrom === 'list' ? '.maplist' : '.map-box');
+    if (at && at.nextElementSibling !== panel) at.after(panel);
+  };
+  // After a list tap on a phone, bring the panel up if it landed below the screen; the tapped item keeps focus.
+  const reveal = () => {
+    if (!narrow()) return;
+    const r = panel.getBoundingClientRect();
+    if (r.top > window.innerHeight * 0.85) window.scrollBy({ top: r.top - window.innerHeight * 0.5, behavior: 'instant' });
   };
 
   // Rulings R13/R13a: announcements go through one stationary, visually hidden status element that is never moved
@@ -242,11 +252,13 @@ export function renderWhat(data) {
       const opened = (node.children ?? []).length > 0;
       state = bm.activate(state, side, node);
       lastUsed = side;
+      lastFrom = from === 'list' ? 'list' : 'map';
       drawSide(side);
       showPanel(true);
       const sel = from === 'list' ? '.list-item' : '.cell';
       const target = opened ? cols[side].querySelector(sel) : cols[side].querySelector(`${sel}[data-slot="${slot}"]`);
-      if (target) target.focus();
+      if (target) target.focus({ preventScroll: from === 'list' });
+      if (from === 'list') reveal();
     },
     onUp(side, depth) {
       state = bm.goUp(state, side, depth);
@@ -254,6 +266,7 @@ export function renderWhat(data) {
       // Going back up to a box (not the pot's top level) shows that box's details.
       if (path.length > 1) state = { ...state, selected: { side, node: path[path.length - 1] } };
       lastUsed = side;
+      lastFrom = 'map';
       drawSide(side);
       showPanel(true);
       const first = cols[side].querySelector('.cell');
@@ -287,12 +300,9 @@ export function renderWhat(data) {
 }
 
 // ---- Dig deeper: money-flow Sankey + selected-flow panel -------------------------------------
+// A flow's amount as a sourced figure; a flow that is our own sum says "(our arithmetic)" beside it.
 function flowAmount(link) {
-  const amt = document.createElement('span');
-  amt.className = 'figure';
-  srcData(amt, link.ref);
-  amt.textContent = money(link.value);
-  return amt;
+  return fig({ source: link.ref }, money(link.value));
 }
 
 // The panel is not a live region until the reader selects a flow, so pre-selection and re-renders stay silent.
@@ -309,7 +319,7 @@ function showFlow(panel, link, silent) {
   rule.textContent = link.rule;
   const yr = document.createElement('p');
   yr.className = 'flow-year';
-  yr.textContent = `Source: ${link.ref.doc}.`;
+  yr.textContent = isOurs(link.ref) ? `Our arithmetic: ${link.ref.doc.slice(OURS_PREFIX.length)}.` : `Source: ${link.ref.doc}.`;
   panel.replaceChildren(h, rule, yr);
   mountPopovers(panel);
 }

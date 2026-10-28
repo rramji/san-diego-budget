@@ -1,32 +1,14 @@
 // Section 4: what piles up (reserves, infrastructure, pension). renderPiles() fills the three parts' mounts from
 // piles_up.json; the chart maths lives in charts/piles.js (pure, Node-tested).
 // Colour roles: --restricted is money in hand, --gap is what is missing; the payer bar highlights the General Fund.
-import { figureSpan, srcData, mountPopovers } from './sources.js';
+import { figureSpan, mountPopovers, h, fig, cite, OURS } from './sources.js';
 import * as piles from './charts/piles.js';
 import { inkOn } from './charts/budget-map.js';
 import { observeWidth } from './charts/util.js';
 
-const OURS = 'our arithmetic';
 const { m1, bn } = piles;
 const pctText = (v) => `${v}%`;
 
-function h(tag, cls, ...kids) {
-  const e = document.createElement(tag);
-  if (cls) e.className = cls;
-  e.append(...kids.filter((k) => k != null && k !== false));
-  return e;
-}
-// A sourced figure; an our-arithmetic source says so on screen.
-function fig(f, text) {
-  const s = figureSpan(f, text);
-  if (!f.source.doc.startsWith(OURS)) return s;
-  return h('span', null, s, ` (${OURS})`);
-}
-function cite(src, text) {
-  const s = h('span', 'cite', text);
-  srcData(s, src);
-  return s;
-}
 function gl(slug, text) {
   const a = h('a', 'gl', text);
   a.href = `#g-${slug}`;

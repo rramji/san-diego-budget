@@ -1,6 +1,7 @@
 // Section 2: "where your property-tax dollar goes", one horizontal 100-cent bar from the County Auditor's chart.
 // prepare() is pure (importable in Node); render() draws plain SVG plus an HTML legend.
 import { inkOn } from './budget-map.js';
+import { OURS_PREFIX } from '../sources.js';
 
 // The segment the section is about. Slices that share a `group` and sit next to each other become one segment
 // (the County prints cities' share as two slices: regular property tax plus the in-lieu vehicle license fee).
@@ -23,7 +24,7 @@ export function prepare(pd) {
     const figure = parts.length === 1 ? parts[0].cents : {
       value: cents,
       source: {
-        doc: `our arithmetic: ${parts.map((p) => `${n1(p.cents.value)} (${p.label})`).join(' + ')} = ${n1(cents)}, from ${first.doc}`,
+        doc: `${OURS_PREFIX}${parts.map((p) => `${n1(p.cents.value)} (${p.label})`).join(' + ')} = ${n1(cents)}, from ${first.doc}`,
         page: first.page,
         url: first.url,
       },
@@ -107,7 +108,7 @@ export function render(el, prep, colors, { figureSpan, caption, title: titlePart
     if (s.parts) {
       const how = document.createElement('span');
       how.className = 'cl-parts';
-      how.append('our arithmetic: ');
+      how.append(OURS_PREFIX);
       s.parts.forEach((p, i) => {
         if (i) how.append(' + ');
         how.append(figureSpan(p.cents, centsText(p.cents.value)), ` ${/VLF/.test(p.label) ? 'in place of car-registration fees' : 'regular share'}`);

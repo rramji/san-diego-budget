@@ -108,8 +108,10 @@ def test_missing_file_reported(out):
 
 def test_budget_tree_size_flagged(out):
     (out / "budget_tree.json").write_text(json.dumps(_tree()) + " " * 130_000)
+    assert checks.run(out) == []  # ruling R16: the cap is 150,000 (the 300 KB total still binds)
+    (out / "budget_tree.json").write_text(json.dumps(_tree()) + " " * 150_000)
     msgs = checks.run(out)
-    assert len(msgs) == 1 and "budget_tree.json" in msgs[0] and "130,000" in msgs[0]
+    assert any("budget_tree.json" in m and "150,000" in m for m in msgs)
 
 
 def test_budget_tree_same_year_children_must_sum_to_parent(out):
@@ -150,3 +152,47 @@ def test_budget_tree_no_fund_description_required(out):
 def test_budget_tree_deeper_nodes_need_no_description(out):
     # "Secured Property Tax" (level 2) and "Salaried Wages" (level 2) have no descs entry
     assert checks.run(out) == []
+
+
+@pytest.mark.parametrize("name", ["", "  "])
+def test_budget_tree_blank_name_flagged(out, name):
+    _edit(out, "budget_tree", lambda d: d["pots"][1]["out"]["children"][0]["children"][0].update(name=name))
+    msgs = checks.run(out)
+    assert len(msgs) == 1 and "blank name" in msgs[0] and "Salaries & other pay" in msgs[0]
+
+
+@pytest.mark.parametrize("value", [0.0, -1.0])
+def test_budget_tree_child_not_positive_flagged(out, value):
+    def edit(d):
+        sal = d["pots"][1]["out"]["children"][0]
+        sal["children"].append(_node("Odd line", value))
+        sal["offsets"][0]["value_m"] -= value  # keep the sum check quiet: only the drawn-child rule should fire
+    _edit(out, "budget_tree", edit)
+    msgs = checks.run(out)
+    assert len(msgs) == 1 and "Odd line" in msgs[0] and "not positive" in msgs[0]
+
+
+def test_budget_tree_unused_source_flagged(out):
+    _edit(out, "budget_tree", lambda d: d["sources"].update(s9={"doc": "x", "page": None, "url": "https://x"}))
+    msgs = checks.run(out)
+    assert len(msgs) == 1 and "s9" in msgs[0] and "unused" in msgs[0]
+
+
+@pytest.mark.parametrize("pot, side", [("cip", "in"), ("cip", "out"), ("internal", "out")])
+def test_budget_tree_cip_and_internal_top_level_need_descriptions(out, pot, side):
+    def edit(d):
+        root = _node(f"{pot} money {side}", 5.0, fy=2027, children=[_node("Mystery Fund", 5.0, fy=2027)])
+        d["pots"].append({"id": pot, "in": _node("x in", 0.0), "out": _node("x out", 0.0), side: root})
+    _edit(out, "budget_tree", edit)
+    msgs = checks.run(out)
+    assert len(msgs) == 1 and "descs" in msgs[0] and "Mystery Fund" in msgs[0]
+    _edit(out, "budget_tree", lambda d: d["descs"].update({"Mystery Fund": {"text": "A fund.", "src": "s0"}}))
+    assert checks.run(out) == []
+
+
+def test_real_budget_tree_passes_the_new_rules():
+    from pathlib import Path
+    real = Path(__file__).parent.parent / "data" / "build"
+    failures = []
+    checks.check_budget_tree(real, failures)
+    assert failures == []

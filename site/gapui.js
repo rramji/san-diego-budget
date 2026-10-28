@@ -1,6 +1,6 @@
 import { money, pct, perPerson, cents, monthly } from './format.js';
 import { compute } from './gapcalc.js';
-import { figureSpan, srcData, mountPopovers } from './sources.js';
+import { figureSpan, mountPopovers, fig, cite, OURS_PREFIX } from './sources.js';
 
 const OPTIONS = [
   { mode: 'pre_cut', text: "Before this year's cuts" },
@@ -10,14 +10,13 @@ const OPTIONS = [
 const HEADINGS = {
   Both: "The city's budget office and the IBA",
   'City budget office': "The city's budget office",
-  'Our arithmetic': 'Counting the skipped reserve deposit too (our arithmetic)',
+  'Our arithmetic': 'Counting the skipped reserve deposit too',
 };
 
-const derived = (how, src) => ({ source: { doc: `derived: ${how}`, page: src.page ?? null, url: src.url } });
+// The calculator's rows are our own arithmetic on the gap; each says so on screen.
+const derived = (how, src) => ({ source: { doc: `${OURS_PREFIX}${how}`, page: src.page ?? null, url: src.url } });
 // Gap amounts keep their stated precision ($23.1M, $80.1M); format.money would round them to $23M.
 export const gapMoney = (m) => (m >= 1000 ? money(m) : `$${Number(m.toFixed(1))}M`);
-const num = (fig, text) => figureSpan(fig, text);
-const cite = (src, text) => { const c = document.createElement('span'); c.className = 'cite'; srcData(c, src); c.textContent = text; return c; };
 
 function column(f, gap) {
   const col = document.createElement('section');
@@ -27,7 +26,7 @@ function column(f, gap) {
   h.textContent = HEADINGS[f.framing] || f.framing;
   const big = document.createElement('p');
   big.className = 'gap-amount';
-  const amt = num({ source: f.sources.amount }, f.approx ? `about ${money(f.amount_m)}` : gapMoney(f.amount_m));
+  const amt = fig({ source: f.sources.amount }, f.approx ? `about ${money(f.amount_m)}` : gapMoney(f.amount_m));
   big.append(amt, ' a year');
   col.append(h, big);
   const s = f.sources;
@@ -42,11 +41,11 @@ function column(f, gap) {
   );
   const dl = document.createElement('dl');
   dl.className = 'gap-rows';
-  for (const [k, fig, text] of rows) {
+  for (const [k, f2, text] of rows) {
     const dt = document.createElement('dt');
     dt.textContent = k;
     const dd = document.createElement('dd');
-    dd.append(num(fig, text));
+    dd.append(fig(f2, text));
     dl.append(dt, dd);
   }
   col.append(dl);
@@ -55,8 +54,8 @@ function column(f, gap) {
   const share = derived('the gap divided by the General Fund spending the Council can cut (the last bar of the funnel)', s.cuttable);
   cmp.append(
     'Closing it with cuts alone means cutting about one dollar in ',
-    num(share, String(f.oneDollarIn)), ' (', num(share, pct(f.shareOfCuttable)),
-    ') from the General Fund services the Council can cut (the last bar of the funnel under Dig deeper).',
+    figureSpan(share, String(f.oneDollarIn)), ' (', figureSpan(share, pct(f.shareOfCuttable)),
+    ') from the General Fund services the Council can cut (the last bar of the funnel under Dig deeper; our arithmetic).',
   );
   col.append(cmp);
   return col;

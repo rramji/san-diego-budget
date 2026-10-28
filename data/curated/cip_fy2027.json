@@ -203,7 +203,7 @@
           "amount_m": {
             "value": 37.9,
             "source": {
-              "doc": "our arithmetic: $20,600,848 (Sewer Funds, Vol. III p.14) + $17,255,061 (Water Fund, p.16) = $37,855,909; equals the FY2027 Total row on the Public Utilities project page for Pure Water Program (ALA00001)",
+              "doc": "our arithmetic: $20,600,848 (Sewer Funds, Vol. III p.14) + $17,255,061 (Water Fund, p.16) = $37,855,909, the FY2027 Total on its project page",
               "page": 299,
               "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v3.pdf"
             }
@@ -214,7 +214,7 @@
           "amount_m": {
             "value": 36.2,
             "source": {
-              "doc": "our arithmetic: $29,815,688 (Sewer Funds, Vol. III p.13) + $6,376,665 (Water Fund, p.16) = $36,192,353; equals the FY2027 Total row on the Public Utilities project page for Metro Treatment Plants (ABO00001)",
+              "doc": "our arithmetic: $29,815,688 (Sewer Funds, Vol. III p.13) + $6,376,665 (Water Fund, p.16) = $36,192,353, the FY2027 Total on its project page",
               "page": 275,
               "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v3.pdf"
             }
@@ -225,7 +225,7 @@
           "amount_m": {
             "value": 30.0,
             "source": {
-              "doc": "our arithmetic: $22,500,000 (Sewer Funds, Vol. III p.13) + $7,500,000 (Water Fund, p.16) = $30,000,000; equals the FY2027 Total row on the Public Utilities project page for Alvarado Laboratory Improvements (L22000)",
+              "doc": "our arithmetic: $22,500,000 (Sewer Funds, Vol. III p.13) + $7,500,000 (Water Fund, p.16) = $30,000,000, the FY2027 Total on its project page",
               "page": 250,
               "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v3.pdf"
             }
@@ -260,7 +260,7 @@
           "amount_m": {
             "value": 30.7,
             "source": {
-              "doc": "our arithmetic: $8,625,832 (Bond Financing, Vol. III p.7) + $5,300,000 (Gas Tax Fund, p.11) + $14,314,300 (TransNet Funds, p.15) + $2,470,000 (Trench Cut/Excavation Fee Fund, p.15) = $30,710,132; equals the FY2027 Total row on the Transportation project page for Street Resurfacing and Reconstruction (AID00005)",
+              "doc": "our arithmetic: $8,625,832 (Bond Financing, Vol. III p.7) + $5,300,000 (Gas Tax, p.11) + $14,314,300 (TransNet, p.15) + $2,470,000 (Trench Cut, p.15) = $30,710,132, the FY2027 Total on its project page",
               "page": 387,
               "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v3.pdf"
             }

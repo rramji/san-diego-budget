@@ -5,14 +5,18 @@ import { prepare as cents } from '../site/charts/cents-bar.js';
 import { rateBars } from '../site/why.js';
 import { prepare as waterfall } from '../site/charts/waterfall.js';
 import { prepare as timeline, layoutY, BREAK_MONTHS } from '../site/charts/gap-timeline.js';
-import { noteParts, stepLabel } from '../site/gapstory.js';
+import { noteParts, stepLabel, citeParts } from '../site/gapstory.js';
+import { markerParts } from '../site/charts/deficit-bars.js';
+import { moneyToken } from '../site/format.js';
+import { isOurs, expandUrls } from '../site/sources.js';
 import { compute } from '../site/gapcalc.js';
 import { prepareReserve, prepareAssets, preparePension, preparePci, EVERYTHING_ELSE } from '../site/charts/piles.js';
 
-const load = (f) => JSON.parse(readFileSync(new URL(`../data/build/${f}.json`, import.meta.url), 'utf8'));
+const load = (f) => expandUrls(JSON.parse(readFileSync(new URL(`../data/build/${f}.json`, import.meta.url), 'utf8')));
 const why = load('why_short');
 const story = load('gap_story');
 const gap = load('gap');
+const sd = load('structural_deficit');
 const piles = load('piles_up');
 
 test('cents bar segments tile 0..100 and highlight cities', () => {
@@ -157,6 +161,44 @@ test('what\'s coming note: the city figure and the forecast date are sourced par
   assert.equal(cite.source, c.forecast_due.source);
 });
 
+test('what\'s coming note: a whole-number city figure is found as "$12M"; a missing token or cite anchor throws', () => {
+  const c = structuredClone(story.headlines.coming);
+  c.city_m.value = 12.0;
+  c.note = c.note.replace('$9.5M', '$12M');
+  assert.equal(noteParts(c).find((x) => x.kind === 'figure').text, '$12M');
+  assert.throws(() => noteParts({ ...c, note: c.note.replace('$12M', '$12.0M') }), /\$12M/);
+  assert.throws(() => noteParts({ ...c, note: c.note.replace('A new forecast is due', 'Next forecast:') }), /A new forecast is due/);
+});
+
+test('deficit chart: the FY2028 marker shows both figures; a missing amount throws', () => {
+  const m = sd.markers.find((x) => x.fy === story.headlines.coming.fy);
+  assert.deepEqual(m.figures, [story.headlines.coming.city_m, story.headlines.coming.iba_m]);
+  const parts = markerParts(m.label, m.figures);
+  assert.deepEqual(parts.filter((x) => typeof x !== 'string').map((x) => x.token), ['$9.5M', '$32.9M']);
+  assert.equal(parts.map((x) => (typeof x === 'string' ? x : x.token)).join(''), m.label);
+  const twelve = { value: 12.0, source: m.figures[0].source };
+  assert.deepEqual(markerParts('city $12M, IBA $32.9M', [twelve, m.figures[1]]).filter((x) => typeof x !== 'string').map((x) => x.token), ['$12M', '$32.9M']);
+  assert.throws(() => markerParts('city $12.0M', [twelve]), /\$12M/);
+});
+
+test('moneyToken writes amounts as the Python build does', () => {
+  assert.deepEqual([9.5, 32.9, 12.0, 12, 0.25].map(moneyToken), ['$9.5M', '$32.9M', '$12M', '$12M', '$0.25M']);
+});
+
+test('isOurs: one prefix, "our arithmetic: "; "derived:" is not accepted and appears nowhere in the built data', () => {
+  assert.equal(isOurs({ doc: 'our arithmetic: 1 + 2 = 3' }), true);
+  assert.equal(isOurs({ doc: 'derived: 1 + 2' }), false);
+  assert.equal(isOurs({ doc: 'IBA Report 26-11' }), false);
+  assert.equal(isOurs(null), false);
+  for (const f of ['funnel', 'structural_deficit', 'flows', 'budget_tree', 'gap', 'gap_story', 'piles_up', 'why_short', 'claims', 'cuts']) {
+    assert.doesNotMatch(readFileSync(new URL(`../data/build/${f}.json`, import.meta.url), 'utf8'), /"derived:/, f);
+  }
+  const fn = load('funnel');
+  assert.ok(isOurs(fn.bar3.debt_service_m.source) && /adopted and proposed/.test(fn.bar3.debt_service_m.source.doc));
+  assert.ok(isOurs(fn.bar3.everything_else_m.source));
+  assert.ok(isOurs(fn.bar4.find((d) => d.dept === 'All other').amount_m.source));
+});
+
 test('calculator second state is our arithmetic about $103M', () => {
   const [city, ours] = compute(gap, 'post_cut').figures;
   assert.equal(city.amount_m, story.residual.ongoing_m.value);
@@ -241,4 +283,28 @@ test('pci line: measured years solid, projection dashed, goal a reference', () =
   assert.equal(p.goal.value, 65);
   assert.equal(p.goal.was, 70);
   assert.ok(p.domain[0] <= 52 && p.domain[1] >= 71);
+});
+
+test('piles_up stores repeated URLs once; expandUrls gives every Source its https URL back', () => {
+  const raw = JSON.parse(readFileSync(new URL('../data/build/piles_up.json', import.meta.url), 'utf8'));
+  assert.ok(Object.keys(raw.urls).length > 0);
+  const outlook = 'https://www.sandiego.gov/sites/default/files/2026-02/fy-27-31-five-year-capital-infrastructure-planning-outlook.pdf';
+  assert.equal(JSON.stringify(raw).split(outlook).length - 1, 1, 'the Outlook URL is stored once');
+  const urls = [];
+  const walk = (v) => { if (Array.isArray(v)) v.forEach(walk); else if (v && typeof v === 'object') { if (typeof v.doc === 'string') urls.push(v.url); Object.values(v).forEach(walk); } };
+  walk(piles);
+  assert.ok(urls.length > 40 && urls.every((u) => /^https:\/\//.test(u)));
+  assert.equal(piles.urls, undefined);
+  assert.equal(piles.infrastructure.by_asset[0].gap_m.source.url, outlook);
+  assert.equal(expandUrls({ a: 1 }).a, 1); // a file without a table passes through
+});
+
+test('this year\'s $118M card cites both offices that reported it', () => {
+  const ty = story.headlines.this_year;
+  const parts = citeParts(ty.counting, ty.cites);
+  assert.equal(parts.map((x) => (typeof x === 'string' ? x : x.text)).join(''), ty.counting);
+  const cites = parts.filter((x) => typeof x !== 'string');
+  assert.deepEqual(cites.map((x) => x.text), ['the IBA', 'the Mayor']);
+  assert.match(cites[1].source.url, /mayors-message-fy2027-adopted-budget\.pdf$/);
+  assert.throws(() => citeParts('nobody said so', ty.cites), /not found/);
 });

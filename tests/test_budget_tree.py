@@ -430,7 +430,9 @@ def test_cip_maps(tree):
 
 def test_sources_registry_and_keys(tree):
     used = {n["src"] for n in walk(tree)} | {p["src"] for p in tree["pots"]}
-    assert used <= set(tree["sources"])
+    used |= {a["src"] for p in tree["pots"] if p.get("answers") for a in p["answers"].values()}
+    used |= {d["src"] for d in tree["descs"].values() if d.get("src")}
+    assert set(tree["sources"]) == used  # ruling R16: no source registered for a box that was later discarded
     assert sorted(tree["sources"], key=lambda k: int(k[1:])) == [f"s{i}" for i in range(len(tree["sources"]))]
     docs = [(s["doc"], s["page"], s["url"]) for s in tree["sources"].values()]
     assert len(docs) == len(set(docs))

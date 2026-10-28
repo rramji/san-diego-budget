@@ -1,4 +1,5 @@
 import copy
+import json
 import csv
 import re
 from pathlib import Path
@@ -417,3 +418,139 @@ def test_piles_up_input_not_mutated():
     before = copy.deepcopy(raw)
     build_piles_up(raw)
     assert raw == before
+
+
+# ---- R15: the FY2028 pair lives only in gap_story.headlines.coming -------------------------------------
+
+def test_money_token_matches_javascript_string():
+    from pipeline.build import money_token
+    assert money_token(9.5) == "$9.5M"
+    assert money_token(32.9) == "$32.9M"
+    assert money_token(12.0) == "$12M"  # JS String(12.0) is "12": a whole number has no ".0"
+    assert money_token(12) == "$12M"
+    assert money_token(0.25) == "$0.25M"
+
+
+def _coming_whole(d, value=12.0, token="$12M"):
+    c = d["headlines"]["coming"]
+    old = f"${c['city_m']['value']}M"
+    c["city_m"]["value"] = value
+    c["note"] = c["note"].replace(old, token)
+    for e in d["timeline"]:
+        if e["describes_fy"] == c["fy"] and e["office"] == "City":
+            e["value_m"]["value"] = value
+    return d
+
+
+def test_gap_story_accepts_whole_number_city_figure():
+    d = _coming_whole(copy.deepcopy(curated.load(CUR, "gap_story")))
+    out = build_gap_story(d)
+    assert "$12M" in out["headlines"]["coming"]["note"]
+
+
+def test_gap_story_rejects_python_style_whole_number_token():
+    d = _coming_whole(copy.deepcopy(curated.load(CUR, "gap_story")), token="$12.0M")
+    with pytest.raises(ValueError, match=r"coming.note.*\$12M"):
+        build_gap_story(d)
+
+
+def test_gap_story_note_needs_forecast_cite_anchor():
+    d = copy.deepcopy(curated.load(CUR, "gap_story"))
+    c = d["headlines"]["coming"]
+    c["note"] = c["note"].replace("A new forecast is due", "The next forecast comes")
+    with pytest.raises(ValueError, match="A new forecast is due"):
+        build_gap_story(d)
+
+
+@pytest.mark.parametrize("office", ["City", "IBA"])
+def test_gap_story_timeline_must_match_coming(office):
+    d = copy.deepcopy(curated.load(CUR, "gap_story"))
+    fy = d["headlines"]["coming"]["fy"]
+    latest = [e for e in d["timeline"] if e["describes_fy"] == fy and e["office"] == office][-1]
+    latest["value_m"]["value"] += 1
+    with pytest.raises(ValueError, match=f"timeline.*{office}.*headlines.coming"):
+        build_gap_story(d)
+
+
+def test_gap_story_stage_words_required():
+    d = copy.deepcopy(curated.load(CUR, "gap_story"))
+    d["headlines"]["coming"]["city_stage"] = " "
+    with pytest.raises(ValueError, match="city_stage"):
+        build_gap_story(d)
+
+
+def test_deficit_marker_is_built_from_coming():
+    from pipeline.build import build_structural_deficit
+    d = _coming_whole(copy.deepcopy(curated.load(CUR, "gap_story")))
+    coming = build_gap_story(d)["headlines"]["coming"]
+    out = build_structural_deficit(curated.load(CUR, "structural_deficit"), {"gf_by_fy": {}}, coming=coming)
+    m = next(m for m in out["markers"] if m["fy"] == coming["fy"])
+    assert m["label"] == "FY2028 outlook: city $12M (adopted budget), IBA $32.9M (estimated at the proposed budget)"
+    assert m["figures"] == [coming["city_m"], coming["iba_m"]]
+
+
+def test_no_curated_source_uses_the_old_derived_prefix():
+    bad = []
+
+    def walk(v, path):
+        if isinstance(v, dict):
+            if isinstance(v.get("doc"), str) and v["doc"].startswith("derived"):
+                bad.append(path)
+            for k, x in v.items():
+                walk(x, f"{path}.{k}")
+        elif isinstance(v, list):
+            for i, x in enumerate(v):
+                walk(x, f"{path}[{i}]")
+    for p in sorted(CUR.glob("*.json")):
+        walk(curated.load(CUR, p.stem), p.stem)
+    assert bad == []
+
+
+# ---- R16: piles_up stores each repeated document URL once -------------------------------------------------
+
+def test_share_urls_stores_repeated_urls_once_and_round_trips():
+    from pipeline.build import share_urls
+    d = build_piles_up(curated.load(CUR, "piles_up"))
+    out = share_urls(d)
+    outlook = "https://www.sandiego.gov/sites/default/files/2026-02/fy-27-31-five-year-capital-infrastructure-planning-outlook.pdf"
+    assert outlook in out["urls"].values()
+    seen = []
+
+    def walk(v):
+        if isinstance(v, dict):
+            if isinstance(v.get("doc"), str) and "url" in v:
+                seen.append(v["url"])
+            for x in v.values():
+                walk(x)
+        elif isinstance(v, list):
+            for x in v:
+                walk(x)
+    walk({k: v for k, v in out.items() if k != "urls"})
+    assert outlook not in seen and all(u in out["urls"] or u.startswith("https://") for u in seen)
+    # expanding the keys gives back the validated file exactly
+    def expand(v):
+        if isinstance(v, dict):
+            v = {k: expand(x) for k, x in v.items() if k != "urls"}
+            if isinstance(v.get("doc"), str) and v.get("url") in out["urls"]:
+                v["url"] = out["urls"][v["url"]]
+            return v
+        return [expand(x) for x in v] if isinstance(v, list) else v
+    assert expand(out) == d
+    assert len(json.dumps(out)) < len(json.dumps(d)) - 4000
+
+
+def test_gap_story_this_year_cites_both_offices():
+    d = build_gap_story(curated.load(CUR, "gap_story"))
+    ty = d["headlines"]["this_year"]
+    by = {c["text"]: c["source"] for c in ty["cites"]}
+    assert set(by) == {"the IBA", "the Mayor"}
+    assert by["the IBA"]["page"] == 3
+    assert by["the Mayor"]["url"].endswith("mayors-message-fy2027-adopted-budget.pdf") and by["the Mayor"]["page"] is None
+    assert all(t in ty["counting"] for t in by)
+
+
+def test_gap_story_cite_text_must_be_in_counting():
+    d = copy.deepcopy(curated.load(CUR, "gap_story"))
+    d["headlines"]["this_year"]["cites"][1]["text"] = "the Governor"
+    with pytest.raises(ValueError, match="this_year.cites"):
+        build_gap_story(d)

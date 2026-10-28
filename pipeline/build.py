@@ -67,8 +67,6 @@ def build_series(rows: list[dict], vintage: dict | None = None) -> dict:
 
 DEFICIT_CONVENTION = "positive = size of General Fund structural gap, $ millions"
 _IBA_26_11 = "https://www.sandiego.gov/sites/default/files/2026-04/iba-report-26-11-review-of-the-fiscal-year-2027-proposed-budget_0.pdf"
-_CBO_FY27 = "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1cbo.pdf"
-_IBA_26_15 = "https://www.sandiego.gov/sites/default/files/2026-05/26-15-recommended-city-council-modifications-to-the-mayors-proposed-fy-2027-budget-and-review-of-the-may-revision.pdf"
 DEFICIT_MARKERS = [
     {"fy": 2011, "label": "2010: temporary sales tax measure fails", "source": {"source": {
         "doc": "IBA Report 26-11, Key Citywide Issues: Structural Budget Deficit (2010 temporary five-year sales tax measure failed to pass)",
@@ -79,19 +77,24 @@ DEFICIT_MARKERS = [
     {"fy": 2026, "label": "Trash fee adopted with FY2026 budget", "source": {"source": {
         "doc": "IBA Report 26-11, Overview (FY 2026 adoption of a trash fee; footnote 4)",
         "page": 3, "url": _IBA_26_11}}},
-    {
-        "fy": 2028,
-        "label": "FY2028 outlook: city $9.5M (adopted budget), IBA $32.9M (estimated at the proposed budget)",
-        "figures": [
-            {"value": 9.5, "source": {
-                "doc": "FY2027 Adopted Budget Vol. I, Citywide Budget Overview, Table 10 (the city's updated Five-Year Financial Outlook: FY2028 shortfall)",
-                "page": 36, "url": _CBO_FY27}},
-            {"value": 32.9, "source": {
-                "doc": "IBA Report 26-15, Recommended City Council Modifications to the Mayor's Proposed FY 2027 Budget (projected FY2028 deficit of $32.9M \"as estimated at the time of the Proposed Budget\", excluding reserve deposits)",
-                "page": 43, "url": _IBA_26_15}},
-        ],
-    },
 ]
+
+
+def money_token(v) -> str:
+    """A money amount as copy writes it and site/format.js moneyToken() finds it: "$9.5M", and "$12M" for 12.0
+    (the shortest round-trip number, as JavaScript's String() writes it)."""
+    v = float(v)
+    return f"${int(v)}M" if v.is_integer() else f"${v!r}M"
+
+
+def coming_marker(coming: dict) -> dict:
+    """The chart's "what's coming" marker, built from gap_story.headlines.coming (ruling R15: the pair has one home)."""
+    return {
+        "fy": coming["fy"],
+        "label": (f"FY{coming['fy']} outlook: city {money_token(coming['city_m']['value'])} ({coming['city_stage']}), "
+                  f"IBA {money_token(coming['iba_m']['value'])} ({coming['iba_stage']})"),
+        "figures": [coming["city_m"], coming["iba_m"]],
+    }
 
 
 DEFICIT_YEARS = list(range(2012, 2028))
@@ -116,8 +119,9 @@ def _check_deficit_entry(i: int, e: dict) -> None:
             raise ValueError(f"[{i}].components: must be null when reported is false (FY{e.get('fy')})")
 
 
-def build_structural_deficit(entries: list[dict], series: dict) -> dict:
-    """Curated per-FY structural deficit entries, each with that FY's adopted GF expense merged in.
+def build_structural_deficit(entries: list[dict], series: dict, coming: dict | None = None) -> dict:
+    """Curated per-FY structural deficit entries, each with that FY's adopted GF expense merged in. The markers are
+    DEFICIT_MARKERS plus, given gap_story's validated headlines.coming, the FY2028 outlook marker built from it.
 
     Invariants: exactly one entry per FY2012-FY2027; a reported year has a figure; an unreported
     year has no figures and no components (never interpolate a year the IBA did not report)."""
@@ -136,13 +140,40 @@ def build_structural_deficit(entries: list[dict], series: dict) -> dict:
     for e in sorted(entries, key=lambda e: e["fy"]):
         fy_totals = gf.get(str(e["fy"])) or gf.get(e["fy"])
         years.append({**e, "gf_expenditure_adopted_m": fy_totals["expense_m"] if fy_totals else None})
-    for i, m in enumerate(DEFICIT_MARKERS):
+    markers = DEFICIT_MARKERS + ([coming_marker(coming)] if coming else [])
+    for i, m in enumerate(markers):
         if "figures" in m:
             for j, fig in enumerate(m["figures"]):
                 curated.validate_figure(fig, f"markers[{i}].figures[{j}]")
         else:
             _check_source((m.get("source") or {}).get("source"), f"markers[{i}].source")
-    return {"convention": DEFICIT_CONVENTION, "years": years, "markers": DEFICIT_MARKERS}
+    return {"convention": DEFICIT_CONVENTION, "years": years, "markers": markers}
+
+
+def share_urls(d: dict, min_count: int = 2) -> dict:
+    """Ruling R16 (size): store each document URL cited at least min_count times once, in a top-level `urls` table,
+    and have each Source cite it by key ("u0", "u1", ... in first-use order). Run after validation. Readers expand
+    the keys back (site/sources.js expandUrls), so the site sees ordinary Sources."""
+    counts: dict[str, int] = {}
+
+    def sources(v):
+        if isinstance(v, dict):
+            if isinstance(v.get("doc"), str) and isinstance(v.get("url"), str):
+                yield v
+            for x in v.values():
+                yield from sources(x)
+        elif isinstance(v, list):
+            for x in v:
+                yield from sources(x)
+    out = copy.deepcopy(d)
+    for s in sources(out):
+        counts[s["url"]] = counts.get(s["url"], 0) + 1
+    keys: dict[str, str] = {}
+    for s in sources(out):
+        if counts[s["url"]] >= min_count:
+            s["url"] = keys.setdefault(s["url"], f"u{len(keys)}")
+    out["urls"] = {k: u for u, k in keys.items()}
+    return out
 
 
 def _check_source(src, path: str) -> None:
@@ -352,8 +383,8 @@ def build_cip(d: dict) -> dict:
         raise ValueError(f"departments: sum {dsum:.1f} differs from total_m {total:.1f} by more than {SUM_TOLERANCE_M}")
     parts = " + ".join(f"{s['amount_m']['value']:.1f}" for s in srcs)
     d["sources"].append({"name": "Other sources", "amount_m": {"value": other, "source": {
-        "doc": (f"our arithmetic: {total:.1f} (Grand Total) - {named:.1f} (sum of the {len(srcs)} named sources: {parts}) "
-                f"= {other:.1f}; stands for the other Table 1 lines combined, as a difference of rounded figures"),
+        "doc": (f"our arithmetic: {total:.1f} (Grand Total) - {named:.1f} (the {len(srcs)} named sources: {parts}) "
+                f"= {other:.1f}, the other Table 1 lines combined (rounded figures)"),
         "page": total_fig["source"]["page"], "url": total_fig["source"]["url"]}}})
     return d
 
@@ -527,6 +558,7 @@ GAP_TOLERANCE_M = 0.05
 WATERFALL_KINDS = ("start", "up", "down", "subtotal", "end")
 GAP_OFFICES = ("IBA", "City")
 _OURS = "our arithmetic: "
+FORECAST_CITE_ANCHOR = "A new forecast is due"  # site/gapstory.js noteParts() starts the cite here
 
 
 def _text(v, path: str) -> str:
@@ -590,6 +622,11 @@ def build_gap_story(d: dict) -> dict:
             raise ValueError(f"headlines.{k}: object required")
     _need_value(h["this_year"].get("value_m"), "headlines.this_year.value_m")
     _text(h["this_year"].get("counting"), "headlines.this_year.counting")
+    for i, ct in enumerate(h["this_year"].get("cites") or []):
+        path = f"headlines.this_year.cites[{i}]"
+        if _text(ct.get("text") if isinstance(ct, dict) else None, f"{path}.text") not in h["this_year"]["counting"]:
+            raise ValueError(f"{path}.text: {ct['text']!r} must appear in headlines.this_year.counting")
+        _check_source(ct.get("source"), f"{path}.source")
     w = h["worst"]
     for k in ("value_m", "without_reserve_m"):
         _need_value(w.get(k), f"headlines.worst.{k}")
@@ -601,10 +638,13 @@ def build_gap_story(d: dict) -> dict:
         raise ValueError("headlines.coming.fy: int required")
     for k in ("city_m", "iba_m"):
         _need_value(c.get(k), f"headlines.coming.{k}")
-    for k in ("note", "city_counting", "iba_counting"):
+    for k in ("note", "city_counting", "iba_counting", "city_stage", "iba_stage"):
         _text(c.get(k), f"headlines.coming.{k}")
-    if f"${c['city_m']['value']}M" not in c["note"]:
-        raise ValueError("headlines.coming.note: must name the city's figure as it is shown")
+    token = money_token(c["city_m"]["value"])
+    if token not in c["note"]:
+        raise ValueError(f"headlines.coming.note: must name the city's figure as it is shown ({token})")
+    if FORECAST_CITE_ANCHOR not in c["note"]:
+        raise ValueError(f"headlines.coming.note: must contain {FORECAST_CITE_ANCHOR!r}, where the forecast-date cite starts")
     sett = c.get("settlement")
     if not isinstance(sett, list) or not sett:
         raise ValueError("headlines.coming.settlement: non-empty list required")
@@ -655,6 +695,11 @@ def build_gap_story(d: dict) -> dict:
         _need_value(e.get("value_m"), f"{path}.value_m")
         if e.get("value2_m") is not None:
             _need_value(e["value2_m"], f"{path}.value2_m")
+    # Ruling R15: each office's latest entry for the coming year is the headline figure, not a second copy of it.
+    for office, k in (("City", "city_m"), ("IBA", "iba_m")):
+        mine = [e for e in tl if e["office"] == office and e["describes_fy"] == c["fy"]]
+        if mine and max(mine, key=lambda e: e["date"])["value_m"] != c[k]:
+            raise ValueError(f"timeline: the latest {office} entry for FY{c['fy']} must equal headlines.coming.{k}")
     return d
 
 
@@ -816,6 +861,7 @@ def _build_into(raw_dir: Path, curated_dir: Path, out_dir: Path) -> list[str]:
     rows = load_budget_rows(raw_dir)
     series = build_series(rows, _vintage(raw_dir))
     cip_rows = load_cip_rows(raw_dir)
+    gap_story = build_gap_story(curated.load(curated_dir, "gap_story"))
     steps = [
         ("series", lambda: series),
         ("headline", lambda: curated.load(curated_dir, "headline")),
@@ -823,7 +869,7 @@ def _build_into(raw_dir: Path, curated_dir: Path, out_dir: Path) -> list[str]:
         ("cuts", lambda: build_cuts(curated.load(curated_dir, "cuts"))),
         ("flows", lambda: build_flows(curated.load(curated_dir, "flows"))),
         ("structural_deficit", lambda: build_structural_deficit(
-            curated.load(curated_dir, "structural_deficit"), series)),
+            curated.load(curated_dir, "structural_deficit"), series, coming=gap_story["headlines"]["coming"])),
         ("gap", lambda: build_gap(curated.load(curated_dir, "gap"), curated.load(curated_dir, "funnel"))),
         ("claims", lambda: build_claims(curated.load(curated_dir, "claims"), cip_rows, series,
                                          curated.load(curated_dir, "funnel"))),
@@ -837,8 +883,8 @@ def _build_into(raw_dir: Path, curated_dir: Path, out_dir: Path) -> list[str]:
             labels=build_labels(curated.load(curated_dir, "labels")),
             unmatched=unmatched_rows(raw_dir))),
         ("why_short", lambda: build_why_short(curated.load(curated_dir, "why_short"))),
-        ("gap_story", lambda: build_gap_story(curated.load(curated_dir, "gap_story"))),
-        ("piles_up", lambda: build_piles_up(curated.load(curated_dir, "piles_up"))),
+        ("gap_story", lambda: gap_story),
+        ("piles_up", lambda: share_urls(build_piles_up(curated.load(curated_dir, "piles_up")))),
     ]
     return [_write(out_dir, name, fn()).name for name, fn in steps]
 

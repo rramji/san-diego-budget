@@ -3,12 +3,13 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import { claimCardModel } from '../site/claims.js';
-import { collectSources, docTitle } from '../site/sources.js';
+import { collectSources, docTitle, expandUrls } from '../site/sources.js';
 import { methodsModel, RULES } from '../site/methods.js';
 
 const dir = new URL('../data/build/', import.meta.url);
-const load = (f) => JSON.parse(readFileSync(new URL(`${f}.json`, dir), 'utf8'));
-const all = Object.fromEntries(readdirSync(dir).map((f) => [f, JSON.parse(readFileSync(new URL(f, dir), 'utf8'))]));
+// As the site loads them: shared URL keys expanded (sources.js expandUrls).
+const load = (f) => expandUrls(JSON.parse(readFileSync(new URL(`${f}.json`, dir), 'utf8')));
+const all = Object.fromEntries(readdirSync(dir).map((f) => [f, expandUrls(JSON.parse(readFileSync(new URL(f, dir), 'utf8')))]));
 
 test('bike card exposes its link to how projects are chosen; the others have none', () => {
   const claims = load('claims');

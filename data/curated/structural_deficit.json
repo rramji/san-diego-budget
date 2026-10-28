@@ -142,7 +142,7 @@
     "structural_deficit_m": {
       "value": 52.1,
       "source": {
-        "doc": "derived: sum of one-time resources itemized in IBA Report 17-16 p.2 (chart 'General Fund Mitigation Actions: $81.0 Million'; text pp.2-3): 16.0 + 15.5 + 8.3 + 8.3 + 4.0",
+        "doc": "our arithmetic: 16.0 + 15.5 + 8.3 + 8.3 + 4.0 = 52.1, the one-time resources itemized in IBA Report 17-16 p.2 (chart 'General Fund Mitigation Actions: $81.0 Million'; text pp.2-3)",
         "page": 2,
         "url": "https://www.sandiego.gov/sites/default/files/17_16_review_of_the_fiscal_year_2018_proposed_budget_complete_report.pdf"
       }
@@ -150,7 +150,7 @@
     "one_time_resources_m": {
       "value": 52.1,
       "source": {
-        "doc": "derived: sum of one-time resources itemized in IBA Report 17-16 p.2 (chart 'General Fund Mitigation Actions: $81.0 Million'; text pp.2-3): 16.0 + 15.5 + 8.3 + 8.3 + 4.0",
+        "doc": "our arithmetic: 16.0 + 15.5 + 8.3 + 8.3 + 4.0 = 52.1, the one-time resources itemized in IBA Report 17-16 p.2 (chart 'General Fund Mitigation Actions: $81.0 Million'; text pp.2-3)",
         "page": 2,
         "url": "https://www.sandiego.gov/sites/default/files/17_16_review_of_the_fiscal_year_2018_proposed_budget_complete_report.pdf"
       }
@@ -190,7 +190,7 @@
     "structural_deficit_m": {
       "value": 32.3,
       "source": {
-        "doc": "derived: sum of one-time resources itemized in IBA Report 18-08 p.2 (continues p.3): 12.3 + 14.4 + 5.6",
+        "doc": "our arithmetic: 12.3 + 14.4 + 5.6 = 32.3, the one-time resources itemized in IBA Report 18-08 p.2 (continues p.3)",
         "page": 2,
         "url": "https://www.sandiego.gov/sites/default/files/iba_report_18-08_review_of_fy19_proposed_budget_complete_rpt.pdf"
       }
@@ -198,7 +198,7 @@
     "one_time_resources_m": {
       "value": 32.3,
       "source": {
-        "doc": "derived: sum of one-time resources itemized in IBA Report 18-08 p.2 (continues p.3): 12.3 + 14.4 + 5.6",
+        "doc": "our arithmetic: 12.3 + 14.4 + 5.6 = 32.3, the one-time resources itemized in IBA Report 18-08 p.2 (continues p.3)",
         "page": 2,
         "url": "https://www.sandiego.gov/sites/default/files/iba_report_18-08_review_of_fy19_proposed_budget_complete_rpt.pdf"
       }
@@ -230,7 +230,7 @@
     "structural_deficit_m": {
       "value": 44.6,
       "source": {
-        "doc": "derived: sum of one-time resources itemized in IBA Report 19-06 p.3 (chart 'General Fund Balancing Resources - $72.4 Million'): 30.7 + 4.8 + 4.0 + 2.6 + 2.5",
+        "doc": "our arithmetic: 30.7 + 4.8 + 4.0 + 2.6 + 2.5 = 44.6, the one-time resources itemized in IBA Report 19-06 p.3 (chart 'General Fund Balancing Resources - $72.4 Million')",
         "page": 3,
         "url": "https://www.sandiego.gov/sites/default/files/19_06_review_of_fy2020_proposed_budget.pdf"
       }
@@ -238,7 +238,7 @@
     "one_time_resources_m": {
       "value": 44.6,
       "source": {
-        "doc": "derived: sum of one-time resources itemized in IBA Report 19-06 p.3 (chart 'General Fund Balancing Resources - $72.4 Million'): 30.7 + 4.8 + 4.0 + 2.6 + 2.5",
+        "doc": "our arithmetic: 30.7 + 4.8 + 4.0 + 2.6 + 2.5 = 44.6, the one-time resources itemized in IBA Report 19-06 p.3 (chart 'General Fund Balancing Resources - $72.4 Million')",
         "page": 3,
         "url": "https://www.sandiego.gov/sites/default/files/19_06_review_of_fy2020_proposed_budget.pdf"
       }

@@ -261,7 +261,7 @@
       "amount_m": 338.9,
       "rule": "Money from general taxes and fees goes into the General Fund, and the City Council decides each year how to divide it among services.",
       "ref": {
-        "doc": "FY2027 Adopted Budget Vol. I, General Fund Revenues, Table 2 (sum of remaining lines: licenses & permits 57.8, fines 45.9, money & property 96.7, federal & other agencies 11.8, property transfer 12.0, transfers in 111.6, other 3.1)",
+        "doc": "our arithmetic: 57.8 (licenses & permits) + 45.9 (fines) + 96.7 (money & property) + 11.8 (federal & other agencies) + 12.0 (property transfer) + 111.6 (transfers in) + 3.1 (other) = 338.9, the remaining lines of FY2027 Adopted Budget Vol. I, General Fund Revenues, Table 2",
         "page": 57,
         "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1generalfundrevenues.pdf"
       },
@@ -513,7 +513,7 @@
       "amount_m": 838.1,
       "rule": "Other grants and special funds can only pay for the program they were created or awarded for.",
       "ref": {
-        "doc": "Remainder of restricted inflow (grants and other special revenue funds, FY2026/FY2027 as listed on the inflow links) after the bike, road-repair and hotel-tax uses; it includes the FY2026 Gas Tax and Road Maintenance and Rehabilitation operating funds, which pay for street work outside the capital projects drawn here",
+        "doc": "our arithmetic: the four restricted inflow links (25.1 + 100.9 + 194.0 + 730.9, grants and other special revenue funds, FY2026/FY2027) minus the bike (0.273), road-repair (18.588) and hotel-tax (194.0) uses = 838.1, computed before rounding; it includes the FY2026 Gas Tax and Road Maintenance and Rehabilitation operating funds, which pay for street work outside the capital projects drawn here",
         "page": null,
         "url": "https://data.sandiego.gov/datasets/operating-budget/"
       },

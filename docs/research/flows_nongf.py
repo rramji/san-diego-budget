@@ -114,7 +114,13 @@ def main():
         "roads": (road_rest, road_doc + "non-bond fund types: " + fmt(nonbond(road_split)), CIP_URL),
         "convention_arts": (amounts["hotel_setasides"][0], amounts["hotel_setasides"][1], OP_URL),
         "other_programs": (rest_in - bike_rest - road_rest - amounts["hotel_setasides"][0],
-                           "Remainder of restricted inflow (grants and other special revenue funds, FY2026/FY2027 as listed on the inflow links) after the bike, road-repair and hotel-tax uses; it includes the FY2026 Gas Tax and Road Maintenance and Rehabilitation operating funds, which pay for street work outside the capital projects drawn here", OP_URL),
+                           "our arithmetic: the four restricted inflow links ("
+                           + " + ".join(f"{amounts[k][0]:.1f}" for k in ("grants", "gas_transnet", "hotel_setasides", "other_special"))
+                           + f", grants and other special revenue funds, FY2026/FY2027) minus the bike ({bike_rest:.3f}), road-repair "
+                           f"({road_rest:.3f}) and hotel-tax ({amounts['hotel_setasides'][0]:.1f}) uses = "
+                           f"{rest_in - bike_rest - road_rest - amounts['hotel_setasides'][0]:.1f}, computed before rounding; it includes "
+                           "the FY2026 Gas Tax and Road Maintenance and Rehabilitation operating funds, which pay for street work outside "
+                           "the capital projects drawn here", OP_URL),
     }
     capital_out = {
         "bike_ped": (bike_bond, bike_doc + f"Bond Financing ${bike_bond:.2f}M", CIP_URL),

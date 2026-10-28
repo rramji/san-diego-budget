@@ -1,6 +1,7 @@
 // Chapter 1 chart: structural deficit bars FY2012-FY2027 plus a dig-deeper stacked view.
 // prepare() is pure (no DOM, no d3). render()/renderDig() use the global d3.
-import { money } from '../format.js';
+import { money, moneyToken } from '../format.js';
+import { figureSpan, fig, OURS_PREFIX } from '../sources.js';
 
 const val = (f) => (f ? f.value : null);
 const r1 = (x) => Math.round(x * 10) / 10;
@@ -38,15 +39,15 @@ export function prepare(input) {
     const reserveTop = reported && reserve != null && reserve > 0 ? reserve : 0;
     const solid = value == null ? null : (r.includes_suspended_reserve ? r1(value - reserveTop) : value);
     const top = value == null ? null : r3(solid + reserveTop);
-    const fig = reported ? r.structural_deficit_m : null;
-    const topFigure = reserveTop && fig ? {
+    const sf = reported ? r.structural_deficit_m : null;
+    const topFigure = reserveTop && sf ? {
       value: top,
       source: {
         doc: r.includes_suspended_reserve
-          ? `derived: the IBA's $${value}M of one-time money, which includes $${reserveTop}M of skipped reserve contributions (${fig.source.doc})`
-          : `derived: $${value}M excluding reserves plus the $${reserveTop}M skipped reserve deposit; IBA Report 26-11, table 'General Fund Structural Deficit Over Time', row 'Revised Structural Deficit (including reserves)'`,
-        page: fig.source.page ?? null,
-        url: fig.source.url,
+          ? `${OURS_PREFIX}${solid} + ${reserveTop} = ${value}: the IBA's $${value}M of one-time money, which includes $${reserveTop}M of skipped reserve contributions (${sf.source.doc})`
+          : `${OURS_PREFIX}${value} (excluding reserves) + ${reserveTop} (skipped reserve deposit) = ${top}; IBA Report 26-11, table 'General Fund Structural Deficit Over Time', row 'Revised Structural Deficit (including reserves)'`,
+        page: sf.source.page ?? null,
+        url: sf.source.url,
       },
     } : null;
     return {
@@ -89,11 +90,27 @@ export function prepare(input) {
 const NS = 'http://www.w3.org/2000/svg';
 const yy = (fy) => `'${String(fy).slice(2)}`;
 
-function srcAttrs(el, fig) {
+function srcAttrs(el, f) {
   el.className = 'figure';
-  el.dataset.srcDoc = fig.source.doc;
-  el.dataset.srcPage = fig.source.page ?? '';
-  el.dataset.srcUrl = fig.source.url;
+  el.dataset.srcDoc = f.source.doc;
+  el.dataset.srcPage = f.source.page ?? '';
+  el.dataset.srcUrl = f.source.url;
+}
+
+// A marker label with each stated amount as its own sourced .figure span. Throws if the label does not show an
+// amount exactly as moneyToken() writes it (the build makes the FY2028 label from the same pair, so a miss is a bug).
+export function markerParts(label, figures) {
+  let rest = label;
+  const parts = [];
+  for (const f of figures) {
+    const token = moneyToken(f.value);
+    const at = rest.indexOf(token);
+    if (at < 0) throw new Error(`marker label ${JSON.stringify(label)} does not show ${token}`);
+    parts.push(rest.slice(0, at), { token, figure: f });
+    rest = rest.slice(at + token.length);
+  }
+  parts.push(rest);
+  return parts.filter((x) => x !== '');
 }
 
 function legendItem(host, swatchHtml, text) {
@@ -258,19 +275,7 @@ export function render(el, data, colors) {
     li.append(lab);
     const t = document.createElement('span');
     if (mk.figures) {
-      // Each stated amount in the label becomes its own sourced .figure span.
-      let rest = mk.label;
-      const parts = [];
-      for (const f of mk.figures) {
-        const token = `$${f.value}M`;
-        const at = rest.indexOf(token);
-        if (at < 0) continue;
-        parts.push(rest.slice(0, at));
-        const s = document.createElement('span'); srcAttrs(s, f); s.textContent = token; parts.push(s);
-        rest = rest.slice(at + token.length);
-      }
-      parts.push(rest);
-      t.append(...parts);
+      t.append(...markerParts(mk.label, mk.figures).map((p) => (typeof p === 'string' ? p : figureSpan(p.figure, p.token))));
     } else {
       t.textContent = `${mk.label} (FY${mk.fy})`;
       if (mk.source) { srcAttrs(t, mk.source); if (mk.source.value == null) t.className = 'cite'; }
@@ -284,12 +289,11 @@ export function render(el, data, colors) {
     cap.className = 'chart-cap';
     const pk = data.bars.find((b) => b.fy === data.stats.peak_fy);
     cap.append(`The FY${pk.fy} gap was about `);
-    const a = document.createElement('span'); srcAttrs(a, pk.figure); a.textContent = money(pk.value_m); cap.append(a);
-    if (pk.top_figure) {
-      cap.append(', or ');
-      const t = document.createElement('span'); srcAttrs(t, pk.top_figure); t.textContent = money(pk.top_m); cap.append(t);
-      cap.append(' counting the skipped reserve deposit');
-    }
+    cap.append(fig(pk.figure, money(pk.value_m)));
+    // The IBA prints the peak counting the reserve deposit (data.peak_top, from gap_story); else our own sum.
+    const printed = data.peak_top && data.peak_top.fy === pk.fy ? data.peak_top.figure : null;
+    if (printed) cap.append(', or ', figureSpan(printed, `$${printed.value.toFixed(1)}M`), ' counting the skipped reserve deposit');
+    else if (pk.top_figure) cap.append(', or ', fig(pk.top_figure, money(pk.top_m)), ' counting the skipped reserve deposit');
     cap.append(`. Without the deposit, it was about ${Math.round(data.stats.peak_share * 100)}% of that year's General Fund spending (`);
     const b2 = document.createElement('span');
     srcAttrs(b2, { source: { doc: `City of San Diego open data, Operating Budget: General Fund adopted expenditure, FY${pk.fy}`, page: null, url: 'https://seshat.datasd.org/operating_budget/budget_operating_datasd.csv' } });
@@ -361,10 +365,7 @@ export function renderNotes(el, data) {
     const dt = document.createElement('dt');
     dt.append(`FY${b.fy}: `);
     if (b.figure) {
-      const s = document.createElement('span');
-      srcAttrs(s, b.figure);
-      s.textContent = b.value_m === 0 ? '$0' : money(b.value_m);
-      dt.append(s);
+      dt.append(fig(b.figure, b.value_m === 0 ? '$0' : money(b.value_m)));
     } else dt.append('not reported');
     const dd = document.createElement('dd');
     dd.textContent = b.note;

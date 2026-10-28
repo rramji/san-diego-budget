@@ -1,12 +1,15 @@
 // Chapter 2 funnel: four stacked bars sharing one x-scale.
 // prepare() is pure (no DOM, no d3). render() uses the global d3.
 import { money } from '../format.js';
+import { figureSpan, fig, h, OURS, OURS_PREFIX } from '../sources.js';
+
+export const DEBT_NOTE = 'it combines the adopted and proposed budgets';
 
 export function prepare(headline, funnel) {
   const h = headline;
   const total = h.total_budget_m;
   const gfFig = h.general_fund_m;
-  const fund = (label, fig, kind) => ({ label, amount_m: fig.value, kind, figure: fig });
+  const fund = (label, f, kind, note = null) => ({ label, amount_m: f.value, kind, figure: f, note });
   const bar1 = [
     fund('General Fund', h.general_fund_m, 'general'),
     fund('Enterprise funds', h.enterprise_m, 'restricted'),
@@ -19,7 +22,8 @@ export function prepare(headline, funnel) {
   const b3 = funnel.bar3;
   const bar3 = [
     fund('Pension payment (ADC)', b3.pension_adc_m, 'locked'),
-    fund('Debt service', b3.debt_service_m, 'locked'),
+    // Our sum of an adopted-budget line and a proposed-budget line (funnel.json), so the legend says so.
+    fund('Debt service', b3.debt_service_m, 'locked', DEBT_NOTE),
     fund('Everything else', b3.everything_else_m, 'discretionary'),
   ];
   const bar4 = funnel.bar4.map((d) => ({ label: d.dept, amount_m: d.amount_m.value, kind: 'discretionary', figure: d.amount_m }));
@@ -36,18 +40,24 @@ export function prepare(headline, funnel) {
   };
 }
 
-function srcAttrs(el, fig) {
-  el.className = 'figure';
-  el.dataset.srcDoc = fig.source.doc;
-  el.dataset.srcPage = fig.source.page ?? '';
-  el.dataset.srcUrl = fig.source.url;
+// A segment's amount: a sourced figure, "(our arithmetic)" where it is our sum, plus the segment's note if any.
+function amount(s) {
+  if (!s.note) return fig(s.figure, money(s.amount_m));
+  return h('span', null, figureSpan(s.figure, money(s.amount_m)), ` (${OURS}; ${s.note})`);
 }
 
-function figSpan(fig, text) {
-  const s = document.createElement('span');
-  srcAttrs(s, fig);
-  s.textContent = text;
-  return s;
+// The gap as a share of everything-else spending, as our own sourced sum.
+export function ratioFigure(data) {
+  const f = data.figures;
+  const pct = Math.round(data.gapRatio * 1000) / 10;
+  return {
+    value: data.gapRatio,
+    source: {
+      doc: `${OURS_PREFIX}${f.gap.value.toFixed(1)} (the gap, ${f.gap.source.doc}) ÷ ${f.cuttable.value.toFixed(1)} (General Fund spending other than the pension payment and debt service) = ${pct}%`,
+      page: f.gap.source.page ?? null,
+      url: f.gap.source.url,
+    },
+  };
 }
 
 // Fill {total} {gf} {gap} {cuttable} {ratio} placeholders in caption text with sourced .figure spans.
@@ -55,13 +65,12 @@ function captionNode(text, data) {
   const p = document.createElement('p');
   p.className = 'chart-cap';
   const f = data.figures;
-  const ratioFig = { source: { ...f.gap.source, doc: `derived: gap divided by everything-else General Fund spending (${f.gap.source.doc})` } };
   const map = {
-    total: () => figSpan(f.total, money(f.total.value)),
-    gf: () => figSpan(f.gf, money(f.gf.value)),
-    gap: () => figSpan(f.gap, money(f.gap.value)),
-    cuttable: () => figSpan(f.cuttable, money(f.cuttable.value)),
-    ratio: () => figSpan(ratioFig, `about ${Math.round(data.gapRatio * 100)}%`),
+    total: () => fig(f.total, money(f.total.value)),
+    gf: () => fig(f.gf, money(f.gf.value)),
+    gap: () => fig(f.gap, money(f.gap.value)),
+    cuttable: () => fig(f.cuttable, money(f.cuttable.value)),
+    ratio: () => fig(ratioFigure(data), `about ${Math.round(data.gapRatio * 100)}%`),
   };
   for (const part of String(text || '').split(/(\{[a-z]+\})/)) {
     const m = /^\{([a-z]+)\}$/.exec(part);
@@ -172,8 +181,8 @@ export function render(el, data, colors, captions = []) {
       r.setAttribute('width', 14); r.setAttribute('height', 14); r.setAttribute('fill', fillFor(bar, s, i, n));
       if (bar.id === 'locked' && s.kind === 'locked') r.setAttribute('fill-opacity', 0.35);
       sw.append(r);
-      li.append(sw, `${s.kind === 'gap' ? 'Gap' : s.label} `);
-      li.append(figSpan(s.figure, money(s.amount_m)));
+      // Name and amount in one span, so a long amount note wraps as text instead of squeezing the name.
+      li.append(sw, h('span', null, `${s.kind === 'gap' ? 'Gap' : s.label} `, amount(s)));
       legend.append(li);
     });
     wrap.append(legend);

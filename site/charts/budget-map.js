@@ -10,6 +10,7 @@
 // parent's own value_m, because the parent can be a different fiscal year from its children. Police is FY2027
 // (718.3) but its children are FY2026 detail; a child's share is against the FY2026 children total.
 import { money } from '../format.js';
+import { isOurs, OURS, OURS_PREFIX, fig } from '../sources.js';
 
 const MIN_SIDE = 0.5; // every positive item gets at least this many px in both directions
 const MIN_AREA = 4; // area floor (px squared) so a tiny item never degenerates into a sliver
@@ -217,7 +218,7 @@ export function listModel(node) {
 
 // ---- render-side models (pure) ----
 
-export const isOurs = (src) => typeof src?.doc === 'string' && src.doc.startsWith('our arithmetic');
+export { isOurs }; // one rule for the whole site, from sources.js
 
 // "32%", or "less than 1%" so a real share never reads as 0%.
 export function shareText(x) {
@@ -251,10 +252,10 @@ export function potSegments(tree) {
 // box opened into the map, and "our arithmetic" when the amount is our own sum). A pot reads its bar value and year.
 export function statusText(pot, node, tree, opened = false) {
   if (pot) {
-    const ours = isOurs(resolve(tree, pot.src ?? null)) ? ' (our arithmetic)' : '';
+    const ours = isOurs(resolve(tree, pot.src ?? null)) ? ` (${OURS})` : '';
     return `${pot.label}, ${money(pot.value_m)}${ours}, FY${tree.bar_fy}`;
   }
-  const ours = isOurs(resolve(tree, node.src ?? null)) ? ' (our arithmetic)' : '';
+  const ours = isOurs(resolve(tree, node.src ?? null)) ? ` (${OURS})` : '';
   return `${node.name}, ${money(node.value_m)}${ours}, FY${node.fy}${opened ? ', opened' : ''}`;
 }
 
@@ -284,7 +285,7 @@ export function headerFigure(node, tree) {
   const terms = [...kids(node), ...(node.offsets ?? [])].map((c) => n1(c.value_m));
   const anySrc = kids(node).map((c) => resolve(tree, c.src ?? null)).find(Boolean) ?? own;
   const source = {
-    doc: `our arithmetic: ${terms.join(' + ')} = ${n1(h.total_m)} (the ${kids(node).length} boxes in this map${node.offsets?.length ? ' plus its credits' : ''}, FY${h.fy})`,
+    doc: `${OURS_PREFIX}${terms.join(' + ')} = ${n1(h.total_m)} (the ${kids(node).length} boxes in this map${node.offsets?.length ? ' plus its credits' : ''}, FY${h.fy})`,
     page: null,
     url: anySrc?.url ?? null,
   };
@@ -300,7 +301,7 @@ export function offsetsFigure(node, tree) {
   const text = `−${money(Math.abs(value_m))}`;
   if (offs.length === 1) return { value_m, text, source: own, ours: isOurs(own) };
   const source = {
-    doc: `our arithmetic: ${offs.map((o) => `${n1(o.value_m)} (${o.name})`).join(' + ')} = ${n1(value_m)}`,
+    doc: `${OURS_PREFIX}${offs.map((o) => `${n1(o.value_m)} (${o.name})`).join(' + ')} = ${n1(value_m)}`,
     page: own?.page ?? null,
     url: own?.url ?? null,
   };
@@ -519,13 +520,7 @@ export function render(el, state, tree, colors, handlers) {
   const hf = headerFigure(node, tree);
   head.append(hf.prefix);
   if (hf.source?.url) {
-    const f = document.createElement('span');
-    f.className = 'figure';
-    f.dataset.srcDoc = hf.source.doc;
-    f.dataset.srcPage = hf.source.page ?? '';
-    f.dataset.srcUrl = hf.source.url;
-    f.textContent = hf.amount;
-    head.append(f, hf.ours ? ' (our arithmetic)' : '');
+    head.append(fig(hf, hf.amount));
   } else {
     head.append(hf.amount);
   }
@@ -589,14 +584,7 @@ export function render(el, state, tree, colors, handlers) {
     const amt = document.createElement('span');
     amt.className = 'list-amt';
     if (src?.url) {
-      const f = document.createElement('span');
-      f.className = 'figure';
-      f.dataset.srcDoc = src.doc;
-      f.dataset.srcPage = src.page ?? '';
-      f.dataset.srcUrl = src.url;
-      f.textContent = money(it.value_m);
-      amt.append(f);
-      if (isOurs(src)) amt.append(' (our arithmetic)');
+      amt.append(fig({ source: src }, money(it.value_m)));
     } else {
       amt.textContent = money(it.value_m);
     }

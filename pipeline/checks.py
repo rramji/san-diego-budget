@@ -10,12 +10,14 @@ PROPERTY_TAX_FY2026_M = 844.6
 TOLERANCE = 0.01
 BAR4_TOLERANCE_M = 0.5
 MAX_BYTES = 300_000
-TREE_MAX_BYTES = 130_000
+TREE_MAX_BYTES = 150_000  # ruling R16 (R11 fallback): plan-only sub-limit; the spec's binding cap is MAX_BYTES
 TREE_SUM_TOLERANCE = 0.01      # same-year children (plus offsets) vs. their parent
 TREE_ROUNDING_SLACK_M = 0.0005  # per summed value: build output is rounded to 3 decimals
-# Boxes that must have a description (descs[key]): the top level of these maps, plus the no-fund box.
-# Construction projects and Internal services boxes may fall back to their category text.
-DESC_REQUIRED = {"general_fund": ("in", "out"), "utilities": ("out",), "purpose": ("out",)}
+# Boxes that must have a description (descs[key]): the top level of these maps, plus the no-fund box (ruling R16
+# adds Construction projects in/out and Internal services out). Deeper boxes may go without one (the panel shows the
+# amount and its category context).
+DESC_REQUIRED = {"general_fund": ("in", "out"), "utilities": ("out",), "purpose": ("out",),
+                 "cip": ("in", "out"), "internal": ("out",)}
 DESC_ALWAYS = ("_no_fund",)
 
 
@@ -55,6 +57,13 @@ def _check_descs(tree: dict, failures: list[str]) -> None:
         failures.append(f"budget_tree descs missing for {len(missing)} item(s): " + "; ".join(missing))
 
 
+def _used_sources(tree: dict) -> set:
+    used = {n.get("src") for _, n in _tree_nodes(tree)} | {p.get("src") for p in tree["pots"]}
+    used |= {a.get("src") for p in tree["pots"] for a in (p.get("answers") or {}).values()}
+    used |= {d.get("src") for d in (tree.get("descs") or {}).values()}
+    return used - {None}
+
+
 def check_budget_tree(out_dir: Path, failures: list[str]) -> None:
     path = Path(out_dir) / "budget_tree.json"
     try:
@@ -63,6 +72,12 @@ def check_budget_tree(out_dir: Path, failures: list[str]) -> None:
         if size >= TREE_MAX_BYTES:
             failures.append(f"budget_tree.json size {size} bytes exceeds {TREE_MAX_BYTES:,} byte limit")
         for where, n in _tree_nodes(tree):
+            # Review focus 1 and 2: no blank label is ever drawn, and no drawn box has a zero or negative area.
+            if not str(n.get("name") or "").strip():
+                failures.append(f"budget_tree {where}: blank name")
+            for c in n.get("children") or []:
+                if not c["value_m"] > 0:
+                    failures.append(f"budget_tree {where} > {c['name']}: drawn child value {c['value_m']} is not positive")
             kids = n.get("children")
             # Children from a different year are detail (FY2026 lines under an FY2027 box), not a sum.
             if not kids or any(c["fy"] != n["fy"] for c in kids):
@@ -73,6 +88,9 @@ def check_budget_tree(out_dir: Path, failures: list[str]) -> None:
                 failures.append(f"budget_tree {where}: children and offsets sum to {s:.3f}, "
                                 f"not within {TREE_SUM_TOLERANCE:.0%} of {n['value_m']}")
         _check_descs(tree, failures)
+        unused = sorted(set(tree.get("sources") or {}) - _used_sources(tree))
+        if unused:
+            failures.append(f"budget_tree sources unused by any node, answer or description: {', '.join(unused)}")
     except (OSError, KeyError, TypeError, ValueError) as e:
         failures.append(f"budget_tree.json check could not run: {e!r}")
 

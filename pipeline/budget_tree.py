@@ -38,7 +38,8 @@ Rules for every map:
 - Blank names never reach the page: a blank department is "Not named in the city's data".
 - No box opens into a copy of itself (ruling R12): a node left with exactly one drawn child and
   no offsets takes that child's children (and offsets) as its own, or becomes a leaf.
-- Every source is stored once in `sources` and cited by key (s0, s1, ...).
+- Every source is stored once in `sources` and cited by key (s0, s1, ...); a source no box, answer or
+  description cites is dropped (ruling R16).
 """
 import sys
 from collections import defaultdict
@@ -48,7 +49,7 @@ from pipeline.csv_loader import EXPENSE_TYPES, latest_detail_fy, select_cycle
 
 MAX_CHILDREN = 10            # boxes per level, counting "Everything else"
 # Opening thresholds (ruling R9). They exist for size: with every line itemized the tree is
-# ~454 KB (3,372 nodes); budget_tree.json must stay under 130,000 bytes (about 800 nodes).
+# ~454 KB (3,372 nodes); budget_tree.json must stay under 150,000 bytes (ruling R16).
 # Even with no account level at all it is ~178 KB, so the category and Everything-else levels
 # need a threshold too.
 ACCOUNT_LEVEL_MIN_M = 50.0         # a category opens into accounts only at or above this size
@@ -423,6 +424,38 @@ def _compact(node: dict) -> dict:
     return node
 
 
+def _prune_sources(tree: dict) -> dict:
+    """Ruling R16: drop sources registered for boxes that were later discarded (a collapsed single child, R12) and
+    renumber the rest s0, s1, ... in their original first-use order, so every stored source is cited."""
+    used = set()
+
+    def nodes(n):
+        yield n
+        for c in n.get("children") or []:
+            yield from nodes(c)
+    for p in tree["pots"]:
+        used.add(p["src"])
+        used |= {a["src"] for a in (p.get("answers") or {}).values()}
+        for side in ("in", "out"):
+            used |= {n["src"] for n in nodes(p[side]) if n.get("src")}
+    used |= {d["src"] for d in tree["descs"].values() if d.get("src")}
+    keep = [k for k in tree["sources"] if k in used]  # dict order is registration order
+    new = {k: f"s{i}" for i, k in enumerate(keep)}
+    tree["sources"] = {new[k]: tree["sources"][k] for k in keep}
+    for p in tree["pots"]:
+        p["src"] = new[p["src"]]
+        for a in (p.get("answers") or {}).values():
+            a["src"] = new[a["src"]]
+        for side in ("in", "out"):
+            for n in nodes(p[side]):
+                if n.get("src"):
+                    n["src"] = new[n["src"]]
+    for d in tree["descs"].values():
+        if d.get("src"):
+            d["src"] = new[d["src"]]
+    return tree
+
+
 def _pot_value(headline: dict, field: str | None, reg: _Sources) -> tuple[float, str]:
     if field:
         fig = headline[field]
@@ -494,7 +527,7 @@ def build_budget_tree(rows, fund_names: dict[str, str], headline, funnel, gf_rev
         depts = sorted({r["dept_name"].strip() or UNNAMED for r in nf_exp})
         unassigned = {"value_m": _m(sum(r["amount"] for r in nf_exp) / 1e6), "dept_name": "; ".join(depts)}
 
-    return {
+    return _prune_sources({
         "bar_fy": headline["fy"],
         "detail_fy": detail_fy,
         "total_m": headline["total_budget_m"],
@@ -503,4 +536,4 @@ def build_budget_tree(rows, fund_names: dict[str, str], headline, funnel, gf_rev
         "unassigned": unassigned,
         "unmatched": _unmatched_summary(unmatched, rows, detail_fy),
         "pots": pots,
-    }
+    })

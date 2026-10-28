@@ -9,7 +9,25 @@
           "url": "https://www.sandiego.gov/sites/default/files/2026-04/iba-report-26-11-review-of-the-fiscal-year-2027-proposed-budget_0.pdf"
         }
       },
-      "counting": "The FY2027 shortfall before the budget's decisions, as both the IBA and the Mayor reported it. It already leaves out the yearly deposits into the city's reserves."
+      "counting": "The FY2027 shortfall before the budget's decisions, as both the IBA and the Mayor reported it. It already leaves out the yearly deposits into the city's reserves.",
+      "cites": [
+        {
+          "text": "the IBA",
+          "source": {
+            "doc": "IBA Report 26-11, Review of the FY 2027 Proposed Budget: baseline deficit increased to $118.0 million",
+            "page": 3,
+            "url": "https://www.sandiego.gov/sites/default/files/2026-04/iba-report-26-11-review-of-the-fiscal-year-2027-proposed-budget_0.pdf"
+          }
+        },
+        {
+          "text": "the Mayor",
+          "source": {
+            "doc": "A Message to San Diegans from Mayor Todd Gloria, Fiscal Year 2027 Adopted Budget: the shortfall 'worsened to approximately $118.0 million' (first page; the pages carry no printed number)",
+            "page": null,
+            "url": "https://www.sandiego.gov/sites/default/files/2026-08/mayors-message-fy2027-adopted-budget.pdf"
+          }
+        }
+      ]
     },
     "worst": {
       "fy": 2025,
@@ -42,6 +60,7 @@
         }
       },
       "city_counting": "The city budget office's updated outlook, made with the adopted budget",
+      "city_stage": "adopted budget",
       "iba_m": {
         "value": 32.9,
         "source": {
@@ -51,6 +70,7 @@
         }
       },
       "iba_counting": "The IBA's estimate, made at the proposed-budget stage, not counting reserve deposits",
+      "iba_stage": "estimated at the proposed budget",
       "note": "The two were measured at different stages. The city's documents don't say whether its $9.5M includes the settlement costs. A new forecast is due November 6, 2026.",
       "settlement": [
         {

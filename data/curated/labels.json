@@ -120,7 +120,7 @@
         }
       },
       "committed_to": {
-        "text": "Most of it is tied to its source: according to the IBA, water and wastewater money can only be used on water and wastewater systems, and General Fund borrowing is the city's only capital funding with few limits. Projects such as streetlights, parks, fire stations and libraries often can't use the restricted money and compete for that small pool.",
+        "text": "Most of it is tied to its source: according to the Council's Independent Budget Analyst (IBA), water and wastewater money can only be used on water and wastewater systems, and General Fund borrowing is the city's only capital funding with few limits. Projects such as streetlights, parks, fire stations and libraries often can't use the restricted money and compete for that small pool.",
         "source": {
           "doc": "IBA Report 26-06, Review of the FY 2027-2031 Five-Year Capital Infrastructure Planning Outlook (projected funding: water and wastewater funds can only be used for water and wastewater infrastructure; General Fund financing has minimal use restrictions)",
           "page": 5,
@@ -574,6 +574,141 @@
         "doc": "City of San Diego open data: operating budget CSV (rows with department Citywide Other/Special Funds and a blank fund)",
         "page": null,
         "url": "https://seshat.datasd.org/operating_budget/budget_operating_datasd.csv"
+      },
+      "link": null
+    },
+    "Other sources": {
+      "text": "Eight smaller funding sources in the city's table of this year's construction money, such as the regional parks fund, the landfill fund (Refuse Disposal Fund) and money from developers, added together. The amount is the total minus the sources shown by name (our arithmetic).",
+      "source": {
+        "doc": "FY2027 Adopted Budget Vol. III, Capital Improvements Program, Table 1, Fiscal Year 2027 Adopted CIP Budget",
+        "page": 4,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v3.pdf"
+      },
+      "link": null
+    },
+    "TransNet Funds": {
+      "text": "TransNet is the half-cent local sales tax for transportation. The city uses it to relieve traffic and improve roads, and for bike and pedestrian projects.",
+      "source": {
+        "doc": "FY2027 Adopted Budget Vol. III, Capital Improvements Program, Funding Sources",
+        "page": 60,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v3.pdf"
+      },
+      "link": null
+    },
+    "Development Impact Fees": {
+      "text": "Fees charged to new building projects to pay for all or part of the new public facilities they need, such as parks, transportation, fire stations and libraries (development impact fees). By state law the money must be spent on the purpose it was collected for.",
+      "source": {
+        "doc": "FY2027 Adopted Budget Vol. III, Capital Improvements Program, Funding Sources",
+        "page": 57,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v3.pdf"
+      },
+      "link": null
+    },
+    "TOT Convention Center": {
+      "text": "The Convention Center's share of the hotel-tax increase in Measure C, a 2020 citizens' initiative (transient occupancy tax). The increase also pays for homelessness programs and road repairs.",
+      "source": {
+        "doc": "FY2027 Adopted Budget Vol. III, Capital Improvements Program, Funding Sources",
+        "page": 60,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v3.pdf"
+      },
+      "link": null
+    },
+    "Mission Bay Park Improvement Fund": {
+      "text": "A share of the rents and concession payments from Mission Bay Park, set aside by the City Charter. It can be spent only on permanent or put-off (deferred) improvements in Mission Bay Park and on its environment.",
+      "source": {
+        "doc": "FY2027 Adopted Budget Vol. III, Capital Improvements Program, Funding Sources",
+        "page": 59,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v3.pdf"
+      },
+      "link": null
+    },
+    "Citywide": {
+      "text": "Construction projects that serve the whole city rather than one department, such as city operations buildings, information technology and the Convention Center. In FY2027 all of its new money goes to Convention Center Improvements.",
+      "source": {
+        "doc": "FY2027 Adopted Budget Vol. III, Citywide: description (p.76) and Citywide Capital Improvement Projects table (p.77)",
+        "page": 76,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v3.pdf"
+      },
+      "link": null
+    },
+    "Department of Information Technology": {
+      "text": "The city's technology department. Its construction budget pays for upgrades to computer systems and equipment the city will own, such as control systems at water and sewer plants and new police and fire dispatch systems.",
+      "source": {
+        "doc": "FY2027 Adopted Budget Vol. III, Department of Information Technology: description and FY2027 CIP goals",
+        "page": 85,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v3.pdf"
+      },
+      "link": null
+    },
+    "General Services": {
+      "text": "The department that repairs and modernizes more than 1,600 city buildings, including the backlog of put-off repairs and access upgrades required by the Americans with Disabilities Act. Its Energy Division works to cut energy use and emissions in city buildings.",
+      "source": {
+        "doc": "FY2027 Adopted Budget Vol. III, General Services: description",
+        "page": 117,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v3.pdf"
+      },
+      "link": null
+    },
+    "Environmental Services": {
+      "text": "The city department for trash, recycling and landfills (Environmental Services Department). It focuses on reducing waste, recycling, and managing landfills in an environmentally sound way.",
+      "source": {
+        "doc": "FY2027 Adopted Budget Vol. III, Environmental Services: description",
+        "page": 96,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v3.pdf"
+      },
+      "link": null
+    },
+    "Risk Management Administration Fund": {
+      "text": "Pays for the Risk Management Department, which handles the city's workers' compensation and injury and damage (public liability) claims, employee benefits and savings plans, safety programs and insurance.",
+      "source": {
+        "doc": "FY2027 Adopted Budget, full document (Volumes I-III), Vol. II, Risk Management, Description",
+        "page": 515,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_full.pdf"
+      },
+      "link": null
+    },
+    "TransNet Extension Maintenance Fund": {
+      "text": "Part of the city's share of TransNet, the half-cent local sales tax for transportation that San Diego County voters first approved in 1987. TransNet money goes mostly to the Transportation Department for traffic engineering and street maintenance.",
+      "source": {
+        "doc": "FY2027 Adopted Budget, full document (Volumes I-III), Vol. II, TransNet, Description",
+        "page": 558,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_full.pdf"
+      },
+      "link": null
+    },
+    "TransNet Extension Congestion Relief Fund": {
+      "text": "Part of the city's share of TransNet, the half-cent local sales tax for transportation. It pays for work that relieves traffic, improves safety and cleans the air, such as road repairs and new work in city streets.",
+      "source": {
+        "doc": "FY2027 Adopted Budget, full document (Volumes I-III), Vol. II, TransNet, Description",
+        "page": 558,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_full.pdf"
+      },
+      "link": null
+    },
+    "Central Stores Fund": {
+      "text": "The warehouse that buys, stores and delivers materials and equipment for city departments (Central Stores, part of the Purchasing & Contracting Department).",
+      "source": {
+        "doc": "FY2027 Adopted Budget, full document (Volumes I-III), Vol. II, Purchasing & Contracting, Description",
+        "page": 503,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_full.pdf"
+      },
+      "link": null
+    },
+    "Energy Conservation Program Fund": {
+      "text": "A Department of General Services fund for the city's energy work. Its Energy Division manages the city's accounts with SDG&E and San Diego Community Power and leads the move to zero-emission city buildings.",
+      "source": {
+        "doc": "FY2027 Adopted Budget, full document (Volumes I-III), Vol. II, General Services: Description (pp.297-298) and Energy Conservation Program Fund (p.306)",
+        "page": 298,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_full.pdf"
+      },
+      "link": null
+    },
+    "Capital Outlay Fund": {
+      "text": "Money set aside under the City Charter, mostly from selling city-owned property, that can pay only for buying or building permanent public improvements, not for repairs or maintenance.",
+      "source": {
+        "doc": "FY2027 Adopted Budget Vol. III, Capital Improvements Program, Funding Sources",
+        "page": 57,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v3.pdf"
       },
       "link": null
     }
