@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { prepare as cents } from '../site/charts/cents-bar.js';
-import { rateBars } from '../site/why.js';
+import { rateBars, countyBars } from '../site/why.js';
 import { prepare as waterfall } from '../site/charts/waterfall.js';
 import { prepare as timeline, layoutY, BREAK_MONTHS } from '../site/charts/gap-timeline.js';
 import { noteParts, stepLabel, citeParts } from '../site/gapstory.js';
@@ -327,4 +327,17 @@ test('sankey label helpers: whole-word wrap and non-overlapping spread', async (
   assert.ok(mids[1] - mids[0] >= 10 && mids[2] - mids[1] >= 10);
   const packed = spreadLabels([{ mid: 95, h: 10 }, { mid: 98, h: 10 }], 0, 100);
   assert.ok(packed[1] + 5 <= 100 && packed[1] - packed[0] >= 10);
+});
+
+test('countyBars sorts the 18 cities by total and splits base from add-on', () => {
+  const why = JSON.parse(readFileSync(new URL('../data/build/why_short.json', import.meta.url), 'utf8'));
+  const rows = countyBars(why.sales_tax.county);
+  assert.equal(rows.length, 18);
+  for (let i = 1; i < rows.length; i += 1) assert.ok(rows[i - 1].total >= rows[i].total);
+  const sd = rows.find((r) => r.city === 'San Diego');
+  assert.ok(sd.highlight && sd.addon === 0 && sd.addonFigure === null);
+  const lm = rows.find((r) => r.city === 'La Mesa');
+  assert.equal(lm.addon, 0.75);
+  assert.ok(Math.abs(lm.basePct + lm.addonPct - (8.5 / 8.75) * 100) < 1e-9);
+  assert.equal(rows.filter((r) => r.addon > 0).length, why.sales_tax.county.n_addon.value);
 });

@@ -249,6 +249,346 @@
           "url": "https://sandiego.gov/sites/default/files/2024-08/measure-e-online-posting.pdf"
         }
       }
+    },
+    "county": {
+      "effective": "October 1, 2026",
+      "state_pct": {
+        "value": 7.25,
+        "source": {
+          "doc": "CDTFA, Getting Started with Local Jurisdiction and District Taxes: 'The base statewide sales and use tax rate is currently 7.25 percent' (6.00% state, 1.00% local jurisdiction, 0.25% local transportation fund)",
+          "page": null,
+          "url": "https://cdtfa.ca.gov/industry/local-jurisdictions-and-districts/getting-started.htm"
+        }
+      },
+      "transnet_pct": {
+        "value": 0.5,
+        "source": {
+          "doc": "CDTFA-105 (Rev. 41, 10-26), San Diego County: San Diego County Regional Transportation Commission, 0.50%, from 04-01-1988",
+          "page": 10,
+          "url": "https://cdtfa.ca.gov/formspubs/cdtfa105.pdf"
+        }
+      },
+      "unincorporated_pct": {
+        "value": 7.75,
+        "source": {
+          "doc": "California Department of Tax and Fee Administration (CDTFA), sales tax rates effective Oct 1, 2026, row 'San Diego County'",
+          "page": null,
+          "url": "https://www.cdtfa.ca.gov/taxes-and-fees/SalesTaxRates10-1-26.xlsx"
+        }
+      },
+      "cities": [
+        {
+          "city": "Carlsbad",
+          "rate_pct": {
+            "value": 7.75,
+            "source": {
+              "doc": "California Department of Tax and Fee Administration (CDTFA), sales tax rates effective Oct 1, 2026, row 'Carlsbad'",
+              "page": null,
+              "url": "https://www.cdtfa.ca.gov/taxes-and-fees/SalesTaxRates10-1-26.xlsx"
+            }
+          }
+        },
+        {
+          "city": "Chula Vista",
+          "rate_pct": {
+            "value": 8.75,
+            "source": {
+              "doc": "California Department of Tax and Fee Administration (CDTFA), sales tax rates effective Oct 1, 2026, row 'Chula Vista'",
+              "page": null,
+              "url": "https://www.cdtfa.ca.gov/taxes-and-fees/SalesTaxRates10-1-26.xlsx"
+            }
+          },
+          "addon_pct": {
+            "value": 1.0,
+            "source": {
+              "doc": "CDTFA, Tax Rates for Special Taxing Jurisdictions: District Taxes, Rates, and Effective Dates (CDTFA-105, Rev. 41, 10-26), San Diego County: City of Chula Vista 2018 Transactions and Use Tax, 0.50%, from 10-01-2018; City of Chula Vista Temporary Transactions and Use Tax, 0.50%, from 04-01-2017",
+              "page": 10,
+              "url": "https://cdtfa.ca.gov/formspubs/cdtfa105.pdf"
+            }
+          }
+        },
+        {
+          "city": "Coronado",
+          "rate_pct": {
+            "value": 7.75,
+            "source": {
+              "doc": "California Department of Tax and Fee Administration (CDTFA), sales tax rates effective Oct 1, 2026, row 'Coronado'",
+              "page": null,
+              "url": "https://www.cdtfa.ca.gov/taxes-and-fees/SalesTaxRates10-1-26.xlsx"
+            }
+          }
+        },
+        {
+          "city": "Del Mar",
+          "rate_pct": {
+            "value": 8.75,
+            "source": {
+              "doc": "California Department of Tax and Fee Administration (CDTFA), sales tax rates effective Oct 1, 2026, row 'Del Mar'",
+              "page": null,
+              "url": "https://www.cdtfa.ca.gov/taxes-and-fees/SalesTaxRates10-1-26.xlsx"
+            }
+          },
+          "addon_pct": {
+            "value": 1.0,
+            "source": {
+              "doc": "CDTFA, Tax Rates for Special Taxing Jurisdictions: District Taxes, Rates, and Effective Dates (CDTFA-105, Rev. 41, 10-26), San Diego County: City of Del Mar Transactions and Use Tax, 1.00%, from 04-01-2017",
+              "page": 10,
+              "url": "https://cdtfa.ca.gov/formspubs/cdtfa105.pdf"
+            }
+          }
+        },
+        {
+          "city": "El Cajon",
+          "rate_pct": {
+            "value": 8.25,
+            "source": {
+              "doc": "California Department of Tax and Fee Administration (CDTFA), sales tax rates effective Oct 1, 2026, row 'El Cajon'",
+              "page": null,
+              "url": "https://www.cdtfa.ca.gov/taxes-and-fees/SalesTaxRates10-1-26.xlsx"
+            }
+          },
+          "addon_pct": {
+            "value": 0.5,
+            "source": {
+              "doc": "CDTFA, Tax Rates for Special Taxing Jurisdictions: District Taxes, Rates, and Effective Dates (CDTFA-105, Rev. 41, 10-26), San Diego County: City of El Cajon Service Preservation Transactions and Use Tax, 0.50%, from 04-01-2009",
+              "page": 10,
+              "url": "https://cdtfa.ca.gov/formspubs/cdtfa105.pdf"
+            }
+          }
+        },
+        {
+          "city": "Encinitas",
+          "rate_pct": {
+            "value": 7.75,
+            "source": {
+              "doc": "California Department of Tax and Fee Administration (CDTFA), sales tax rates effective Oct 1, 2026, row 'Encinitas'",
+              "page": null,
+              "url": "https://www.cdtfa.ca.gov/taxes-and-fees/SalesTaxRates10-1-26.xlsx"
+            }
+          }
+        },
+        {
+          "city": "Escondido",
+          "rate_pct": {
+            "value": 8.75,
+            "source": {
+              "doc": "California Department of Tax and Fee Administration (CDTFA), sales tax rates effective Oct 1, 2026, row 'Escondido'",
+              "page": null,
+              "url": "https://www.cdtfa.ca.gov/taxes-and-fees/SalesTaxRates10-1-26.xlsx"
+            }
+          },
+          "addon_pct": {
+            "value": 1.0,
+            "source": {
+              "doc": "CDTFA, Tax Rates for Special Taxing Jurisdictions: District Taxes, Rates, and Effective Dates (CDTFA-105, Rev. 41, 10-26), San Diego County: City of Escondido Community Investment Transactions and Use Tax, 1.00%, from 04-01-2025",
+              "page": 10,
+              "url": "https://cdtfa.ca.gov/formspubs/cdtfa105.pdf"
+            }
+          }
+        },
+        {
+          "city": "Imperial Beach",
+          "rate_pct": {
+            "value": 8.75,
+            "source": {
+              "doc": "California Department of Tax and Fee Administration (CDTFA), sales tax rates effective Oct 1, 2026, row 'Imperial Beach'",
+              "page": null,
+              "url": "https://www.cdtfa.ca.gov/taxes-and-fees/SalesTaxRates10-1-26.xlsx"
+            }
+          },
+          "addon_pct": {
+            "value": 1.0,
+            "source": {
+              "doc": "CDTFA, Tax Rates for Special Taxing Jurisdictions: District Taxes, Rates, and Effective Dates (CDTFA-105, Rev. 41, 10-26), San Diego County: City of Imperial Beach Emergency Response and Vital Transactions and Use Tax, 1.00%, from 04-01-2021",
+              "page": 10,
+              "url": "https://cdtfa.ca.gov/formspubs/cdtfa105.pdf"
+            }
+          }
+        },
+        {
+          "city": "La Mesa",
+          "rate_pct": {
+            "value": 8.5,
+            "source": {
+              "doc": "California Department of Tax and Fee Administration (CDTFA), sales tax rates effective Oct 1, 2026, row 'La Mesa'",
+              "page": null,
+              "url": "https://www.cdtfa.ca.gov/taxes-and-fees/SalesTaxRates10-1-26.xlsx"
+            }
+          },
+          "addon_pct": {
+            "value": 0.75,
+            "source": {
+              "doc": "CDTFA, Tax Rates for Special Taxing Jurisdictions: District Taxes, Rates, and Effective Dates (CDTFA-105, Rev. 41, 10-26), San Diego County: City of La Mesa Transactions and Use Tax, 0.75%, from 04-01-2009",
+              "page": 10,
+              "url": "https://cdtfa.ca.gov/formspubs/cdtfa105.pdf"
+            }
+          }
+        },
+        {
+          "city": "Lemon Grove",
+          "rate_pct": {
+            "value": 8.75,
+            "source": {
+              "doc": "California Department of Tax and Fee Administration (CDTFA), sales tax rates effective Oct 1, 2026, row 'Lemon Grove'",
+              "page": null,
+              "url": "https://www.cdtfa.ca.gov/taxes-and-fees/SalesTaxRates10-1-26.xlsx"
+            }
+          },
+          "addon_pct": {
+            "value": 1.0,
+            "source": {
+              "doc": "CDTFA, Tax Rates for Special Taxing Jurisdictions: District Taxes, Rates, and Effective Dates (CDTFA-105, Rev. 41, 10-26), San Diego County: City of Lemon Grove Transactions and Use Tax, 1.00%, from 07-01-2025",
+              "page": 10,
+              "url": "https://cdtfa.ca.gov/formspubs/cdtfa105.pdf"
+            }
+          }
+        },
+        {
+          "city": "National City",
+          "rate_pct": {
+            "value": 8.75,
+            "source": {
+              "doc": "California Department of Tax and Fee Administration (CDTFA), sales tax rates effective Oct 1, 2026, row 'National City'",
+              "page": null,
+              "url": "https://www.cdtfa.ca.gov/taxes-and-fees/SalesTaxRates10-1-26.xlsx"
+            }
+          },
+          "addon_pct": {
+            "value": 1.0,
+            "source": {
+              "doc": "CDTFA, Tax Rates for Special Taxing Jurisdictions: District Taxes, Rates, and Effective Dates (CDTFA-105, Rev. 41, 10-26), San Diego County: City of National City Transactions and Use Tax, 1.00%, from 10-01-2006",
+              "page": 10,
+              "url": "https://cdtfa.ca.gov/formspubs/cdtfa105.pdf"
+            }
+          }
+        },
+        {
+          "city": "Oceanside",
+          "rate_pct": {
+            "value": 8.25,
+            "source": {
+              "doc": "California Department of Tax and Fee Administration (CDTFA), sales tax rates effective Oct 1, 2026, row 'Oceanside'",
+              "page": null,
+              "url": "https://www.cdtfa.ca.gov/taxes-and-fees/SalesTaxRates10-1-26.xlsx"
+            }
+          },
+          "addon_pct": {
+            "value": 0.5,
+            "source": {
+              "doc": "CDTFA, Tax Rates for Special Taxing Jurisdictions: District Taxes, Rates, and Effective Dates (CDTFA-105, Rev. 41, 10-26), San Diego County: City of Oceanside Temporary Transactions and Use Tax, 0.50%, from 04-01-2019",
+              "page": 10,
+              "url": "https://cdtfa.ca.gov/formspubs/cdtfa105.pdf"
+            }
+          }
+        },
+        {
+          "city": "Poway",
+          "rate_pct": {
+            "value": 7.75,
+            "source": {
+              "doc": "California Department of Tax and Fee Administration (CDTFA), sales tax rates effective Oct 1, 2026, row 'Poway'",
+              "page": null,
+              "url": "https://www.cdtfa.ca.gov/taxes-and-fees/SalesTaxRates10-1-26.xlsx"
+            }
+          }
+        },
+        {
+          "city": "San Diego",
+          "rate_pct": {
+            "value": 7.75,
+            "source": {
+              "doc": "California Department of Tax and Fee Administration (CDTFA), sales tax rates effective Oct 1, 2026, row 'San Diego'",
+              "page": null,
+              "url": "https://www.cdtfa.ca.gov/taxes-and-fees/SalesTaxRates10-1-26.xlsx"
+            }
+          }
+        },
+        {
+          "city": "San Marcos",
+          "rate_pct": {
+            "value": 8.75,
+            "source": {
+              "doc": "California Department of Tax and Fee Administration (CDTFA), sales tax rates effective Oct 1, 2026, row 'San Marcos'",
+              "page": null,
+              "url": "https://www.cdtfa.ca.gov/taxes-and-fees/SalesTaxRates10-1-26.xlsx"
+            }
+          },
+          "addon_pct": {
+            "value": 1.0,
+            "source": {
+              "doc": "CDTFA, Tax Rates for Special Taxing Jurisdictions: District Taxes, Rates, and Effective Dates (CDTFA-105, Rev. 41, 10-26), San Diego County: City of San Marcos Transactions and Use Tax, 1.00%, from 04-01-2025",
+              "page": 10,
+              "url": "https://cdtfa.ca.gov/formspubs/cdtfa105.pdf"
+            }
+          }
+        },
+        {
+          "city": "Santee",
+          "rate_pct": {
+            "value": 7.75,
+            "source": {
+              "doc": "California Department of Tax and Fee Administration (CDTFA), sales tax rates effective Oct 1, 2026, row 'Santee'",
+              "page": null,
+              "url": "https://www.cdtfa.ca.gov/taxes-and-fees/SalesTaxRates10-1-26.xlsx"
+            }
+          }
+        },
+        {
+          "city": "Solana Beach",
+          "rate_pct": {
+            "value": 8.75,
+            "source": {
+              "doc": "California Department of Tax and Fee Administration (CDTFA), sales tax rates effective Oct 1, 2026, row 'Solana Beach'",
+              "page": null,
+              "url": "https://www.cdtfa.ca.gov/taxes-and-fees/SalesTaxRates10-1-26.xlsx"
+            }
+          },
+          "addon_pct": {
+            "value": 1.0,
+            "source": {
+              "doc": "CDTFA, Tax Rates for Special Taxing Jurisdictions: District Taxes, Rates, and Effective Dates (CDTFA-105, Rev. 41, 10-26), San Diego County: City of Solana Beach Local Streets, Infrastructure, Emergency and Municipal Services Transactions and Use Tax, 1.00%, from 04-01-2023",
+              "page": 10,
+              "url": "https://cdtfa.ca.gov/formspubs/cdtfa105.pdf"
+            }
+          }
+        },
+        {
+          "city": "Vista",
+          "rate_pct": {
+            "value": 8.25,
+            "source": {
+              "doc": "California Department of Tax and Fee Administration (CDTFA), sales tax rates effective Oct 1, 2026, row 'Vista'",
+              "page": null,
+              "url": "https://www.cdtfa.ca.gov/taxes-and-fees/SalesTaxRates10-1-26.xlsx"
+            }
+          },
+          "addon_pct": {
+            "value": 0.5,
+            "source": {
+              "doc": "CDTFA, Tax Rates for Special Taxing Jurisdictions: District Taxes, Rates, and Effective Dates (CDTFA-105, Rev. 41, 10-26), San Diego County: City of Vista Transactions and Use Tax, 0.50%, from 04-01-2007",
+              "page": 10,
+              "url": "https://cdtfa.ca.gov/formspubs/cdtfa105.pdf"
+            }
+          }
+        }
+      ],
+      "cites": {
+        "transnet_name": {
+          "doc": "SANDAG, TransNet: 'TransNet is the half-cent sales tax administered by SANDAG', extended by voters in 2004 through 2048",
+          "page": null,
+          "url": "https://sandag.org/funding/transnet"
+        },
+        "ballot_county": {
+          "doc": "County of San Diego, Registrar of Voters, November 3, 2026 measure text, Protect San Diego County's Health and Safety Act, Sec. 22.505: a tax 'in the incorporated and unincorporated territory of the County at the rate of one half of one percent (0.5%)'",
+          "page": 5,
+          "url": "https://www.sdvote.com/content/dam/rov/en/election/nov-3-2026-gubernatorial-general-election/san-diego-county-fund-health-and-safety-services.pdf"
+        },
+        "ballot_santee": {
+          "doc": "City of Santee, Local Funding: Measure Y (a one-cent general sales tax for 10 years, on the November 3, 2026 ballot)",
+          "page": null,
+          "url": "https://www.cityofsanteeca.gov/our-community/local-funding---measure-y"
+        }
+      }
     }
   },
   "hotel": {

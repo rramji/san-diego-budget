@@ -11,11 +11,45 @@ export function rateBars(peers) {
     .map((p) => ({ city: p.city, rate: p.rate_pct.value, pct: (p.rate_pct.value / max) * 100, figure: p.rate_pct, highlight: p.city === 'San Diego' }));
 }
 
+// County cities' sales-tax rates, highest first, each split into the countywide base and the city's own add-on.
+// Widths are shares of the highest total (bars start at zero).
+export function countyBars(county) {
+  const rows = county.cities.map((c) => ({
+    city: c.city, total: c.rate_pct.value, addon: c.addon_pct?.value ?? 0, figure: c.rate_pct, addonFigure: c.addon_pct ?? null,
+  }));
+  const max = Math.max(...rows.map((r) => r.total));
+  return rows
+    .sort((a, b) => b.total - a.total || a.city.localeCompare(b.city))
+    .map((r) => ({ ...r, basePct: ((r.total - r.addon) / max) * 100, addonPct: (r.addon / max) * 100, highlight: r.city === 'San Diego' }));
+}
+
 const pctText = (v) => `${String(v)}%`;
 const centsWord = (v) => `${String(v)} ${v === 1 ? 'cent' : 'cents'}`;
 const mText = (v) => (v >= 100 && Number.isInteger(v) ? `$${v}M` : `$${v.toFixed(1)}M`);
 const votes = (v) => v.toLocaleString('en-US');
 const months = (v) => String(v);
+
+function countyList(county) {
+  const ul = h('ul', 'county-bars');
+  ul.setAttribute('aria-label', `Total sales tax rate in each San Diego County city, ${county.effective}`);
+  ul.append(h('li', 'cb-head', h('span', null, 'City'), h('span', null, ''), h('span', 'cb-val', 'Total'), h('span', 'cb-add-val', 'Own tax')));
+  for (const r of countyBars(county)) {
+    const base = h('span', 'cb-base');
+    base.style.width = `${r.basePct}%`;
+    const track = h('span', 'cb-track', base);
+    if (r.addon) {
+      const add = h('span', 'cb-add');
+      add.style.width = `${r.addonPct}%`;
+      track.append(add);
+    }
+    ul.append(h('li', r.highlight ? 'is-hi' : null,
+      h('span', 'cb-city', r.city),
+      track,
+      h('span', 'cb-val', figureSpan(r.figure, `${r.total.toFixed(2)}%`)),
+      h('span', 'cb-add-val', r.addonFigure ? figureSpan(r.addonFigure, `+${pctText(r.addon)}`) : 'none')));
+  }
+  return ul;
+}
 
 const block = (title, ...paras) => h('section', 'why-block', h('h3', null, title), ...paras.map((kids) => h('p', null, ...kids)));
 
@@ -35,7 +69,7 @@ function rateList(d) {
 }
 
 export function blocks(d) {
-  const st = d.sales_tax, me = st.measure_e, ho = d.hotel, tr = d.trash, gr = d.growth, c = d.cites, p13 = d.prop13;
+  const st = d.sales_tax, me = st.measure_e, co = st.county, ho = d.hotel, tr = d.trash, gr = d.growth, c = d.cites, p13 = d.prop13;
   const quote = h('blockquote', 'why-quote',
     h('p', null, `“…${d.quote.text}”`),
     h('footer', null, '— ', cite(d.quote.source, 'IBA Report 26-11, April 2026')));
@@ -55,7 +89,18 @@ export function blocks(d) {
       h('p', 'chart-cap', cite(c.peers_note, 'These are the total rates charged at the register. They include state and county taxes, so not all of a higher rate goes to that city.')),
       h('p', null, 'In November 2024, a measure to add one more cent per dollar (Measure E), which the city estimated would raise about ',
         fig(me.est_annual_m, mText(me.est_annual_m.value)), ' a year, failed: ', fig(me.yes_pct, pctText(me.yes_pct.value)), ' voted yes and ',
-        fig(me.no_pct, pctText(me.no_pct.value)), ' no, a difference of ', fig(me.margin_votes, `${votes(me.margin_votes.value)} votes`), '.')),
+        fig(me.no_pct, pctText(me.no_pct.value)), ' no, a difference of ', fig(me.margin_votes, `${votes(me.margin_votes.value)} votes`), '.'),
+      h('h4', 'why-sub', 'Other cities in the county add their own'),
+      h('p', null, 'Every city in San Diego County charges at least ', fig(co.unincorporated_pct, pctText(co.unincorporated_pct.value)),
+        ': the statewide ', fig(co.state_pct, pctText(co.state_pct.value)), ' plus ', fig(co.transnet_pct, pctText(co.transnet_pct.value)),
+        ' for regional transportation (', cite(co.cites.transnet_name, 'TransNet'), ') that applies countywide. On top of that, ',
+        fig(co.n_addon, String(co.n_addon.value)), ' of the county’s 18 cities have added a sales tax of their own, of half a cent to a cent per dollar. The City of San Diego is one of ',
+        fig(co.n_none, String(co.n_none.value)), ' that have not.'),
+      countyList(co),
+      h('p', 'chart-cap', `Total rate charged at the register, effective ${co.effective}. Grey: the countywide rate. Teal: the city’s own tax. Unincorporated areas of the county pay `,
+        fig(co.unincorporated_pct, pctText(co.unincorporated_pct.value)), '.'),
+      h('p', null, 'On November 3, 2026, county voters decide on ', cite(co.cites.ballot_county, 'a countywide half-cent sales tax'),
+        ', which would apply in every city, San Diego included, and Santee voters on ', cite(co.cites.ballot_santee, 'a one-cent city sales tax (Measure Y)'), '.')),
     block('Hotel tax: part of it goes to promoting tourism',
       ['Hotel guests pay a base hotel tax (transient occupancy tax) of ', fig(ho.base_cents, centsWord(ho.base_cents.value)),
         ' per dollar of rent, and city law sends ', fig(ho.gf_cents, centsWord(ho.gf_cents.value)), ' of it (', fig(ho.gf_m, mText(ho.gf_m.value)),

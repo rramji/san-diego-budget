@@ -533,6 +533,7 @@ def build_why_short(d: dict) -> dict:
         raise ValueError("sales_tax.measure_e.margin_votes: a computed figure must be labeled 'our arithmetic: '")
     if abs(vals["yes_pct"] + vals["no_pct"] - 100) > 0.011:
         raise ValueError("sales_tax.measure_e: yes_pct + no_pct must be 100")
+    st["county"] = _check_county_sales_tax(st.get("county"), st["sd_rate_pct"]["value"])
 
     if d["hotel"]["gf_cents"]["value"] >= d["hotel"]["base_cents"]["value"]:
         raise ValueError("hotel.gf_cents: must be less than base_cents")
@@ -552,6 +553,48 @@ def build_why_short(d: dict) -> dict:
     for k, v in cites.items():
         _check_source(v, f"cites.{k}")
     return d
+
+
+COUNTY_CITIES = 18  # incorporated cities in San Diego County
+
+
+def _check_county_sales_tax(c, sd_rate: float) -> dict:
+    """County sales-tax comparison. Checks: all 18 cities listed once; the countywide base is the state rate plus
+    TransNet and equals the unincorporated rate; each city's total is the base plus its own add-on (none means the
+    base); San Diego has no add-on and sits at sd_rate. Adds n_addon / n_none, labeled our arithmetic."""
+    if not isinstance(c, dict):
+        raise ValueError("sales_tax.county: object required")
+    if not isinstance(c.get("effective"), str) or not c["effective"].strip():
+        raise ValueError("sales_tax.county.effective: required non-empty string")
+    base = _need_value(c.get("state_pct"), "sales_tax.county.state_pct") + _need_value(c.get("transnet_pct"), "sales_tax.county.transnet_pct")
+    if abs(_need_value(c.get("unincorporated_pct"), "sales_tax.county.unincorporated_pct") - base) > 1e-9:
+        raise ValueError(f"sales_tax.county.unincorporated_pct: must equal state + TransNet ({base})")
+    cities = c.get("cities")
+    if not isinstance(cities, list) or len(cities) != COUNTY_CITIES:
+        raise ValueError(f"sales_tax.county.cities: exactly {COUNTY_CITIES} cities required")
+    seen = set()
+    for i, x in enumerate(cities):
+        name = x.get("city") if isinstance(x, dict) else None
+        if not isinstance(name, str) or not name.strip() or name in seen:
+            raise ValueError(f"sales_tax.county.cities[{i}].city: unique non-empty string required")
+        seen.add(name)
+        total = _need_value(x.get("rate_pct"), f"sales_tax.county.cities[{i}].rate_pct")
+        add = _need_value(x["addon_pct"], f"sales_tax.county.cities[{i}].addon_pct") if "addon_pct" in x else 0.0
+        if add < 0 or abs(total - (base + add)) > 1e-9:
+            raise ValueError(f"sales_tax.county.cities[{i}] ({name}): total {total} is not base {base} + add-on {add}")
+    sd = next((x for x in cities if x["city"] == "San Diego"), None)
+    if sd is None or "addon_pct" in sd or sd["rate_pct"]["value"] != sd_rate:
+        raise ValueError("sales_tax.county.cities: San Diego must be listed at sd_rate_pct with no add-on")
+    with_addon = sorted(x["city"] for x in cities if "addon_pct" in x)
+    without = sorted(x["city"] for x in cities if "addon_pct" not in x)
+    src = c["transnet_pct"]["source"]  # the same CDTFA-105 page lists every city add-on
+    for key, names, what in (("n_addon", with_addon, "with"), ("n_none", without, "with no")):
+        c[key] = {"value": len(names), "source": {
+            "doc": f"our arithmetic: cities {what} a city sales tax of their own in CDTFA-105, counted: {', '.join(names)}",
+            "page": src["page"], "url": src["url"]}}
+    for k, v in (c.get("cites") or {}).items():
+        _check_source(v, f"sales_tax.county.cites.{k}")
+    return c
 
 
 GAP_TOLERANCE_M = 0.05

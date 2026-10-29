@@ -192,6 +192,12 @@ export const TITLES = {
   'https://data.sandiego.gov/datasets/operating-budget/': 'City of San Diego open data: operating budget dataset',
   'https://data.sandiego.gov/datasets/cip-fy-budget/': 'City of San Diego open data: Capital Improvement Program budget by fiscal year (cip_budget.csv)',
   'https://www.cdtfa.ca.gov/taxes-and-fees/SalesTaxRates10-1-26.xlsx': 'California Department of Tax and Fee Administration (CDTFA), sales tax rates effective October 1, 2026',
+  'https://cdtfa.ca.gov/formspubs/cdtfa105.pdf': 'CDTFA-105, Tax Rates for Special Taxing Jurisdictions: District Taxes, Rates, and Effective Dates (Rev. 41, October 2026)',
+  'https://cdtfa.ca.gov/industry/local-jurisdictions-and-districts/getting-started.htm': 'CDTFA, Getting Started with Local Jurisdiction and District Taxes',
+  'https://sandag.org/funding/transnet': 'SANDAG, TransNet',
+  'https://www.sdvote.com/content/dam/rov/en/election/nov-3-2026-gubernatorial-general-election/san-diego-county-fund-health-and-safety-services.pdf':
+    "County of San Diego Registrar of Voters, measure text: Protect San Diego County's Health and Safety Act (November 3, 2026)",
+  'https://www.cityofsanteeca.gov/our-community/local-funding---measure-y': 'City of Santee, Local Funding: Measure Y',
 };
 
 // A document's name from the descriptions cited at one URL: the longest shared lead-in that ends

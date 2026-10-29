@@ -343,6 +343,19 @@ main { padding-bottom: 80px; }
 .rb-val { text-align: right; white-space: nowrap; min-width: 5.6em; }
 .rate-bars li.is-hi .rb-city { font-weight: 700; }
 .rate-bars li.is-hi .rb-bar { background: var(--gap); }
+.why-sub { margin: 20px 0 6px; font: 650 1rem/1.3 var(--font-ui); }
+.county-bars { list-style: none; margin: 12px 0 0; padding: 0; max-width: 40em; font: 0.85rem/1.3 var(--font-ui); }
+.county-bars li { display: grid; grid-template-columns: 8.5em minmax(0, 1fr) 5em 5.6em; column-gap: 10px; align-items: center; min-height: 26px; }
+.county-bars .cb-head { color: var(--muted); font-size: 0.78rem; min-height: 20px; border-bottom: 1px solid var(--rule); }
+.cb-track { display: flex; }
+.cb-base, .cb-add { display: block; height: 12px; }
+.cb-base { background: var(--cents-b); }
+.cb-add { background: var(--restricted); border-radius: 0 4px 4px 0; border-left: 2px solid var(--bg); }
+.cb-val, .cb-add-val { text-align: right; white-space: nowrap; }
+.cb-add-val { color: var(--muted); }
+.county-bars li.is-hi .cb-city { font-weight: 700; }
+.county-bars li.is-hi .cb-base { background: var(--gap); border-radius: 0 4px 4px 0; }
+@media (max-width: 639.98px) { .county-bars li { grid-template-columns: 6em minmax(0, 1fr) 4.6em 5.5em; column-gap: 6px; } }
 
 .why-quote { margin: 8px 0 0; padding: 2px 0 2px 16px; border-left: 3px solid var(--muted); max-width: 34em; }
 .why-quote p { margin: 0 0 8px; font-size: 1.15rem; line-height: 1.55; font-style: italic; }
