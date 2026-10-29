@@ -303,6 +303,8 @@ main { padding-bottom: 80px; }
 .panel-amt { margin: 0 0 10px; font: 0.9rem/1.45 var(--font-ui); color: var(--muted); }
 .panel-amt .figure { color: var(--text); font-size: 1.05rem; }
 .panel-desc { margin: 0 0 10px; max-width: 34em; }
+.panel-lines { list-style: none; margin: 4px 0 10px; padding: 0; max-width: 34em; font: 0.85rem/1.35 var(--font-ui); }
+.panel-lines li { display: flex; justify-content: space-between; gap: 12px; padding: 4px 0; border-bottom: 1px solid var(--rule); }
 .panel-note { margin: 0 0 8px; font: 0.85rem/1.45 var(--font-ui); color: var(--muted); }
 .panel-note .figure { color: var(--text); }
 .panel-answers { margin: 0 0 10px; }

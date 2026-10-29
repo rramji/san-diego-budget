@@ -180,8 +180,24 @@ export function nodePanel(node, parent, tree) {
     link: d?.link ?? null,
     opens: kids(node).length > 0,
     offsets: node.offsets ?? null,
-    note: leafMisc ? EVERYTHING_ELSE_NOTE : null,
+    note: leafMisc && !node.lines ? EVERYTHING_ELSE_NOTE : null,
+    lines: leafMisc ? linesSummary(node) : null,
   };
+}
+
+// A closed "Everything else": how many lines it combines and its largest few, as {lead, items: [{name, value_m}],
+// rest}. Null when the tree has no summary for the box.
+export function linesSummary(node) {
+  const l = node.lines;
+  if (!l) return null;
+  const items = l.top.map(([name, value_m]) => ({ name, value_m }));
+  const lead = l.n > items.length
+    ? `It combines ${l.n} smaller lines of the city's budget data. The ${items.length} largest:`
+    : `It combines ${l.n === 1 ? 'one line' : `${l.n} lines`} of the city's budget data:`;
+  const more = l.n - items.length;
+  const rest = [more > 0 ? `${more} more line${more === 1 ? '' : 's'}` : '', l.small_m ? `lines under ${money(0.05)} each, ${money(l.small_m)} in all` : '']
+    .filter(Boolean);
+  return { lead, items, rest: rest.length ? `Plus ${rest.join(', and ')}.` : null };
 }
 
 export function potPanel(pot, tree) {

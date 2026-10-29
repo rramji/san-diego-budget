@@ -247,7 +247,13 @@ test('leaf "Everything else" box: text from descs._everything_else plus a smalle
   const p = bm.nodePanel(leafBox, parent, tree);
   assert.equal(p.text, tree.descs._everything_else.text);
   assert.equal(p.opens, false);
-  assert.equal(p.note, 'Smaller lines combined; too small to list separately.');
+  if (leafBox.lines) {
+    assert.equal(p.note, null);
+    assert.equal(p.lines.items.length, leafBox.lines.top.length);
+  } else {
+    assert.equal(p.note, 'Smaller lines combined; too small to list separately.');
+    assert.equal(p.lines, null);
+  }
   const police = byName(pot('general_fund').out, 'Police');
   assert.equal(bm.nodePanel(police, pot('general_fund').out, tree).note, null);
 });
@@ -435,4 +441,13 @@ test('wrapWords sets whole words only, never truncating', () => {
   assert.deepEqual(bm.wrapWords('Parks & Recreation', fits, 2), ['Parks &', 'Recreation']);
   assert.equal(bm.wrapWords('Transportation', fits, 3), null); // one word wider than the box
   assert.equal(bm.wrapWords('', fits, 3), null);
+});
+
+test('linesSummary describes a closed Everything else box', () => {
+  const s = bm.linesSummary({ lines: { n: 9, top: [['A', 3], ['B', 2]], small_m: 0.2 } });
+  assert.equal(s.lead, "It combines 9 smaller lines of the city's budget data. The 2 largest:");
+  assert.deepEqual(s.items, [{ name: 'A', value_m: 3 }, { name: 'B', value_m: 2 }]);
+  assert.match(s.rest, /^Plus 7 more lines, and lines under/);
+  assert.equal(bm.linesSummary({ lines: { n: 1, top: [['A', 3]] } }).rest, null);
+  assert.equal(bm.linesSummary({}), null);
 });

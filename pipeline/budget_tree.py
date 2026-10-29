@@ -56,6 +56,7 @@ ACCOUNT_LEVEL_MIN_M = 50.0         # a category opens into accounts only at or a
 FUND_DEPT_CATEGORY_MIN_M = 15.0    # a fund or department opens into categories at or above this
 EVERYTHING_ELSE_OPEN_MIN_M = 50.0  # a CSV "Everything else" box opens at or above this
 OMIT_BELOW_M = 0.05                # ruling R10: lines below this either way fold into Everything else
+LINES_TOP_N = 6                    # a closed "Everything else" names this many of its largest lines
 UNMAPPED_GF_REVENUE_MAX_M = 5.0   # ruling R8: above this, stop rather than file it under Other Revenue
 
 FUNNEL_TO_CSV_DEPT = {"Citywide Program Expenditures": "Citywide Expenses"}
@@ -165,6 +166,8 @@ class _Builder:
         ee = _node(EVERYTHING_ELSE, EVERYTHING_ELSE_KEY, total, fy, src)
         if curated or _m(total) >= EVERYTHING_ELSE_OPEN_MIN_M:
             ee["children"], ee["offsets"] = self.trim(rest, fy, curated, folded)
+        else:
+            ee["lines"] = _lines_summary(rest, folded)
         return keep + [ee], extra
 
     def _rollup_src(self, rest: list[dict], total: float) -> str:
@@ -196,6 +199,15 @@ class _Builder:
         if kids:
             node["children"], node["offsets"] = self.arrange(kids, self.detail_fy, curated=False)
         return node
+
+
+def _lines_summary(rest: list[dict], folded: float) -> dict:
+    """What a closed "Everything else" holds: how many lines, its largest few, and any folded
+    lines too small to list (under OMIT_BELOW_M each)."""
+    out = {"n": len(rest), "top": [[k["name"], _m(k["value_m"])] for k in rest[:LINES_TOP_N]]}
+    if _m(folded) >= OMIT_BELOW_M:
+        out["small_m"] = _m(folded)
+    return out
 
 
 def _dept_level(r, _parent_key):

@@ -523,3 +523,22 @@ def test_single_child_chain_and_offsets():
 def test_no_single_child_without_offsets_in_tree(tree):
     for n in walk(tree):
         assert not (len(n.get("children") or []) == 1 and not n.get("offsets")), n["name"]
+
+
+def test_closed_everything_else_names_its_largest_lines():
+    import json
+    from pathlib import Path
+    tree = json.loads(Path("data/build/budget_tree.json").read_text())
+
+    def nodes(n):
+        yield n
+        for c in n.get("children") or []:
+            yield from nodes(c)
+    closed = [n for p in tree["pots"] for s in ("in", "out") for n in nodes(p[s])
+              if n["name"] == "Everything else" and not n.get("children") and "lines" in n]
+    assert closed, "expected closed Everything-else boxes with a lines summary"
+    for n in closed:
+        top = [v for _, v in n["lines"]["top"]]
+        assert 1 <= len(top) <= 6 and n["lines"]["n"] >= len(top)
+        assert top == sorted(top, reverse=True)
+        assert sum(top) + n["lines"].get("small_m", 0) <= n["value_m"] + 0.01

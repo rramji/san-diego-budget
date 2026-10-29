@@ -165,6 +165,17 @@ function nodePanelBody(tree, node, parent) {
   const out = [el('h3', 'panel-title', m.title), amt];
   if (m.text) { const p = el('p', 'panel-desc'); p.append(citedText(m.text, m.descSrc)); out.push(p); }
   if (m.note) out.push(el('p', 'panel-note', m.note));
+  if (m.lines) {
+    out.push(el('p', 'panel-note', m.lines.lead));
+    const ul = el('ul', 'panel-lines');
+    for (const it of m.lines.items) {
+      const li = el('li');
+      li.append(el('span', null, it.name), el('span', 'figure', money(it.value_m)));
+      ul.append(li);
+    }
+    out.push(ul);
+    if (m.lines.rest) out.push(el('p', 'panel-note', m.lines.rest));
+  }
   const off = bm.offsetsFigure(node, tree);
   if (off) {
     const p = el('p', 'panel-note');
