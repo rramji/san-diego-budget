@@ -11,7 +11,6 @@
 <body>
 
 <header class="masthead" id="top">
-  <div id="progress" role="progressbar" aria-label="Reading progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
   <h1>San Diego's city budget, explained</h1>
   <figure class="hero">
     <img src="img/ob-pier-1200.jpg" srcset="img/ob-pier-800.jpg 800w, img/ob-pier-1200.jpg 1200w, img/ob-pier-2400.jpg 2400w" sizes="(min-width: 1264px) 1136px, (min-width: 900px) calc(100vw - 64px), calc(100vw - 32px)" width="2400" height="1074" alt="The locked gate of the Ocean Beach Fishing Pier, with the pier and the ocean behind it." fetchpriority="high">
@@ -20,17 +19,21 @@
   <p class="intro">As a San Diego resident over the past eleven years, I have long wondered how it could be that a city that is so famous and expensive could simultaneously be so strapped for cash that it can’t afford to maintain its basic infrastructure. Since nearly everyone who lives here drives on these notoriously poor roads, I can’t imagine that I am alone in my confusion.</p>
   <p class="intro">That thought has come and gone over the years (arising most frequently when blasting my poor tires into the potholes on Seaworld Drive after a heavy rain). But during this election cycle in San Diego, the abundance of rhetoric and shortage of objective data regarding the city’s budget and deficit made me realize how little I actually understood about the flows of money in San Diego.</p>
   <p class="dek" id="dek">This page walks through the City of San Diego's budget for FY2027 (July 2026 to June 2027), which plans <span id="dek-total">about $6.5 billion</span> of spending: where the money comes from, where it goes, and why it falls short. It then looks at what piles up when money is short, how long this has been going on, and what the documents say about five common claims.</p>
-  <nav class="toc" aria-label="Sections">
-    <a href="#what">The budget</a>
-    <a href="#why-short">Why it falls short</a>
-    <a href="#gap">The gap</a>
-    <a href="#piles">What piles up</a>
-    <a href="#how-long">How long</a>
-    <a href="#claims">Check a claim</a>
-    <a href="#sources">Sources</a>
-    <a href="#glossary">Glossary</a>
-  </nav>
 </header>
+
+<nav class="secbar" id="secbar" aria-label="Sections">
+  <ul>
+    <li><a href="#what">The budget</a></li>
+    <li><a href="#why-short">Why it falls short</a></li>
+    <li><a href="#gap">The gap</a></li>
+    <li><a href="#piles">What piles up</a></li>
+    <li><a href="#how-long">How long</a></li>
+    <li><a href="#claims">Check a claim</a></li>
+    <li><a href="#sources">Sources</a></li>
+    <li><a href="#glossary">Glossary</a></li>
+  </ul>
+  <div id="progress" role="progressbar" aria-label="Reading progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
+</nav>
 
 <div id="load-error" role="alert" hidden></div>
 
@@ -56,7 +59,7 @@
   <section id="why-short" class="chapter" aria-labelledby="why-short-h">
     <h2 id="why-short-h">Why doesn't a wealthy city have more money?</h2>
     <p class="lead">Of each dollar of basic property tax paid in San Diego County, cities get about <span data-why-fig="property_dollar.cities_cents">18¢</span> on average, so high home values don't mean a big check for City Hall; schools and the county get most of the rest. Of the <span data-why-fig="sales_tax.sd_rate_pct">7.75%</span> sales tax, the city keeps just <span data-why-fig="sales_tax.city_cents_of_rate">1 cent</span> of every dollar spent (1% of the price), and its General Fund gets <span data-why-fig="hotel.gf_cents">5.5</span> of the <span data-why-fig="hotel.base_cents">10.5</span> cents of base hotel tax, with most of the rest set aside for promoting tourism. Meanwhile, <span class="cite" data-src-doc="IBA Report 26-11, Review of the FY 2027 Proposed Budget, Key Citywide Issues: Structural Budget Deficit" data-src-page="77" data-src-url="https://www.sandiego.gov/sites/default/files/2026-04/iba-report-26-11-review-of-the-fiscal-year-2027-proposed-budget_0.pdf">the city's costs have been growing faster than its income</span>.</p>
-    <figure class="chart wide" id="s2-cents"></figure>
+    <figure class="chart" id="s2-cents"></figure>
     <figure class="chart" id="s2-blocks"></figure>
     <details class="dig"><summary>Dig deeper</summary>
       <div class="dig-body" id="s2-dig"></div>
@@ -76,7 +79,7 @@
     </aside>
     <h3 class="sub-h">What would closing it cost you?</h3>
     <p>The calculator below splits the gap per resident and per household, and turns it into a sales tax and a monthly fee. Before the cuts it shows one number. After them it shows two: the city's, and one that also counts the skipped reserve deposit.</p>
-    <figure class="chart wide" id="ch3-calc"></figure>
+    <figure class="chart" id="ch3-calc"></figure>
     <details class="dig"><summary>Dig deeper</summary>
       <div class="dig-body">
         <figure class="chart" id="s3-timeline"></figure>
@@ -98,7 +101,7 @@
     <section id="reserves" class="part" aria-labelledby="reserves-h">
       <h3 id="reserves-h">The rainy-day reserve</h3>
       <p class="lead">At the end of FY2026 (June 30, 2026), the city’s rainy-day savings (its General Fund <a class="gl" href="#g-reserve-rainy-day-fund">reserves</a>) held <span data-pile-fig="reserves.balance_m" data-fmt="m1">$202.4M</span>, by the city’s year-end count, which is <strong class="tag">not yet audited</strong>. Its policy called for <span data-pile-fig="reserves.target_m" data-fmt="m1">$262.9M</span> that year, by the IBA’s calculation.</p>
-      <figure class="chart wide" id="s4-reserve"></figure>
+      <figure class="chart" id="s4-reserve"></figure>
       <div class="pile-copy" id="s4-reserve-copy"></div>
       <details class="dig"><summary>Dig deeper</summary>
         <div class="dig-body" id="s4-reserve-dig"></div>
@@ -118,7 +121,7 @@
     <section id="pension" class="part" aria-labelledby="pension-h">
       <h3 id="pension-h">The pension</h3>
       <p class="lead">The city’s pension fund holds about <span data-pile-fig="pension.funded_pct" data-fmt="cents">76 cents</span> for every dollar of retirement benefits its workers have earned so far: it is <span data-pile-fig="pension.funded_pct" data-fmt="pct">76.1%</span> funded, at the June 30, 2025 valuation.</p>
-      <figure class="chart wide" id="s4-pension"></figure>
+      <figure class="chart" id="s4-pension"></figure>
       <figure class="chart" id="s4-payers"></figure>
       <div class="pile-copy" id="s4-pension-copy"></div>
       <details class="dig"><summary>Dig deeper</summary>

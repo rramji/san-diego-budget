@@ -341,3 +341,15 @@ test('countyBars sorts the 18 cities by total and splits base from add-on', () =
   assert.ok(Math.abs(lm.basePct + lm.addonPct - (8.5 / 8.75) * 100) < 1e-9);
   assert.equal(rows.filter((r) => r.addon > 0).length, why.sales_tax.county.n_addon.value);
 });
+
+// ---- Section bar ----
+import { currentSection } from '../site/nav.js';
+
+test('section bar: the current chapter is the last one whose top is above the reading line', () => {
+  const tops = [['what', 1000], ['why-short', 3000], ['gap', 5000]];
+  assert.equal(currentSection(tops, 0), null);
+  assert.equal(currentSection(tops, 1000), 'what');
+  assert.equal(currentSection(tops, 2999), 'what');
+  assert.equal(currentSection(tops, 3000), 'why-short');
+  assert.equal(currentSection(tops, 99999), 'gap');
+});

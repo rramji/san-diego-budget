@@ -13,6 +13,7 @@ import { mountClaims, claimCardModel } from './claims.js';
 export { mountClaims, claimCardModel };
 import * as sankey from './charts/sankey.js';
 import { themeColors, observeWidth } from './charts/util.js';
+import { mountSectionBar } from './nav.js';
 import * as bm from './charts/budget-map.js';
 import { renderWhy } from './why.js';
 export { renderWhy };
@@ -414,6 +415,7 @@ export function guarded(name, mountId, fn) {
 
 async function main() {
   mountProgress();
+  mountSectionBar();
   mountDigDeeper(document);
   const data = await loadData();
   if (new URLSearchParams(location.search).has('debug')) window.__data = data;
