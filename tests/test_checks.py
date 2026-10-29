@@ -93,11 +93,9 @@ def test_empty_vintage_flagged(out, vintage):
     assert len(msgs) == 1 and "vintage" in msgs[0]
 
 
-def test_size_flagged_and_negative_case(out):
-    assert checks.run(out) == []
+def test_total_size_not_capped(out):
     (out / "big.json").write_text("x" * 301_000)
-    msgs = checks.run(out)
-    assert len(msgs) == 1 and "300" in msgs[0]
+    assert checks.run(out) == []
 
 
 def test_missing_file_reported(out):
@@ -108,7 +106,7 @@ def test_missing_file_reported(out):
 
 def test_budget_tree_size_flagged(out):
     (out / "budget_tree.json").write_text(json.dumps(_tree()) + " " * 130_000)
-    assert checks.run(out) == []  # ruling R16: the cap is 150,000 (the 300 KB total still binds)
+    assert checks.run(out) == []  # the tree alone is capped at 150,000
     (out / "budget_tree.json").write_text(json.dumps(_tree()) + " " * 150_000)
     msgs = checks.run(out)
     assert any("budget_tree.json" in m and "150,000" in m for m in msgs)

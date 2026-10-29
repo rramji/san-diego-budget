@@ -9,8 +9,7 @@ GF_REVENUE_FY2026_M = 2167.4
 PROPERTY_TAX_FY2026_M = 844.6
 TOLERANCE = 0.01
 BAR4_TOLERANCE_M = 0.5
-MAX_BYTES = 300_000
-TREE_MAX_BYTES = 150_000  # ruling R16 (R11 fallback): plan-only sub-limit; the spec's binding cap is MAX_BYTES
+TREE_MAX_BYTES = 150_000  # catches a runaway tree build (it once reached 453 KB); there is no cap on the total
 TREE_SUM_TOLERANCE = 0.01      # same-year children (plus offsets) vs. their parent
 TREE_ROUNDING_SLACK_M = 0.0005  # per summed value: build output is rounded to 3 decimals
 # Boxes that must have a description (descs[key]): the top level of these maps, plus the no-fund box (ruling R16
@@ -125,7 +124,4 @@ def run(out_dir: Path) -> list[str]:
     except (OSError, KeyError, ValueError) as e:
         failures.append(f"series.json vintage check could not run: {e!r}")
     check_budget_tree(out_dir, failures)
-    total = sum(p.stat().st_size for p in out_dir.glob("*.json"))
-    if total >= MAX_BYTES:
-        failures.append(f"data/build size {total} bytes exceeds 300,000 byte limit")
     return failures

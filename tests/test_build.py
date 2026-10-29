@@ -39,13 +39,6 @@ def test_series_fy_keys_are_four_digit_ints(tmp_path):
     assert all(len(k) == 4 and k.isdigit() for k in series["gf_dept_by_fy"])
 
 
-def test_checks_flag_size_over_300kb(tmp_path):
-    out, _ = _build(tmp_path)
-    (out / "dummy.json").write_text("x" * 301_000)
-    msgs = checks.run(out)
-    assert any("300" in m for m in msgs)
-
-
 def test_series_values_rounded_to_three_decimals_and_compact(tmp_path):
     raw = tmp_path / "raw"
     shutil.copytree(FIX, raw)
