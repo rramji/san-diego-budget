@@ -570,3 +570,22 @@ def test_methods_note_thresholds_match_the_pipeline():
         "account_min_m": budget_tree.ACCOUNT_LEVEL_MIN_M,
         "fold_below_m": budget_tree.OMIT_BELOW_M,
     }
+
+
+def test_county_sales_tax_checks():
+    import copy
+    import json
+    import pytest
+    from pipeline.build import build_why_short
+    d = json.loads((CURATED / "why_short.json").read_text())
+    out = build_why_short(d)["sales_tax"]["county"]
+    assert out["n_addon"]["value"] == 12 and out["n_none"]["value"] == 6
+    assert out["n_addon"]["source"]["doc"].startswith("our arithmetic: ")
+    bad = copy.deepcopy(d)
+    next(c for c in bad["sales_tax"]["county"]["cities"] if c["city"] == "La Mesa")["rate_pct"]["value"] = 8.75
+    with pytest.raises(ValueError, match="La Mesa"):
+        build_why_short(bad)
+    bad = copy.deepcopy(d)
+    bad["sales_tax"]["county"]["cities"].pop()
+    with pytest.raises(ValueError, match="18"):
+        build_why_short(bad)
