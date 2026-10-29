@@ -71,6 +71,10 @@ a { color: var(--link); }
 .masthead { padding-top: 40px; padding-bottom: 8px; }
 h1, h2 { font-family: var(--font-ui); letter-spacing: -0.015em; line-height: 1.15; margin: 0; }
 h1 { font-size: clamp(1.9rem, 7vw, 2.5rem); font-weight: 750; }
+.hero { margin: 20px 0 0; }
+.hero img { display: block; width: 100%; height: auto; border-radius: 3px; }
+@media (max-width: 639.98px) { .hero img { aspect-ratio: 3 / 2; object-fit: cover; } } /* the panorama is too thin on a phone */
+.hero figcaption { margin: 8px auto 0; font: 0.85rem/1.45 var(--font-ui); color: var(--muted); }
 .intro { margin: 16px 0 0; }
 .intro + .intro { margin-top: 12px; }
 .dek { font-size: 1.1875rem; line-height: 1.55; margin: 16px 0 20px; }
@@ -539,5 +543,7 @@ main { padding-bottom: 80px; }
   max-width: var(--col) !important; margin-left: auto !important; margin-right: auto !important;
 }
 .chapter > .part, .chapter > details.dig, .part > details.dig, .chapter > .wide, .part > .wide, .dig-body > .wide { max-width: none !important; }
+.masthead > .hero { max-width: none !important; }
+.hero > figcaption { max-width: var(--col); }
 .masthead > h1 { max-width: none !important; margin-left: max(0px, calc((100% - var(--col)) / 2)) !important; } /* starts at the column, may run past it */
 .wide p, .wide li, .wide dd { max-width: var(--col); }
