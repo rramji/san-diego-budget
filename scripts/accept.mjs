@@ -134,7 +134,7 @@ async function section1(chromium) {
         const p = document.getElementById('s1-panel');
         return { parent: p.parentElement.dataset.side || p.parentElement.id, prev: p.previousElementSibling?.className, live: p.getAttribute('aria-live') };
       });
-      const want = width < 640 ? { parent: 'out', prev: 'map-box' } : { parent: 'what', prev: 'chart' };
+      const want = width < 640 ? { parent: 'out', prev: 'map-box' } : { parent: 'what', prev: 'chart wide' };
       if (where.parent !== want.parent || where.prev !== want.prev) fail(`panel placed at ${JSON.stringify(where)}, expected ${JSON.stringify(want)}`);
       if (where.live) fail('panel has aria-live after an action');
       // Re-rendering the same map must not detach the panel (ruling R13).
