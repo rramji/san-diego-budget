@@ -63,6 +63,8 @@ a { color: var(--link); }
 .masthead { padding-top: 40px; padding-bottom: 8px; }
 h1, h2 { font-family: var(--font-ui); letter-spacing: -0.015em; line-height: 1.15; margin: 0; }
 h1 { font-size: clamp(1.9rem, 7vw, 2.75rem); font-weight: 750; }
+.intro { margin: 16px 0 0; max-width: 34em; }
+.intro + .intro { margin-top: 12px; }
 .dek { font-size: 1.1875rem; line-height: 1.55; margin: 16px 0 20px; max-width: 34em; }
 .toc { display: flex; flex-wrap: wrap; gap: 6px 18px; font: 0.9rem/1.4 var(--font-ui); padding-bottom: 20px; border-bottom: 1px solid var(--rule); }
 .toc a { color: var(--muted); text-decoration: none; }
