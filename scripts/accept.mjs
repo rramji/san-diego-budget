@@ -406,6 +406,7 @@ async function section3(chromium) {
         const sec = document.getElementById('gap');
         const host = sec.querySelector('#s3-timeline .tl-host');
         const funnel = sec.querySelector('#ch2-funnel');
+        const fhost = funnel.querySelector('.scrolly-stage') || funnel; // wide: the bar fills the sticky stage
         const fsvg = funnel.querySelector('svg');
         return {
           defs: [...sec.querySelectorAll('.gap-defs dt')].map((x) => x.textContent),
@@ -413,7 +414,9 @@ async function section3(chromium) {
           ptOverlap: eval(ov.pts),
           ptOut: [...sec.querySelectorAll('#s3-timeline .tl-pt')].filter((p) => p.getBoundingClientRect().right > host.getBoundingClientRect().right + 1).length,
           funnelW: fsvg ? Math.round(fsvg.getBoundingClientRect().width) : 0,
-          funnelBox: Math.round(funnel.getBoundingClientRect().width),
+          funnelBox: Math.round(fhost.getBoundingClientRect().width),
+          funnelSteps: funnel.querySelectorAll('.step').length,
+          funnelMode: funnel.classList.contains('scrolly') ? 'scrolly' : 'stacked',
           unsourced: sec.querySelectorAll('.figure:not([data-src-url])').length,
           noFn: [...sec.querySelectorAll('[data-src-url]')].filter((e) => !(e.nextElementSibling && e.nextElementSibling.classList.contains('fn'))).length,
           scroll: document.documentElement.scrollWidth - window.innerWidth,
@@ -424,6 +427,8 @@ async function section3(chromium) {
       if (d.ptOverlap.length) fail(`timeline labels overlap: ${JSON.stringify(d.ptOverlap)}`);
       if (d.ptOut) fail(`${d.ptOut} timeline label(s) past the right edge`);
       if (!d.funnelW || Math.abs(d.funnelW - d.funnelBox) > 2) fail(`funnel drawn at ${d.funnelW}px in a ${d.funnelBox}px box after opening`);
+      if (d.funnelMode !== (width >= 900 ? 'scrolly' : 'stacked')) fail(`funnel is ${d.funnelMode} at ${width}px`);
+      if (width >= 900 && d.funnelSteps !== 4) fail(`${d.funnelSteps} scrolly steps`);
       if (d.unsourced) fail(`${d.unsourced} .figure without data-src-url`);
       if (d.noFn) fail(`${d.noFn} sourced element(s) without a footnote button`);
       if (d.scroll > 0) fail(`horizontal scroll (${d.scroll}px)`);

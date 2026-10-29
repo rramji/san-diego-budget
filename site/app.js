@@ -110,7 +110,7 @@ function renderFunnel(data) {
   const el = document.getElementById('ch2-funnel');
   const prep = funnel.prepare(data.headline, data.funnel);
   const captions = [1, 2, 3, 4].map((n) => el.getAttribute(`data-caption-${n}`));
-  observeWidth(el, () => { funnel.render(el, prep, themeColors(), captions); mountPopovers(el); });
+  observeWidth(el, () => { funnel.render(el, prep, themeColors(), captions, { onStep: () => mountPopovers(el) }); mountPopovers(el); });
 }
 
 // ---- Section 1: pots bar, twin money maps, details panel ---------------------------------------

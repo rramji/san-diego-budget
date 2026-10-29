@@ -76,7 +76,7 @@ test('prepare computes peak share of General Fund spending; null where spending 
 });
 
 // ---- Chapter 2 funnel ----
-import { prepare as funnelPrepare } from '../site/charts/funnel.js';
+import { prepare as funnelPrepare, stepSegments, STEP_TITLES } from '../site/charts/funnel.js';
 
 const fig = (value) => ({ value, source: { doc: 'test', page: 1, url: 'https://example.org/x' } });
 const hl = { fy: 2027, total_budget_m: fig(6486.9), general_fund_m: fig(2256.7), enterprise_m: fig(1915.1), special_revenue_m: fig(1207.9), internal_service_m: fig(225.7), capital_project_m: fig(23.5), cip_m: fig(858.1) };
@@ -119,6 +119,17 @@ test('funnel on real data: segments sum to the General Fund and gap ratio is abo
   assert.ok(Math.abs(sum(p.bars[3]) - 2256.7) < 0.05);
   assert.ok(Math.abs(sum(p.bars[2]) - 2256.7) < 0.05);
   assert.ok(Math.abs(p.gapRatio - 0.0661) < 0.0005);
+});
+
+test('funnel scrolly steps: four titles, step 2 dims the restricted funds, step 4 ends with the gap', () => {
+  const p = funnelPrepare(hl, fn);
+  assert.equal(STEP_TITLES.length, 4);
+  assert.ok(stepSegments(p, 0).every((s) => !s.dim));
+  const s2 = stepSegments(p, 1);
+  assert.equal(s2[0].dim, false);
+  assert.ok(s2.slice(1).every((s) => s.dim));
+  assert.deepEqual(stepSegments(p, 2).map((s) => s.label), ['Pension payment (ADC)', 'Debt service', 'Everything else']);
+  assert.equal(stepSegments(p, 3).at(-1).kind, 'gap');
 });
 
 // ---- Chapter 2 dig-deeper: sankey ----
