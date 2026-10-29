@@ -51,7 +51,10 @@ body {
   -webkit-text-size-adjust: 100%;
   overflow-x: hidden;
 }
-.masthead, main, #load-error { max-width: 720px; margin: 0 auto; padding: 0 var(--gutter); }
+/* Wide screens: charts use up to 1200px; running text keeps a readable measure. */
+.masthead, main, #load-error { max-width: 1200px; margin: 0 auto; padding: 0 var(--gutter); }
+@media (min-width: 900px) { :root { --gutter: 32px; } }
+main p, main li, main dd, .masthead p { max-width: 40em; }
 a { color: var(--link); }
 :focus-visible { outline: 2px solid var(--link); outline-offset: 2px; }
 
@@ -242,7 +245,13 @@ main { padding-bottom: 80px; }
 .hint { margin: -8px 0 0; font: 0.9rem/1.4 var(--font-ui); color: var(--muted); }
 #s1-pots { margin: 16px 0 0; }
 .potbar, .map { display: block; max-width: 100%; height: auto; overflow: visible; }
-.potbar text, .map text { fill: var(--ink); font: 600 12px/1 var(--font-ui); pointer-events: none; }
+.potbar text, .map text { fill: var(--ink); font: 600 13px/1 var(--font-ui); pointer-events: none; }
+.map-tip {
+  position: absolute; z-index: 60; max-width: 260px; pointer-events: none;
+  background: var(--text); color: var(--bg); border-radius: 4px; padding: 6px 9px;
+  font: 0.85rem/1.35 var(--font-ui); box-shadow: 0 2px 8px rgb(0 0 0 / 0.2);
+}
+.map-tip[hidden] { display: none; }
 .potbar .cell-amt, .map .cell-amt { font-weight: 400; font-variant-numeric: tabular-nums; }
 .pot, .cell { cursor: pointer; outline: none; -webkit-tap-highlight-color: transparent; }
 @media (hover: hover) {

@@ -327,80 +327,75 @@ const svgEl = (tag, attrs = {}) => {
   for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, String(v));
   return e;
 };
-const LINE = 15; // label line height, px
+const LINE = 16; // label line height, px
 const PAD = 6;
 
-// Add a <text> line; returns it, or null (removed) when wider than maxW.
-function fitText(parent, str, x, y, maxW, cls) {
-  const t = svgEl('text', { x, y, class: cls });
-  t.textContent = str;
-  parent.append(t);
-  if (t.getComputedTextLength() <= maxW) return t;
-  t.remove();
-  return null;
-}
-
-// Longest prefix of `str` (ending in "…") that fits maxW, or null when not even a few letters fit.
-function truncFit(parent, str, x, y, maxW, cls) {
-  const t = svgEl('text', { x, y, class: cls });
-  parent.append(t);
-  const fits = (n) => { t.textContent = `${str.slice(0, n).trimEnd()}…`; return t.getComputedTextLength() <= maxW; };
-  // Prefer cutting at a word boundary; fall back to letters only when no whole word fits.
-  for (let n = str.lastIndexOf(' '); n >= 4; n = str.lastIndexOf(' ', n - 1)) if (fits(n)) return t;
-  for (let n = str.length - 1; n >= 4; n -= 1) if (fits(n)) return t;
-  t.remove();
-  return null;
-}
-
-// Greedy two-line wrap; the second line is truncated if it still overflows. Returns true when placed.
-function wrapTwo(parent, str, x, y, maxW, cls) {
-  const words = str.split(' ');
-  if (words.length < 2) return false;
-  const probe = svgEl('text', { x, y, class: cls });
-  parent.append(probe);
-  let k = 0;
-  for (let i = 1; i < words.length; i += 1) {
-    probe.textContent = words.slice(0, i).join(' ');
-    if (probe.getComputedTextLength() <= maxW) k = i; else break;
+// Greedy word wrap into at most maxLines lines, each passing fits(line). Never cuts a word or adds "…": returns
+// null when the whole string can't be set that way.
+export function wrapWords(str, fits, maxLines) {
+  const lines = [];
+  let cur = '';
+  for (const w of str.split(/\s+/).filter(Boolean)) {
+    const next = cur ? `${cur} ${w}` : w;
+    if (fits(next)) { cur = next; continue; }
+    if (!cur || !fits(w)) return null;
+    lines.push(cur);
+    cur = w;
   }
-  probe.remove();
-  if (!k) return false;
-  fitText(parent, words.slice(0, k).join(' '), x, y, maxW, cls);
-  const rest = words.slice(k).join(' ');
-  return !!(fitText(parent, rest, x, y + LINE, maxW, cls) || truncFit(parent, rest, x, y + LINE, maxW, cls));
+  if (cur) lines.push(cur);
+  return lines.length && lines.length <= maxLines ? lines : null;
 }
 
-// Label a rectangle only where the text fits inside it with padding. Never clipped: anything that does not fit is
-// left to the aria-label, the panel and the list.
+// Label a rectangle only where the text fits inside it with padding: the whole name, wrapped, then the amount.
+// Nothing is truncated. Returns true when the whole name is shown; otherwise the caller adds a hover tooltip.
 function labelCell(g, r, name, amount, opens) {
   const maxW = r.w - 2 * PAD;
   const x = r.x + PAD;
-  const y = r.y + PAD + 11;
+  const y = r.y + PAD + 12;
   const mark = opens ? ' ⊕' : '';
-  const room = Math.floor((r.h - 2 * PAD + 3) / LINE); // lines that fit vertically
-  const tryAll = () => {
-    if (maxW < 20 || room < 1) return false;
-    if (room >= 2 && fitText(g, name, x, y, maxW, 'cell-name')) {
-      if (fitText(g, amount + mark, x, y + LINE, maxW, 'cell-amt')) return true;
-      g.replaceChildren(...[...g.children].filter((c) => c.tagName !== 'text'));
-    }
-    if (room >= 3 && wrapTwo(g, name, x, y, maxW, 'cell-name')) {
-      if (fitText(g, amount + mark, x, y + 2 * LINE, maxW, 'cell-amt')) return true;
-      g.replaceChildren(...[...g.children].filter((c) => c.tagName !== 'text'));
-    }
-    if (room >= 2 && truncFit(g, name, x, y, maxW, 'cell-name')) {
-      if (fitText(g, amount + mark, x, y + LINE, maxW, 'cell-amt')) return true;
-      g.replaceChildren(...[...g.children].filter((c) => c.tagName !== 'text'));
-    }
-    return !!fitText(g, amount + mark, x, y, maxW, 'cell-amt');
-  };
-  if (tryAll()) return;
+  const room = Math.floor((r.h - 2 * PAD + 4) / LINE); // lines that fit vertically
+  const probe = svgEl('text', { x, y, class: 'cell-name' });
+  g.append(probe);
+  const fits = (cls) => (str) => { probe.setAttribute('class', cls); probe.textContent = str; return probe.getComputedTextLength() <= maxW; };
+  const nameLines = maxW >= 20 && room >= 2 ? wrapWords(name, fits('cell-name'), room - 1) : null;
+  const amtFits = maxW >= 20 && room >= 1 && fits('cell-amt')(amount + mark);
+  probe.remove();
+  const line = (str, cls, k) => { const t = svgEl('text', { x, y: y + k * LINE, class: cls }); t.textContent = str; g.append(t); };
+  if (nameLines && amtFits) {
+    nameLines.forEach((l, k) => line(l, 'cell-name', k));
+    line(amount + mark, 'cell-amt', nameLines.length);
+    return true;
+  }
+  if (amtFits) { line(amount + mark, 'cell-amt', 0); return false; }
   // Too small for words: an opening box still shows its mark when there is room for it.
   if (opens && r.w >= 16 && r.h >= 16) {
     const t = svgEl('text', { x: r.x + r.w / 2, y: r.y + r.h / 2 + 4, class: 'cell-amt', 'text-anchor': 'middle' });
     t.textContent = '⊕';
     g.append(t);
   }
+  return false;
+}
+
+// One shared hover tooltip for boxes too small to show their whole name. Pointer only: keyboard and screen-reader
+// users already get the full name from the box's aria-label and the panel.
+let tipEl = null;
+function hoverTip(g, title, amount) {
+  const show = (e) => {
+    if (!tipEl) { tipEl = document.createElement('div'); tipEl.className = 'map-tip'; tipEl.setAttribute('aria-hidden', 'true'); document.body.append(tipEl); }
+    tipEl.replaceChildren();
+    const b = document.createElement('b');
+    b.textContent = title;
+    tipEl.append(b, document.createElement('br'), amount);
+    tipEl.hidden = false;
+    const pad = 14;
+    const w = tipEl.offsetWidth;
+    const left = Math.min(e.pageX + pad, window.scrollX + document.documentElement.clientWidth - w - 8);
+    tipEl.style.left = `${Math.max(window.scrollX + 8, left)}px`;
+    tipEl.style.top = `${e.pageY + pad}px`;
+  };
+  g.addEventListener('pointerenter', (e) => { if (e.pointerType === 'mouse') show(e); });
+  g.addEventListener('pointermove', (e) => { if (e.pointerType === 'mouse') show(e); });
+  g.addEventListener('pointerleave', () => { if (tipEl) tipEl.hidden = true; });
 }
 
 const press = (fn) => (e) => {
@@ -460,7 +455,7 @@ export function renderPots(el, tree, state, colors, onSelect) {
     g.append(svgEl('rect', { x: r.x, y: r.y, width: r.w, height: r.h, fill, rx: 2 }));
     selectionRings(g, r);
     svg.insertBefore(g, svg.lastChild);
-    labelCell(g, r, s.pot.label, money(s.pot.value_m), false);
+    if (!labelCell(g, r, s.pot.label, money(s.pot.value_m), false)) hoverTip(g, s.pot.label, money(s.pot.value_m));
     wireFocus(g, r);
     g.addEventListener('click', () => onSelect(s.pot.id));
     g.addEventListener('keydown', press(() => onSelect(s.pot.id)));
@@ -526,7 +521,7 @@ export function render(el, state, tree, colors, handlers) {
   }
 
   const W = Math.max(240, Math.round(el.getBoundingClientRect().width || 320));
-  const H = Math.round(Math.min(340, Math.max(240, W * 0.82)));
+  const H = Math.round(Math.min(480, Math.max(240, W * 0.75)));
   const svg = svgEl('svg', { class: 'map', viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: 'group', 'aria-label': `${node.name}: map of ${kids(node).length} boxes` });
   box.replaceChildren(svg);
   const wireFocus = focusOverlay(svg);
@@ -547,7 +542,7 @@ export function render(el, state, tree, colors, handlers) {
     g.append(svgEl('rect', { x: r.x, y: r.y, width: r.w, height: r.h, fill, rx: Math.min(2, r.w / 4, r.h / 4) }));
     selectionRings(g, r);
     svg.insertBefore(g, svg.lastChild);
-    labelCell(g, r, c.node.name, money(c.node.value_m), c.opens);
+    if (!labelCell(g, r, c.node.name, money(c.node.value_m), c.opens)) hoverTip(g, c.node.name, money(c.node.value_m));
     wireFocus(g, r);
     const go = () => handlers.onActivate(side, c.node, { from: 'map', slot: c.slot });
     g.addEventListener('click', go);

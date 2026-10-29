@@ -426,3 +426,13 @@ test('statusText: short spoken summary for a pot, a box and an opened box', () =
   assert.equal(bm.statusText(null, police, tree, true), 'Police, $718M, FY2027, opened');
   assert.equal(bm.statusText(null, byName(police, 'Overtime'), tree), 'Overtime, $45.3M, FY2026');
 });
+
+test('wrapWords sets whole words only, never truncating', () => {
+  const fits = (s) => s.length <= 10;
+  assert.equal(bm.wrapWords('Charges for Current Services', fits, 3), null); // needs four lines
+  assert.deepEqual(bm.wrapWords('Charges for Current Services', fits, 4), ['Charges', 'for', 'Current', 'Services']);
+  assert.deepEqual(bm.wrapWords('Sales Tax', fits, 1), ['Sales Tax']);
+  assert.deepEqual(bm.wrapWords('Parks & Recreation', fits, 2), ['Parks &', 'Recreation']);
+  assert.equal(bm.wrapWords('Transportation', fits, 3), null); // one word wider than the box
+  assert.equal(bm.wrapWords('', fits, 3), null);
+});
