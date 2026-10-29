@@ -2,9 +2,14 @@
 // render() uses the global d3 plus d3-sankey (registered on the d3 namespace).
 import { money } from '../format.js';
 
+// Within each column, General Fund money comes first, so its flows run along the top of the diagram.
+const KIND_RANK = { discretionary: 0, utility: 1, restricted: 2, borrowed: 3 };
+
 export function prepare(flows) {
+  const nodes = flows.nodes.map((n) => ({ id: n.id, label: n.label, column: n.column, kind: n.kind }));
+  nodes.sort((a, b) => (a.column - b.column) || ((KIND_RANK[a.kind] ?? 9) - (KIND_RANK[b.kind] ?? 9)));
   return {
-    nodes: flows.nodes.map((n) => ({ id: n.id, label: n.label, column: n.column, kind: n.kind })),
+    nodes,
     links: flows.links.map((l) => ({
       source: l.source, target: l.target, value: l.amount_m, rule: l.rule, ref: l.ref, highlight: !!l.highlight,
     })),
@@ -14,7 +19,8 @@ export function prepare(flows) {
 export const linkKey = (l) => `${l.source.id ?? l.source}>${l.target.id ?? l.target}`;
 export const linkLabel = (l) => `${l.source.label} → ${l.target.label}`;
 
-const FONT = 11;
+const FONT = 11; // phone (vertical) layout
+const WIDE_FONT = 13; // desktop (horizontal) layout
 const CHAR = FONT * 0.56; // average glyph width estimate for the UI font
 
 const trunc = (s, px) => {
@@ -22,22 +28,34 @@ const trunc = (s, px) => {
   return s.length <= max ? s : `${s.slice(0, max - 1).trimEnd()}…`;
 };
 
-// Wrap into at most `lines` lines of about px width; the last line is truncated with an ellipsis.
-function wrap(s, px, lines) {
-  const max = Math.max(6, Math.floor(px / CHAR));
+// Wrap whole words into lines no wider than px, measured with measure(str) -> px. Words are never cut.
+export function wrapMeasured(s, px, measure) {
   const out = [];
   let cur = '';
-  const words = s.split(' ');
-  for (let i = 0; i < words.length; i += 1) {
-    const next = cur ? `${cur} ${words[i]}` : words[i];
-    if (next.length <= max || !cur) cur = next;
-    else { out.push(cur); cur = words[i]; }
-    if (out.length === lines) break;
+  for (const w of s.split(' ')) {
+    const next = cur ? `${cur} ${w}` : w;
+    if (!cur || measure(next) <= px) cur = next;
+    else { out.push(cur); cur = w; }
   }
-  if (out.length < lines && cur) out.push(cur);
-  const used = out.join(' ').length;
-  if (used < s.length) out[out.length - 1] = trunc(`${out[out.length - 1]} ${s.slice(used + 1)}`, px);
-  return out.map((t) => trunc(t, px));
+  if (cur) out.push(cur);
+  return out;
+}
+
+// Spread label blocks {mid, h} apart so none overlap, staying within [lo, hi] where possible. Returns the new
+// centre of each block, in input order.
+export function spreadLabels(blocks, lo, hi, gap = 2) {
+  const order = blocks.map((b, i) => ({ ...b, i })).sort((a, b) => a.mid - b.mid);
+  let y = lo;
+  for (const b of order) { b.top = Math.max(b.mid - b.h / 2, y); y = b.top + b.h + gap; }
+  let limit = hi;
+  for (let k = order.length - 1; k >= 0; k -= 1) {
+    const b = order[k];
+    if (b.top + b.h > limit) b.top = limit - b.h;
+    limit = b.top - gap;
+  }
+  const out = [];
+  for (const b of order) out[b.i] = b.top + b.h / 2;
+  return out;
 }
 
 // Greedy label thinning: keep labels (priority first) whose centres sit at least `gap` px apart.
@@ -54,6 +72,10 @@ export function render(el, data, colors, onSelect, opts = {}) {
   const captions = opts.captions || [];
   const W = Math.max(280, Math.round(el.getBoundingClientRect().width || el.parentElement.clientWidth));
   const vertical = W < 600;
+  const font = vertical ? FONT : WIDE_FONT;
+  const ctx = document.createElement('canvas').getContext('2d');
+  ctx.font = `${font}px ${getComputedStyle(document.documentElement).getPropertyValue('--font-ui') || 'system-ui'}`;
+  const measure = (str) => ctx.measureText(str).width;
   const kindColor = { utility: colors.locked, restricted: colors.restricted, discretionary: colors.discretionary, borrowed: colors.locked };
   // Borrowed money shares the "locked" colour, so its ribbons are striped to stay distinct from utility fees.
   const kindDash = { borrowed: '5 3' };
@@ -68,9 +90,13 @@ export function render(el, data, colors, onSelect, opts = {}) {
     extent = [[0, 0], [430, W - m.left - m.right]];
     H = m.top + 430 + m.bottom;
   } else {
-    m = { top: 30, right: 200, bottom: 8, left: 150 };
-    extent = [[0, 0], [W - m.left - m.right, 470]];
-    H = m.top + 470 + m.bottom;
+    // Side margins fit the longest label, up to a quarter of the width each; longer labels wrap.
+    const longest = (col) => Math.max(0, ...data.nodes.filter((n) => n.column === col).map((n) => measure(n.label)));
+    const cap = Math.round(W * 0.25);
+    m = { top: 30, right: Math.min(cap, longest(2) + 16), bottom: 8, left: Math.min(cap, longest(0) + 16) };
+    const inner = W >= 900 ? 580 : 470;
+    extent = [[0, 0], [W - m.left - m.right, inner]];
+    H = m.top + inner + m.bottom;
   }
   const layout = d3.sankey().nodeId((d) => d.id).nodeWidth(NODE_W).nodePadding(vertical ? 3 : 8)
     .nodeAlign((n) => n.column).nodeSort(null).linkSort(null).extent(extent).iterations(32);
@@ -158,7 +184,7 @@ export function render(el, data, colors, onSelect, opts = {}) {
   // labels
   const halo = { 'paint-order': 'stroke', stroke: 'var(--bg)', 'stroke-width': 3, 'stroke-linejoin': 'round' };
   const label = (parent) => {
-    const t = parent.append('text').attr('fill', colors.text).style('font', `${FONT}px var(--font-ui)`).attr('pointer-events', 'none');
+    const t = parent.append('text').attr('fill', colors.text).style('font', `${font}px var(--font-ui)`).attr('pointer-events', 'none');
     for (const [k, v] of Object.entries(halo)) t.style(k, v);
     return t;
   };
@@ -176,22 +202,29 @@ export function render(el, data, colors, onSelect, opts = {}) {
           .attr('transform', `translate(${cx + FONT * 0.35},${up ? b.y - 5 : b.y + b.h + 5}) rotate(${up ? -90 : 90})`);
         t.text(trunc(n.label, up ? m.top - 30 : m.bottom - 8));
       }
-    } else if (col === 1) {
-      const gap = (extent[1][0] - NODE_W * 3) / 2 - 12;
-      for (const n of cn) {
-        const b = nodeBox(n);
-        const lines = wrap(n.label, gap, 3);
-        const t = label(g).attr('text-anchor', 'start');
-        lines.forEach((ln, i) => t.append('tspan').attr('x', b.x + b.w + 6).attr('y', b.mid + (i - (lines.length - 1) / 2) * 13).attr('dy', '0.35em').text(ln));
-      }
     } else {
-      const keep = pickLabels(cn, (n) => (n.y0 + n.y1) / 2, prio, FONT + 4);
-      for (const n of keep) {
-        const b = nodeBox(n);
+      // Every node gets its full label, wrapped to the space beside it; labels that would collide are spread
+      // apart, with a short leader line back to their node.
+      const LH = font + 3;
+      const room = col === 1 ? (extent[1][0] - NODE_W * 3) / 2 - 12 : (col === 0 ? m.left : m.right) - 12;
+      const blocks = cn.map((n) => {
+        const lines = wrapMeasured(n.label, room, measure);
+        return { n, b: nodeBox(n), lines, mid: nodeBox(n).mid, h: lines.length * LH };
+      });
+      const mids = col === 1 ? spreadLabels(blocks, 0, extent[1][1]) : spreadLabels(blocks, -m.top + 18, extent[1][1] + m.bottom);
+      blocks.forEach(({ b, lines }, k) => {
         const left = col === 0;
-        label(g).attr('x', left ? b.x - 6 : b.x + b.w + 6).attr('y', b.mid).attr('dy', '0.35em').attr('text-anchor', left ? 'end' : 'start')
-          .text(trunc(n.label, left ? m.left - 10 : m.right - 10));
-      }
+        const x = left ? b.x - 6 : b.x + b.w + 6;
+        const y = mids[k];
+        if (Math.abs(y - b.mid) > 2) {
+          const x2 = left ? x - 4 : x + 4;
+          g.append('path').attr('d', `M${left ? b.x - 1 : b.x + b.w + 1},${b.mid}L${x2},${y}`)
+            .attr('stroke', colors.muted).attr('stroke-width', 0.75).attr('fill', 'none');
+        }
+        const t = label(g).attr('text-anchor', left ? 'end' : 'start');
+        lines.forEach((ln, i) => t.append('tspan').attr('x', Math.abs(y - b.mid) > 2 ? (left ? x - 6 : x + 6) : x)
+          .attr('y', y + (i - (lines.length - 1) / 2) * LH).attr('dy', '0.35em').text(ln));
+      });
     }
   }
 
@@ -201,7 +234,7 @@ export function render(el, data, colors, onSelect, opts = {}) {
     captions.slice(0, 3).forEach((cap, col) => {
       if (!cap) return;
       const n = nodes.find((x) => x.column === col);
-      svg.append('text').attr('fill', colors.muted).style('font', `600 ${FONT + 1}px var(--font-ui)`).text(cap)
+      svg.append('text').attr('fill', colors.muted).style('font', `600 ${font + 1}px var(--font-ui)`).text(cap)
         .attr('y', 16).attr('text-anchor', col === 0 ? 'end' : col === 2 ? 'start' : 'middle')
         .attr('x', col === 0 ? m.left + n.x0 + NODE_W : col === 2 ? m.left + n.x0 : m.left + n.x0 + NODE_W / 2);
     });

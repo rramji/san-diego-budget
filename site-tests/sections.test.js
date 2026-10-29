@@ -308,3 +308,23 @@ test('this year\'s $118M card cites both offices that reported it', () => {
   assert.match(cites[1].source.url, /mayors-message-fy2027-adopted-budget\.pdf$/);
   assert.throws(() => citeParts('nobody said so', ty.cites), /not found/);
 });
+
+test('sankey puts General Fund nodes first in every column', async () => {
+  const { prepare } = await import('../site/charts/sankey.js');
+  const flows = JSON.parse(readFileSync(new URL('../data/build/flows.json', import.meta.url), 'utf8'));
+  const p = prepare(flows);
+  for (const col of [0, 1, 2]) {
+    const kinds = p.nodes.filter((n) => n.column === col).map((n) => n.kind);
+    assert.equal(kinds[0], 'discretionary');
+    assert.equal(kinds.lastIndexOf('discretionary') + 1, kinds.filter((k) => k === 'discretionary').length);
+  }
+});
+
+test('sankey label helpers: whole-word wrap and non-overlapping spread', async () => {
+  const { wrapMeasured, spreadLabels } = await import('../site/charts/sankey.js');
+  assert.deepEqual(wrapMeasured('Permits, trash, golf, airports', 15, (s) => s.length), ['Permits, trash,', 'golf, airports']);
+  const mids = spreadLabels([{ mid: 10, h: 10 }, { mid: 12, h: 10 }, { mid: 14, h: 10 }], 0, 100);
+  assert.ok(mids[1] - mids[0] >= 10 && mids[2] - mids[1] >= 10);
+  const packed = spreadLabels([{ mid: 95, h: 10 }, { mid: 98, h: 10 }], 0, 100);
+  assert.ok(packed[1] + 5 <= 100 && packed[1] - packed[0] >= 10);
+});
