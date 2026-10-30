@@ -139,13 +139,7 @@ export function render(el, data, colors) {
   legendItem(legend, '<svg width="14" height="14" aria-hidden="true"><rect x=".5" y=".5" width="13" height="13" fill="var(--gap)" fill-opacity=".38" stroke="var(--gap)"/></svg>', 'One-time money used (proposed budgets, FY2012\u201321)');
   legendItem(legend, '<svg width="14" height="14" aria-hidden="true"><rect x=".5" y=".5" width="13" height="13" fill="var(--gap)" fill-opacity=".2" stroke="var(--gap)"/></svg>', 'Skipped reserve deposit (faint top segment)');
   legendItem(legend, '<svg width="14" height="14" aria-hidden="true"><rect x=".5" y="7.5" width="13" height="6" fill="url(#hatch)" stroke="var(--muted)" stroke-dasharray="2 2"/></svg>', 'n/r: not reported (short hatched mark, not a value)');
-  const note27 = document.createElement('li');
-  note27.className = 'legend-note';
-  note27.innerHTML = '<svg width="14" height="14" aria-hidden="true" style="vertical-align:-2px;margin-right:6px"><rect x="1" y="1" width="12" height="12" fill="var(--gap)" stroke="var(--text)" stroke-width="1.5" stroke-dasharray="3 2"/></svg>';
-  note27.append("FY2027 (dashed): what the Council's independent budget analyst (the IBA) found left in the proposed budget after the proposed cuts; the city's budget office (the Mayor's Department of Finance) puts the adopted budget's own figure at ");
-  if (data.fy27_adopted) { const f = document.createElement('span'); srcAttrs(f, data.fy27_adopted); f.textContent = `$${data.fy27_adopted.value}M`; note27.append(f); }
-  note27.append('.');
-  legend.append(note27);
+  legendItem(legend, '<svg width="14" height="14" aria-hidden="true"><rect x="1" y="1" width="12" height="12" fill="var(--gap)" stroke="var(--text)" stroke-width="1.5" stroke-dasharray="3 2"/></svg>', "FY2027 (dashed): the IBA's figure for the proposed budget");
   el.append(legend);
 
   const svg = d3.select(el).append('svg')
@@ -284,6 +278,15 @@ export function render(el, data, colors) {
     ol.append(li);
   });
   el.append(ol);
+  const cap27 = document.createElement('p');
+  cap27.className = 'chart-cap';
+  cap27.append("The dashed FY2027 bar is what the Council's independent budget analyst (the IBA) found left in the proposed budget after the proposed cuts");
+  if (data.fy27_adopted) {
+    const f = document.createElement('span'); srcAttrs(f, data.fy27_adopted); f.textContent = `$${data.fy27_adopted.value}M`;
+    cap27.append("; the city's budget office (the Mayor's Department of Finance) puts the adopted budget's own figure at ", f);
+  }
+  cap27.append('.');
+  el.append(cap27);
   if (data.stats.peak_share != null) {
     const cap = document.createElement('p');
     cap.className = 'chart-cap';

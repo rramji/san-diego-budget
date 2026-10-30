@@ -659,6 +659,28 @@ async function pageWide(chromium) {
         await page.evaluate(() => document.querySelectorAll('details').forEach((d) => { d.open = true; }));
         await page.waitForTimeout(400);
 
+        // Every source popover opens on the page, just under its control, wherever the control sits (charts and the
+        // timeline are positioned containers; a chart row forbids wrapping). Once per run: it clicks every button.
+        if (width === 1200 && scheme === 'light') {
+          const pops = await page.evaluate(() => {
+            const out = [];
+            const docW = document.documentElement.clientWidth;
+            for (const btn of document.querySelectorAll('button.fn')) {
+              btn.scrollIntoView({ block: 'center', behavior: 'instant' });
+              btn.click();
+              const pop = document.getElementById('popover');
+              const r = pop?.getBoundingClientRect();
+              const b = btn.getBoundingClientRect();
+              if (!r || r.right > docW + 1 || r.left < -1 || Math.abs(r.top - b.bottom) > 40 || Math.abs(r.left - b.left) > 400 || r.width > r.height * 20) {
+                out.push(`${btn.getAttribute('aria-label')} in ${btn.closest('[id]')?.id || '?'}`);
+              }
+              btn.click();
+            }
+            return out;
+          });
+          if (pops.length) fail(`${pops.length} popover(s) off the page or away from their control: ${pops.slice(0, 3).join('; ')}`);
+        }
+
         const r = await page.evaluate((retired) => {
           const visible = document.body.innerText;
           const blocks = [...document.querySelectorAll('p, li, figcaption, dd, td, th, h3, h4, text, span.figure')]
