@@ -1,6 +1,6 @@
 // Section 3: the gap and how it was closed. noteParts() and stepLabel() are pure (Node-testable);
 // renderGapStory() fills the section's mounts from gap_story.json.
-import { figureSpan, mountPopovers, h, fig as sourced, cite, OURS, isOurs } from './sources.js';
+import { figureSpan, mountPopovers, h, fig as sourced, cite, isOurs } from './sources.js';
 import { gapMoney } from './gapui.js';
 import { moneyToken } from './format.js';
 import * as waterfall from './charts/waterfall.js';
@@ -41,7 +41,7 @@ export function citeParts(text, cites = []) {
   return out.filter((x) => x !== '');
 }
 
-export const stepLabel = (b) => (b.ourArithmetic ? `${b.label} (${OURS})` : b.label);
+export const stepLabel = (b) => b.label; // the computed step says so in its footnote and by its hatching, not in words
 
 // ---- DOM (browser only) ----
 // A sourced figure in this section's money format; an our-arithmetic source says so on screen.
@@ -88,7 +88,7 @@ function legend() {
     sw.style.background = `var(--${role})`;
     ul.append(h('li', null, sw, text));
   }
-  ul.append(h('li', null, h('span', 'swatch is-hatched'), `Closed, ${OURS} (hatched)`));
+  ul.append(h('li', null, h('span', 'swatch is-hatched'), 'Closed, not itemized by the IBA (hatched)'));
   return ul;
 }
 

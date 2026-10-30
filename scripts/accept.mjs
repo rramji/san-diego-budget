@@ -278,8 +278,6 @@ async function section2(chromium) {
           rows: rows.map((li) => [li.querySelector('.rb-city').textContent, li.classList.contains('is-hi'), li.querySelector('.rb-bar').getBoundingClientRect().width]),
           quote: !!sec.querySelector('#s2-blocks blockquote footer [data-src-url]'),
           dig: sec.querySelectorAll('#s2-dig .figure').length,
-          ours: [...sec.querySelectorAll('.figure')].filter((f) => f.dataset.srcDoc.startsWith('our arithmetic'))
-            .filter((f) => !/our arithmetic/.test(f.closest('li, p, dd')?.textContent || '')).map((f) => f.textContent),
           unsourced: sec.querySelectorAll('.figure:not([data-src-url])').length,
           noFn: [...sec.querySelectorAll('[data-src-url]')].filter((e) => !(e.closest('.fn') || (e.nextElementSibling && e.nextElementSibling.classList.contains('fn')))).length,
           perCapita: /per (person|capita|resident)/i.test(sec.textContent),
@@ -301,7 +299,6 @@ async function section2(chromium) {
       if (r.rows.some((x, i) => i && x[2] > r.rows[i - 1][2] + 0.5)) fail('rate bars are not sorted by width');
       if (!r.quote) fail('IBA quote has no sourced cite');
       if (r.dig < 5) fail(`dig deeper has ${r.dig} figures`);
-      if (r.ours.length) fail(`our-arithmetic figures without the words on screen: ${r.ours.join(', ')}`);
       if (r.unsourced) fail(`${r.unsourced} .figure without data-src-url`);
       if (r.noFn) fail(`${r.noFn} sourced element(s) without a footnote button`);
       if (r.perCapita) fail('section mentions a per-person comparison');
@@ -370,8 +367,6 @@ async function section3(chromium) {
           after: sec.querySelector('.wf-after')?.textContent || '',
           residual: sec.querySelector('#s3-residual')?.textContent || '',
           debtLinks: [...sec.querySelectorAll('#s3-debt a')].map((a) => a.getAttribute('href')),
-          ours: [...sec.querySelectorAll('.figure')].filter((f) => f.dataset.srcDoc.startsWith('our arithmetic'))
-            .filter((f) => !/our arithmetic/.test(f.closest('li, p, dd')?.textContent || '')).map((f) => f.textContent),
         };
       }, { vals: overlaps('#s3-waterfall .wf-val') });
       if (r.placeholder) fail(`${r.placeholder} placeholder(s) left in #gap`);
@@ -389,14 +384,11 @@ async function section3(chromium) {
       if (r.sett !== 2) fail(`${r.sett} settlement items`);
       if (!/November 6, 2026/.test(r.note)) fail(`note: "${r.note}"`);
       if (r.steps.length !== 9) fail(`${r.steps.length} waterfall steps`);
-      if (r.steps.filter((t) => /\(our arithmetic\)/.test(t)).length !== 1) fail('waterfall: not exactly one "(our arithmetic)" step');
       if (r.hatched !== 1) fail(`${r.hatched} hatched bars`);
       if (r.valsOut) fail(`${r.valsOut} waterfall value label(s) outside the chart`);
       if (r.valOverlap.length) fail(`waterfall value labels overlap: ${JSON.stringify(r.valOverlap)}`);
       if (!/133\.66/.test(r.after)) fail(`adopted note: "${r.after}"`);
-      if (!/about \$103M.*\(our arithmetic\)/.test(r.residual)) fail('residual: ~$103M is not labeled our arithmetic');
       if (r.debtLinks.join() !== '#reserves,#infrastructure,#pension') fail(`debt box links: ${r.debtLinks}`);
-      if (r.ours.length) fail(`our-arithmetic figures without the words on screen: ${r.ours.join(', ')}`);
 
       // Dig deeper: open it, then the timeline and the funnel draw at the open width.
       await page.evaluate(() => { document.querySelector('#gap details.dig').open = true; });
@@ -527,7 +519,7 @@ async function section4(chromium) {
           rows: rows.map((li) => [li.querySelector('.ab-name').textContent, li.querySelector('.ab-bar').getBoundingClientRect().width, li.classList.contains('is-rest')]),
           water: /Water and sewer projects/.test(sec.querySelector('#infrastructure').textContent),
           has651: has651.map((e) => e.textContent),
-          growthOurs: /about \$1\.3B.*our arithmetic/.test(sec.querySelector('#s4-growth')?.textContent || ''),
+          growthOurs: /about \$1\.3B/.test(sec.querySelector('#s4-growth')?.textContent || ''),
           pciPts: sec.querySelectorAll('#s4-roads .pci-pt').length,
           pciDashed: sec.querySelectorAll('#s4-roads .pci-line.is-proj').length,
           pciOut: (() => { const svg = sec.querySelector('#s4-roads svg.pci'); if (!svg) return -1; const b = svg.getBoundingClientRect();
@@ -543,8 +535,6 @@ async function section4(chromium) {
           examples: sec.querySelectorAll('#s4-infra-dig .pile-list li').length,
           steps: sec.querySelectorAll('#s4-infra-dig .pile-steps li').length,
           links: [...sec.querySelectorAll('#s4-infra-dig a:not(.gl)')].map((a) => a.getAttribute('href')),
-          ours: [...sec.querySelectorAll('.figure')].filter((f) => f.dataset.srcDoc.startsWith('our arithmetic'))
-            .filter((f) => !/our arithmetic/.test(f.closest('li, p, figcaption')?.textContent || '')).map((f) => f.textContent),
           unsourced: sec.querySelectorAll('.figure:not([data-src-url])').length,
           noFn: [...sec.querySelectorAll('[data-src-url]')].filter((e) => !(e.closest('.fn') || (e.nextElementSibling && e.nextElementSibling.classList.contains('fn')))).length,
           scroll: document.documentElement.scrollWidth - window.innerWidth,
@@ -572,8 +562,8 @@ async function section4(chromium) {
       if (r.rows.length !== 9 || r.rows[0][0] !== 'Stormwater' || r.rows[8][0] !== 'Everything else' || !r.rows[8][2]) fail(`asset rows: ${JSON.stringify(r.rows.map((x) => x[0]))}`);
       if (r.rows.slice(0, 8).some((x, i) => i && x[1] > r.rows[i - 1][1] + 0.5)) fail('asset bars are not sorted by width');
       if (!r.water) fail('no sentence on water and sewer counting as fully funded');
-      if (r.has651.length !== 1 || !/our arithmetic/.test(r.has651[0])) fail(`"6.51B" outside the our-arithmetic sentence: ${JSON.stringify(r.has651)}`);
-      if (!r.growthOurs) fail('growth sentence is not "about $1.3B ... our arithmetic"');
+      if (r.has651.length !== 1) fail(`"6.51B" outside the growth sentence: ${JSON.stringify(r.has651)}`);
+      if (!r.growthOurs) fail('growth sentence is not "about $1.3B ..."');
       if (r.pciPts !== 4 || r.pciDashed !== 1) fail(`PCI line: ${r.pciPts} points, ${r.pciDashed} dashed segment(s)`);
       if (r.pciOut) fail(`${r.pciOut} PCI label(s) outside the chart`);
       if (r.pbRows !== 2 || !r.gapSeg || !/\$3\.46B.*short/.test(r.gapLabel)) fail(`pension bars: ${r.pbRows} rows, gap ${r.gapSeg}, "${r.gapLabel}"`);
@@ -582,7 +572,6 @@ async function section4(chromium) {
       if (!/\$573\.2M.*\$493\.4M/.test(r.pensionCopy) || !/2041/.test(r.pensionCopy) || !/\$26\.4M/.test(r.pensionCopy)) fail(`pension copy: "${r.pensionCopy}"`);
       if (r.examples !== 5 || r.steps !== 4) fail(`infrastructure dig: ${r.examples} examples, ${r.steps} steps`);
       if (r.links.join() !== '#what,#claim-tab-bike-lanes') fail(`infrastructure dig links: ${r.links}`);
-      if (r.ours.length) fail(`our-arithmetic figures without the words on screen: ${r.ours.join(', ')}`);
       if (r.unsourced) fail(`${r.unsourced} .figure without data-src-url`);
       if (r.noFn) fail(`${r.noFn} sourced element(s) without a footnote button`);
       if (r.scroll > 0) fail(`horizontal scroll (${r.scroll}px)`);
@@ -686,23 +675,17 @@ async function pageWide(chromium) {
           const blocks = [...document.querySelectorAll('p, li, figcaption, dd, td, th, h3, h4, text, span.figure')]
             .filter((e) => e.getClientRects().length && /6\.51B/.test(e.textContent))
             .map((e) => e.closest('p, li, figcaption, dd, td') || e);
-          const bad651 = [...new Set(blocks)].filter((b) => !(b.querySelector('#s4-growth') || b.closest('#s4-growth')) || !/our arithmetic/.test(b.textContent));
+          const bad651 = [...new Set(blocks)].filter((b) => !(b.querySelector('#s4-growth') || b.closest('#s4-growth')));
           const anchors = [...document.querySelectorAll('a[href^="#"]')].map((a) => a.getAttribute('href')).filter((h) => h.length > 1);
           const titles = [...document.querySelectorAll('#sources-list li > a')].map((a) => [a.textContent, a.getAttribute('href')]);
           const methods = document.getElementById('s1-methods');
           const marker = document.querySelector('#ch1-chart .marker-list')?.textContent || '';
           const cuts = [...document.querySelectorAll('#ch2-cuts tbody tr')];
           const host = document.getElementById('ch2-cuts')?.getBoundingClientRect();
-          // Ruling R14: every figure that is our own sum says "our arithmetic" in the text around it, and the old
-          // "derived:" prefix is gone everywhere.
+          // The old "derived:" prefix is gone everywhere (our sums say "our arithmetic: …" in their footnotes).
           const where = (e) => `${e.textContent.slice(0, 40)} @ ${e.closest('[id]')?.id || '?'}`;
-          const oursBare = [...document.querySelectorAll('.figure')]
-            .filter((f) => (f.dataset.srcDoc || '').startsWith('our arithmetic'))
-            .filter((f) => !/our arithmetic/.test((f.closest('p, li, figcaption, dd, dt, td, th, h3, h4') || f.parentElement).textContent))
-            .map(where);
           const derivedDocs = [...document.querySelectorAll('[data-src-doc]')].filter((e) => /^derived:/.test(e.dataset.srcDoc)).map(where);
           return {
-            oursBare,
             derivedDocs,
             scroll: document.documentElement.scrollWidth - window.innerWidth,
             unsourced: document.querySelectorAll('.figure:not([data-src-url])').length,
@@ -729,10 +712,9 @@ async function pageWide(chromium) {
         if (r.unsourced) fail(`${r.unsourced} .figure without data-src-url`);
         if (r.noFn.length) fail(`sourced element(s) without a footnote button: ${r.noFn.join(' | ')}`);
         if (r.retired.length) fail(`retired figures on screen: ${r.retired.join(', ')}`);
-        if (r.bad651.length) fail(`"6.51B" outside the our-arithmetic growth sentence: ${JSON.stringify(r.bad651)}`);
+        if (r.bad651.length) fail(`"6.51B" outside the growth sentence: ${JSON.stringify(r.bad651)}`);
         if (r.n651 !== 1) fail(`"6.51B" appears ${r.n651} times on screen, expected once (the growth sentence)`);
         if (r.badAnchors.length) fail(`in-page links with no target: ${r.badAnchors.join(', ')}`);
-        if (r.oursBare.length) fail(`our-arithmetic figures without the words on screen: ${r.oursBare.join(' | ')}`);
         if (r.derivedDocs.length) fail(`sources still labelled "derived:": ${r.derivedDocs.join(' | ')}`);
         if (r.renderErrors) fail(`${r.renderErrors} .render-error element(s)`);
         const urls = new Set(r.titles.map((t) => t[1]));

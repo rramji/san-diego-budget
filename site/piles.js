@@ -1,7 +1,7 @@
 // Section 4: what piles up (reserves, infrastructure, pension). renderPiles() fills the three parts' mounts from
 // piles_up.json; the chart maths lives in charts/piles.js (pure, Node-tested).
 // Colour roles: --restricted is money in hand, --gap is what is missing; the payer bar highlights the General Fund.
-import { figureSpan, mountPopovers, h, fig, cite, OURS } from './sources.js';
+import { figureSpan, mountPopovers, h, fig, cite } from './sources.js';
 import * as piles from './charts/piles.js';
 import { inkOn } from './charts/budget-map.js';
 import { observeWidth } from './charts/util.js';
@@ -62,7 +62,7 @@ function assets(el, d) {
   const rest = rows.find((r) => r.rest);
   const chart = h('div', 'pile-chart');
   el.replaceChildren(h('p', 'pile-title', 'Unfunded need by type of asset, FY2027–FY2031'), chart,
-    h('figcaption', 'chart-cap', `“Everything else” adds up the other ${rest.count} types (our arithmetic), ${rest.zero.length} of them at $0.`));
+    h('figcaption', 'chart-cap', `“Everything else” adds up the other ${rest.count} types, ${rest.zero.length} of them at $0.`));
   piles.renderAssets(chart, rows, { fig });
   return h('p', null, 'Water and sewer projects aren’t in the gap. The plan counts them, like Pure Water, airports, golf and landfills, as fully paid for by their own customers’ fees, so ',
     cite(d.cites.gf_only_gap, 'the whole gap falls on things the General Fund pays for'), ': storm drains, streets, sidewalks, streetlights, parks, and fire and police stations.');
@@ -179,7 +179,7 @@ function pension(barsEl, payersEl, copy, dig, d) {
 // The one sentence that names last year's $6.51B: it says how the $1.3B growth was worked out.
 function growth(el, d) {
   const inf = d.infrastructure;
-  el.replaceChildren('That is about ', figureSpan(inf.growth_m, `$${(inf.growth_m.value / 1000).toFixed(1)}B`), ' more than a year earlier (our arithmetic: ',
+  el.replaceChildren('That is about ', figureSpan(inf.growth_m, `$${(inf.growth_m.value / 1000).toFixed(1)}B`), ' more than a year earlier (',
     figureSpan(inf.gap_m, bn(inf.gap_m.value)), ' − ', figureSpan(inf.prior_gap_m, bn(inf.prior_gap_m.value)), ' in the previous year’s plan), ',
     cite(d.cites.gf_only_gap, 'mostly for stormwater'), '.');
 }

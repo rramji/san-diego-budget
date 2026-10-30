@@ -1,7 +1,7 @@
 // Chapter 2 funnel: four stacked bars sharing one x-scale.
 // prepare() is pure (no DOM, no d3). render() uses the global d3.
 import { money } from '../format.js';
-import { figureSpan, fig, h, OURS, OURS_PREFIX } from '../sources.js';
+import { figureSpan, fig, h, OURS_PREFIX } from '../sources.js';
 
 export const DEBT_NOTE = 'it combines the adopted and proposed budgets';
 
@@ -40,10 +40,10 @@ export function prepare(headline, funnel) {
   };
 }
 
-// A segment's amount: a sourced figure, "(our arithmetic)" where it is our sum, plus the segment's note if any.
+// A segment's amount: a sourced figure, plus the segment's note if any.
 function amount(s) {
   if (!s.note) return fig(s.figure, money(s.amount_m));
-  return h('span', null, figureSpan(s.figure, money(s.amount_m)), ` (${OURS}; ${s.note})`);
+  return h('span', null, figureSpan(s.figure, money(s.amount_m)), ` (${s.note})`);
 }
 
 // The gap as a share of everything-else spending, as our own sourced sum.

@@ -72,14 +72,14 @@ export function methodsModel(tree) {
       url: csvUrl,
     };
     paras.push([
-      `Another ${um.rows} rows of the ${detail} data, totaling `, fig(um.value_m, s, true), ' (our arithmetic), have no account number '
+      `Another ${um.rows} rows of the ${detail} data, totaling `, fig(um.value_m, s, true), ', have no account number '
       + 'we can look up, so we can\'t tell whether they are spending or income. They are not drawn in any map.',
     ]);
   }
 
   paras.push([
-    'Where a number on this page is our own sum or difference rather than one printed in a document, it is labeled '
-    + '"our arithmetic", and its footnote shows the calculation.',
+    'Where a number on this page is our own sum or difference rather than one printed in a document, its footnote '
+    + 'says so ("our arithmetic") and shows the calculation.',
   ]);
   return { title: 'How we built this', paras };
 }

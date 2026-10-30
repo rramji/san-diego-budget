@@ -27,10 +27,9 @@ export function h(tag, cls, ...kids) {
   e.append(...kids.filter((k) => k != null && k !== false));
   return e;
 }
-// A sourced figure; an our-arithmetic source says so on screen, next to the number.
+// A sourced figure. One that is our own sum says so in its footnote ("our arithmetic: …"), not on the page.
 export function fig(f, text) {
-  const s = figureSpan(f, text);
-  return isOurs(f.source) ? h('span', null, s, ` (${OURS})`) : s;
+  return figureSpan(f, text);
 }
 // Copy whose source is a document but which states no number of its own.
 export function cite(src, text) {

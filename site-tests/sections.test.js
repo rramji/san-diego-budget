@@ -112,11 +112,11 @@ test('waterfall prepare is pure', () => {
   assert.equal(JSON.stringify(story.waterfall), before);
 });
 
-test('waterfall step labels say "our arithmetic" on the computed step only', () => {
+test('waterfall step labels never say "our arithmetic" on the page; the footnote does', () => {
   const p = waterfall(story.waterfall);
   const labels = p.bars.map(stepLabel);
-  assert.equal(labels.filter((l) => /our arithmetic/.test(l)).length, 1);
-  assert.match(stepLabel(p.bars.find((b) => b.ourArithmetic)), /\(our arithmetic\)$/);
+  assert.equal(labels.filter((l) => /our arithmetic/.test(l)).length, 0);
+  assert.match(p.bars.find((b) => b.ourArithmetic).figure.source.doc, /^our arithmetic: /);
 });
 
 test('timeline sorts by date and separates near points into lanes', () => {
