@@ -579,7 +579,7 @@
           "url": "https://sandag.org/funding/transnet"
         },
         "ballot_county": {
-          "doc": "County of San Diego, Registrar of Voters, November 3, 2026 measure text, Protect San Diego County's Health and Safety Act, Sec. 22.505: a tax 'in the incorporated and unincorporated territory of the County at the rate of one half of one percent (0.5%)'",
+          "doc": "County of San Diego, Registrar of Voters, November 3, 2026 measure text, Protect San Diego County's Health and Safety Act (Measure B), Sec. 22.505: a tax 'in the incorporated and unincorporated territory of the County at the rate of one half of one percent (0.5%)'",
           "page": 5,
           "url": "https://www.sdvote.com/content/dam/rov/en/election/nov-3-2026-gubernatorial-general-election/san-diego-county-fund-health-and-safety-services.pdf"
         },
@@ -587,6 +587,131 @@
           "doc": "City of Santee, Local Funding: Measure Y (a one-cent general sales tax for 10 years, on the November 3, 2026 ballot)",
           "page": null,
           "url": "https://www.cityofsanteeca.gov/our-community/local-funding---measure-y"
+        }
+      },
+      "ballot": {
+        "county": {
+          "measure": "Measure B",
+          "est_low_m": {
+            "value": 400,
+            "source": {
+              "doc": "County of San Diego Registrar of Voters, November 3, 2026 sample ballot and voter information pamphlet (SB-111), County Counsel impartial analysis of Measure B: the 'sales tax would generate approximately $400,000,000 to $450,000,000 per year'",
+              "page": 69,
+              "url": "https://www.sdvote.com/content/dam/rov/en/sb/SB-ENG-111.pdf"
+            }
+          },
+          "est_high_m": {
+            "value": 450,
+            "source": {
+              "doc": "County of San Diego Registrar of Voters, November 3, 2026 sample ballot and voter information pamphlet (SB-111), County Counsel impartial analysis of Measure B: the 'sales tax would generate approximately $400,000,000 to $450,000,000 per year'",
+              "page": 69,
+              "url": "https://www.sdvote.com/content/dam/rov/en/sb/SB-ENG-111.pdf"
+            }
+          },
+          "population": {
+            "value": 3344322,
+            "source": {
+              "doc": "California Department of Finance, E-5 Population and Housing Estimates for Cities, Counties, and the State, January 2026 (Table 1, sheet E5CountyState2026, San Diego County row): total population, January 1, 2026 (provisional; released May 1, 2026)",
+              "page": null,
+              "url": "https://dof.ca.gov/media/docs/forecasting/Demographics/estimates/e-5-population-and-housing-estimates-for-cities-counties-and-the-state-2020-2026/E-5_2026_InternetVersion.xlsx"
+            }
+          },
+          "shares": [
+            {
+              "label": "health care, food assistance, childcare and children's services",
+              "cap": true,
+              "pct": {
+                "value": 60,
+                "source": {
+                  "doc": "Protect San Diego County's Health and Safety Act (Measure B ordinance), Sec. 22.519(b)(1): 'No more than sixty percent (60%) on protecting and providing affordable healthcare services, nutrition and food security services, and services and programs for children and families'",
+                  "page": 10,
+                  "url": "https://www.sdvote.com/content/dam/rov/en/election/nov-3-2026-gubernatorial-general-election/san-diego-county-fund-health-and-safety-services.pdf"
+                }
+              }
+            },
+            {
+              "label": "the Tijuana River sewage crisis",
+              "cap": true,
+              "pct": {
+                "value": 22.5,
+                "source": {
+                  "doc": "Protect San Diego County's Health and Safety Act (Measure B ordinance), Sec. 22.519(b)(2): 'No more than twenty-two and one-half percent (22.5%) on environmental mitigation and related programs in connection with the toxic sewage crisis in the Tijuana River Valley'",
+                  "page": 11,
+                  "url": "https://www.sdvote.com/content/dam/rov/en/election/nov-3-2026-gubernatorial-general-election/san-diego-county-fund-health-and-safety-services.pdf"
+                }
+              }
+            },
+            {
+              "label": "public safety, wildfire prevention and emergency response",
+              "cap": false,
+              "pct": {
+                "value": 17.5,
+                "source": {
+                  "doc": "Protect San Diego County's Health and Safety Act (Measure B ordinance), Sec. 22.519(b)(3): 'Seventeen and one-half percent (17.5%) on protecting public safety services, wildfire prevention, and crisis response services'",
+                  "page": 12,
+                  "url": "https://www.sdvote.com/content/dam/rov/en/election/nov-3-2026-gubernatorial-general-election/san-diego-county-fund-health-and-safety-services.pdf"
+                }
+              }
+            },
+            {
+              "label": "administration",
+              "cap": true,
+              "pct": {
+                "value": 1.5,
+                "source": {
+                  "doc": "Protect San Diego County's Health and Safety Act (Measure B ordinance), Sec. 22.519(b)(4): 'No more than one and one-half percent (1.5%) shall be expended on general administrative services'",
+                  "page": 12,
+                  "url": "https://www.sdvote.com/content/dam/rov/en/election/nov-3-2026-gubernatorial-general-election/san-diego-county-fund-health-and-safety-services.pdf"
+                }
+              }
+            }
+          ],
+          "cites": {
+            "question": {
+              "doc": "County of San Diego Registrar of Voters, November 3, 2026 sample ballot (SB-111), Measure B ballot question: 'a half-cent sales tax raising an estimated $400,000,000 to $450,000,000 annually, requiring citizen oversight, public spending disclosure, and independent annual audits, and lasting until ended by voters'",
+              "page": 44,
+              "url": "https://www.sdvote.com/content/dam/rov/en/sb/SB-ENG-111.pdf"
+            },
+            "county_fund": {
+              "doc": "Protect San Diego County's Health and Safety Act (Measure B ordinance), Sec. 22.515-22.519: proceeds go into the County's 'Protect San Diego County's Health and Safety Fund' and are spent by the County on the programs in its expenditure plan (County safety-net health programs, First 5 San Diego, the County Fire Protection District and the Sheriff)",
+              "page": 9,
+              "url": "https://www.sdvote.com/content/dam/rov/en/election/nov-3-2026-gubernatorial-general-election/san-diego-county-fund-health-and-safety-services.pdf"
+            }
+          }
+        },
+        "santee": {
+          "measure": "Measure Y",
+          "est_m": {
+            "value": 14,
+            "source": {
+              "doc": "City of Santee, Local Funding: Measure Y, ballot question: 'providing approximately $14,000,000 annually for city services for 10 years'",
+              "page": null,
+              "url": "https://www.cityofsanteeca.gov/our-community/local-funding---measure-y"
+            }
+          },
+          "years": {
+            "value": 10,
+            "source": {
+              "doc": "City of Santee, Local Funding: Measure Y, ballot question: 'for 10 years'",
+              "page": null,
+              "url": "https://www.cityofsanteeca.gov/our-community/local-funding---measure-y"
+            }
+          },
+          "population": {
+            "value": 59812,
+            "source": {
+              "doc": "California Department of Finance, E-5 Population and Housing Estimates for Cities, Counties, and the State, January 2026 (Table 2, sheet E5CityCounty2026, Santee row): total population, January 1, 2026 (provisional; released May 1, 2026)",
+              "page": null,
+              "url": "https://dof.ca.gov/media/docs/forecasting/Demographics/estimates/e-5-population-and-housing-estimates-for-cities-counties-and-the-state-2020-2026/E-5_2026_InternetVersion.xlsx"
+            }
+          },
+          "cites": {
+            "uses": {
+              "doc": "City of Santee, Local Funding: Measure Y, ballot question: 'fixing streets and potholes; keeping streets, sidewalks, parks and public facilities safe, clean, and well-maintained; repairing/replacing aging infrastructure and stormdrains; local traffic management; fire protection, paramedic, crime prevention, and 911 emergency response'",
+              "page": null,
+              "url": "https://www.cityofsanteeca.gov/our-community/local-funding---measure-y"
+            }
+          }
         }
       }
     }

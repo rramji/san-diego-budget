@@ -280,7 +280,7 @@ async function section2(chromium) {
           dig: sec.querySelectorAll('#s2-dig .figure').length,
           unsourced: sec.querySelectorAll('.figure:not([data-src-url])').length,
           noFn: [...sec.querySelectorAll('[data-src-url]')].filter((e) => !(e.closest('.fn') || (e.nextElementSibling && e.nextElementSibling.classList.contains('fn')))).length,
-          perCapita: /per (person|capita|resident)/i.test(sec.textContent),
+          perCapita: [...sec.querySelectorAll('p:not(.ballot-note), li, figcaption, h3, h4')].some((e) => /per (person|capita|resident)/i.test(e.textContent)), // the city is never compared per person; the ballot note's per-resident cost is allowed
           scroll: document.documentElement.scrollWidth - window.innerWidth,
         };
       });

@@ -13,6 +13,26 @@ export function rateBars(peers) {
 
 // County cities' sales-tax rates, highest first, each split into the countywide base and the city's own add-on.
 // Widths are shares of the highest total (bars start at zero).
+// The November 3, 2026 measures: what each would raise, what that is per resident, and where the money would go.
+export const shareText = (sh) => `${sh.cap ? 'up to ' : ''}${pctText(sh.pct.value)}`; // the figure; the label follows as plain text
+export function ballotParas(b) {
+  if (!b) return [];
+  const co = b.county, sa = b.santee;
+  const popM = (p) => `${(p.value / 1e6).toFixed(2)} million`;
+  return [
+    h('p', 'ballot-note', `The County estimates that ${co.measure} would raise `, fig(co.est_low_m, mText(co.est_low_m.value)), ' to ',
+      fig(co.est_high_m, mText(co.est_high_m.value)), ' a year, ', cite(co.cites.question, 'with no end date'), '. Spread over the county’s ',
+      fig(co.population, popM(co.population)), ' residents, that is about ', fig(co.per_resident_low, `$${co.per_resident_low.value}`), ' to ',
+      fig(co.per_resident_high, `$${co.per_resident_high.value}`), ' per person per year, though visitors and businesses pay part of any sales tax. ',
+      cite(co.cites.county_fund, 'The money would go to the County of San Diego, not to cities'), ': its spending plan allows ',
+      ...co.shares.flatMap((sh, i) => [i ? (i === co.shares.length - 1 ? ', and ' : ', ') : '', fig(sh.pct, shareText(sh)), ` for ${sh.label}`]),
+      '. None of it would flow into the City of San Diego’s budget.'),
+    h('p', 'ballot-note', `Santee’s ${sa.measure}, a one-cent tax for `, fig(sa.years, `${sa.years.value} years`), ', is estimated to raise about ',
+      fig(sa.est_m, `$${sa.est_m.value}M`), ' a year for that city, about ', fig(sa.per_resident, `$${sa.per_resident.value}`), ' per Santee resident, ',
+      cite(sa.cites.uses, 'for streets, storm drains, and fire and emergency services'), '.'),
+  ];
+}
+
 export function countyBars(county) {
   const rows = county.cities.map((c) => ({
     city: c.city, total: c.rate_pct.value, addon: c.addon_pct?.value ?? 0, figure: c.rate_pct, addonFigure: c.addon_pct ?? null,
@@ -99,8 +119,9 @@ export function blocks(d) {
       countyList(co),
       h('p', 'chart-cap', `Total rate charged at the register, effective ${co.effective}. Grey: the countywide rate. Teal: the city’s own tax. Unincorporated areas of the county pay `,
         fig(co.unincorporated_pct, pctText(co.unincorporated_pct.value)), '.'),
-      h('p', null, 'On November 3, 2026, county voters decide on ', cite(co.cites.ballot_county, 'a countywide half-cent sales tax'),
-        ', which would apply in every city, San Diego included, and Santee voters on ', cite(co.cites.ballot_santee, 'a one-cent city sales tax (Measure Y)'), '.')),
+      h('p', null, 'On November 3, 2026, county voters decide on ', cite(co.cites.ballot_county, 'a countywide half-cent sales tax (Measure B)'),
+        ', which would apply in every city, San Diego included, and Santee voters on ', cite(co.cites.ballot_santee, 'a one-cent city sales tax (Measure Y)'), '.'),
+      ...ballotParas(co.ballot)),
     block('Hotel tax: part of it goes to promoting tourism',
       ['Hotel guests pay a base hotel tax (transient occupancy tax) of ', fig(ho.base_cents, centsWord(ho.base_cents.value)),
         ' per dollar of rent, and city law sends ', fig(ho.gf_cents, centsWord(ho.gf_cents.value)), ' of it (', fig(ho.gf_m, mText(ho.gf_m.value)),

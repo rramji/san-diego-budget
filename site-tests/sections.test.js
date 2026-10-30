@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { prepare as cents } from '../site/charts/cents-bar.js';
-import { rateBars, countyBars } from '../site/why.js';
+import { rateBars, countyBars, shareText } from '../site/why.js';
 import { prepare as waterfall } from '../site/charts/waterfall.js';
 import { prepare as timeline, layoutY, BREAK_MONTHS } from '../site/charts/gap-timeline.js';
 import { noteParts, stepLabel, citeParts } from '../site/gapstory.js';
@@ -340,6 +340,17 @@ test('countyBars sorts the 18 cities by total and splits base from add-on', () =
   assert.equal(lm.addon, 0.75);
   assert.ok(Math.abs(lm.basePct + lm.addonPct - (8.5 / 8.75) * 100) < 1e-9);
   assert.equal(rows.filter((r) => r.addon > 0).length, why.sales_tax.county.n_addon.value);
+});
+
+test('ballot context: per-resident figures are the estimate over the E-5 population; capped shares say "up to"', () => {
+  const why = JSON.parse(readFileSync(new URL('../data/build/why_short.json', import.meta.url), 'utf8'));
+  const b = why.sales_tax.county.ballot;
+  assert.equal(b.county.per_resident_low.value, 120);
+  assert.equal(b.county.per_resident_high.value, 135);
+  assert.equal(b.santee.per_resident.value, 234);
+  for (const f of [b.county.per_resident_low, b.county.per_resident_high, b.santee.per_resident]) assert.match(f.source.doc, /^our arithmetic: /);
+  const texts = b.county.shares.map(shareText);
+  assert.deepEqual(texts, ['up to 60%', 'up to 22.5%', '17.5%', 'up to 1.5%']);
 });
 
 // ---- Section bar ----

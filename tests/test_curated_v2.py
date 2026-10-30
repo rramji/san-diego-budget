@@ -203,6 +203,15 @@ def test_why_short_sources_and_arithmetic():
     h = d["hotel"]
     assert (h["promo_cents"]["value"], h["council_cents"]["value"]) == (4.0, 1.0)
     assert "June 2, 2026" in d["trash"]["settlement_gf_fy2028_m"]["source"]["doc"]
+    # November 3, 2026 measures: the County's estimate spread over the E-5 population, labeled our arithmetic
+    b = d["sales_tax"]["county"]["ballot"]
+    assert (b["county"]["est_low_m"]["value"], b["county"]["est_high_m"]["value"]) == (400, 450)
+    assert b["county"]["per_resident_low"]["value"] == round(400e6 / 3344322) == 120
+    assert b["county"]["per_resident_high"]["value"] == 135
+    assert b["county"]["per_resident_low"]["source"]["doc"].startswith("our arithmetic: ")
+    assert [sh["pct"]["value"] for sh in b["county"]["shares"]] == [60, 22.5, 17.5, 1.5]
+    assert b["santee"]["per_resident"]["value"] == round(14e6 / 59812) == 234
+    assert b["santee"]["years"]["value"] == 10
 
 
 @pytest.mark.parametrize("edit, where", [
@@ -210,6 +219,8 @@ def test_why_short_sources_and_arithmetic():
     (lambda d: d["property_dollar"]["cities_cents"].__setitem__("value", 18.5), "cities_cents"),
     (lambda d: d["sales_tax"]["measure_e"]["margin_votes"].__setitem__("value", 3000), "margin_votes"),
     (lambda d: d["sales_tax"]["peers"].pop(), "peers"),
+    (lambda d: d["sales_tax"]["county"]["ballot"]["county"]["est_low_m"].__setitem__("value", 500), "ballot"),
+    (lambda d: d["sales_tax"]["county"]["ballot"]["county"]["shares"][0]["pct"].__setitem__("value", 160), "shares"),
     (lambda d: d["growth"].__setitem__("revenue_period", ""), "growth.revenue_period"),
     (lambda d: d["quote"]["source"].__setitem__("url", "http://x"), "quote.source"),
     (lambda d: d["hotel"]["promo_cents"].__setitem__("value", 5.0), "hotel"),

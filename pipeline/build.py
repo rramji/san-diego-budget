@@ -594,7 +594,47 @@ def _check_county_sales_tax(c, sd_rate: float) -> dict:
             "page": src["page"], "url": src["url"]}}
     for k, v in (c.get("cites") or {}).items():
         _check_source(v, f"sales_tax.county.cites.{k}")
+    c["ballot"] = _check_ballot(c.get("ballot"))
     return c
+
+
+def _per_resident(amount_m, population, path: str) -> dict:
+    """A yearly amount spread evenly over a population, to the nearest dollar, labeled our arithmetic."""
+    per = round(amount_m["value"] * 1e6 / population["value"])
+    return {"value": per, "source": {
+        "doc": f"our arithmetic: ${amount_m['value']:g}M a year / {population['value']:,} residents (January 2026) = ${per:,} per resident per year, "
+               f"if spread evenly; visitors and businesses pay part of any sales tax",
+        "page": amount_m["source"]["page"], "url": amount_m["source"]["url"]}}
+
+
+def _check_ballot(b) -> dict:
+    """The November 3, 2026 sales-tax measures. Checks every figure and citation, that the county shares are each
+    between 0 and 100, and adds per-resident figures (our arithmetic) from the estimates and the E-5 populations."""
+    if not isinstance(b, dict) or not isinstance(b.get("county"), dict) or not isinstance(b.get("santee"), dict):
+        raise ValueError("sales_tax.county.ballot: objects county and santee required")
+    co, sa = b["county"], b["santee"]
+    for who, obj, keys in (("county", co, ("est_low_m", "est_high_m", "population")), ("santee", sa, ("est_m", "years", "population"))):
+        _text(obj.get("measure"), f"sales_tax.county.ballot.{who}.measure")
+        for k in keys:
+            _need_value(obj.get(k), f"sales_tax.county.ballot.{who}.{k}")
+        for k, v in (obj.get("cites") or {}).items():
+            _check_source(v, f"sales_tax.county.ballot.{who}.cites.{k}")
+    if co["est_low_m"]["value"] > co["est_high_m"]["value"]:
+        raise ValueError("sales_tax.county.ballot.county: est_low_m must not exceed est_high_m")
+    shares = co.get("shares")
+    if not isinstance(shares, list) or not shares:
+        raise ValueError("sales_tax.county.ballot.county.shares: non-empty list required")
+    for i, sh in enumerate(shares):
+        _text(sh.get("label"), f"sales_tax.county.ballot.county.shares[{i}].label")
+        if not isinstance(sh.get("cap"), bool):
+            raise ValueError(f"sales_tax.county.ballot.county.shares[{i}].cap: true/false required")
+        pct = _need_value(sh.get("pct"), f"sales_tax.county.ballot.county.shares[{i}].pct")
+        if not 0 < pct <= 100:
+            raise ValueError(f"sales_tax.county.ballot.county.shares[{i}].pct: must be between 0 and 100")
+    co["per_resident_low"] = _per_resident(co["est_low_m"], co["population"], "county")
+    co["per_resident_high"] = _per_resident(co["est_high_m"], co["population"], "county")
+    sa["per_resident"] = _per_resident(sa["est_m"], sa["population"], "santee")
+    return b
 
 
 GAP_TOLERANCE_M = 0.05
