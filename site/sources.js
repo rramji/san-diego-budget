@@ -67,9 +67,10 @@ function closePop(returnFocus) {
   openBtn.removeAttribute('aria-controls');
   if (returnFocus) openBtn.focus();
   openPop = openBtn = null;
+  hoverOpen = false;
 }
 
-function openPopover(btn, el) {
+function openPopover(btn, el, { focus = true } = {}) {
   closePop(false);
   const pop = document.createElement('div');
   pop.className = 'popover';
@@ -105,10 +106,25 @@ function openPopover(btn, el) {
   btn.setAttribute('aria-controls', 'popover');
   openPop = pop;
   openBtn = btn;
-  a.focus({ preventScroll: true }); // it is a dialog at the end of the body, so Tab wouldn't reach it from the button
+  pop.addEventListener('pointerenter', () => clearTimeout(hoverTimer));
+  pop.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse') scheduleHoverClose(); });
+  if (focus) a.focus({ preventScroll: true }); // it is a dialog at the end of the body, so Tab wouldn't reach it from the button
 }
 
 let globalListeners = false;
+let hoverOpen = false; // the open popover came from hovering, so leaving it closes it; a click pins it
+let hoverTimer = 0;
+
+function scheduleHoverClose() {
+  clearTimeout(hoverTimer);
+  if (hoverOpen) hoverTimer = setTimeout(() => { if (hoverOpen) closePop(false); }, 300);
+}
+
+// A sourced number is itself the control: wrapped in a button with a dotted underline, opened by tap, click or hover.
+// Copy that cites a document without stating a number (.cite), links and anything inside an SVG keep a small mark
+// after the text instead.
+const wrapsText = (el) => el.tagName === 'SPAN' && !el.classList.contains('cite');
+
 export function mountPopovers(root = document) {
   if (!globalListeners) {
     globalListeners = true;
@@ -119,19 +135,34 @@ export function mountPopovers(root = document) {
   }
   let n = 0;
   root.querySelectorAll('[data-src-url]').forEach((el) => {
-    if (el.nextElementSibling && el.nextElementSibling.classList.contains('fn')) return;
+    if (el.closest('.fn') || (el.nextElementSibling && el.nextElementSibling.classList.contains('fn'))) return;
     n += 1;
     const btn = document.createElement('button');
     btn.type = 'button';
-    btn.className = 'fn';
-    btn.textContent = '¹';
     btn.setAttribute('aria-expanded', 'false');
     const label = (el.textContent || '').trim();
-    btn.setAttribute('aria-label', `Source for ${label || 'this figure'}`);
+    if (wrapsText(el)) {
+      btn.className = 'fn fn-fig';
+      btn.setAttribute('aria-label', `${label || 'this figure'}, source`);
+      el.replaceWith(btn);
+      btn.append(el);
+      btn.addEventListener('pointerenter', (e) => {
+        if (e.pointerType !== 'mouse' || openBtn === btn) return;
+        clearTimeout(hoverTimer);
+        hoverTimer = setTimeout(() => { openPopover(btn, el, { focus: false }); hoverOpen = true; }, 250);
+      });
+      btn.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse') scheduleHoverClose(); });
+    } else {
+      btn.className = 'fn';
+      btn.textContent = '\u00b9';
+      btn.setAttribute('aria-label', `Source for ${label || 'this figure'}`);
+      el.after(btn);
+    }
     btn.addEventListener('click', () => {
-      if (openBtn === btn) closePop(false); else openPopover(btn, el);
+      clearTimeout(hoverTimer);
+      if (openBtn !== btn) { openPopover(btn, el); hoverOpen = false; return; }
+      if (hoverOpen) { hoverOpen = false; openPop.querySelector('a').focus({ preventScroll: true }); } else closePop(false);
     });
-    el.after(btn);
   });
   return n;
 }

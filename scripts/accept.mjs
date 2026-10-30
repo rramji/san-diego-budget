@@ -209,7 +209,7 @@ async function section1(chromium) {
       // Every figure is sourced and has a footnote button; nothing scrolls sideways.
       const src = await page.evaluate(() => ({
         unsourced: document.querySelectorAll('.figure:not([data-src-url])').length,
-        noFn: [...document.querySelectorAll('[data-src-url]')].filter((e) => !(e.nextElementSibling && e.nextElementSibling.classList.contains('fn'))).length,
+        noFn: [...document.querySelectorAll('[data-src-url]')].filter((e) => !(e.closest('.fn') || (e.nextElementSibling && e.nextElementSibling.classList.contains('fn')))).length,
         scroll: document.documentElement.scrollWidth - window.innerWidth,
       }));
       if (src.unsourced) fail(`${src.unsourced} .figure without data-src-url`);
@@ -281,7 +281,7 @@ async function section2(chromium) {
           ours: [...sec.querySelectorAll('.figure')].filter((f) => f.dataset.srcDoc.startsWith('our arithmetic'))
             .filter((f) => !/our arithmetic/.test(f.closest('li, p, dd')?.textContent || '')).map((f) => f.textContent),
           unsourced: sec.querySelectorAll('.figure:not([data-src-url])').length,
-          noFn: [...sec.querySelectorAll('[data-src-url]')].filter((e) => !(e.nextElementSibling && e.nextElementSibling.classList.contains('fn'))).length,
+          noFn: [...sec.querySelectorAll('[data-src-url]')].filter((e) => !(e.closest('.fn') || (e.nextElementSibling && e.nextElementSibling.classList.contains('fn')))).length,
           perCapita: /per (person|capita|resident)/i.test(sec.textContent),
           scroll: document.documentElement.scrollWidth - window.innerWidth,
         };
@@ -418,7 +418,7 @@ async function section3(chromium) {
           funnelSteps: funnel.querySelectorAll('.step').length,
           funnelMode: funnel.classList.contains('scrolly') ? 'scrolly' : 'stacked',
           unsourced: sec.querySelectorAll('.figure:not([data-src-url])').length,
-          noFn: [...sec.querySelectorAll('[data-src-url]')].filter((e) => !(e.nextElementSibling && e.nextElementSibling.classList.contains('fn'))).length,
+          noFn: [...sec.querySelectorAll('[data-src-url]')].filter((e) => !(e.closest('.fn') || (e.nextElementSibling && e.nextElementSibling.classList.contains('fn')))).length,
           scroll: document.documentElement.scrollWidth - window.innerWidth,
         };
       }, { pts: overlaps('#s3-timeline .tl-pt') });
@@ -546,7 +546,7 @@ async function section4(chromium) {
           ours: [...sec.querySelectorAll('.figure')].filter((f) => f.dataset.srcDoc.startsWith('our arithmetic'))
             .filter((f) => !/our arithmetic/.test(f.closest('li, p, figcaption')?.textContent || '')).map((f) => f.textContent),
           unsourced: sec.querySelectorAll('.figure:not([data-src-url])').length,
-          noFn: [...sec.querySelectorAll('[data-src-url]')].filter((e) => !(e.nextElementSibling && e.nextElementSibling.classList.contains('fn'))).length,
+          noFn: [...sec.querySelectorAll('[data-src-url]')].filter((e) => !(e.closest('.fn') || (e.nextElementSibling && e.nextElementSibling.classList.contains('fn')))).length,
           scroll: document.documentElement.scrollWidth - window.innerWidth,
         };
       });
@@ -684,7 +684,7 @@ async function pageWide(chromium) {
             derivedDocs,
             scroll: document.documentElement.scrollWidth - window.innerWidth,
             unsourced: document.querySelectorAll('.figure:not([data-src-url])').length,
-            noFn: [...document.querySelectorAll('[data-src-url]')].filter((e) => !(e.nextElementSibling && e.nextElementSibling.classList.contains('fn'))).map((e) => e.textContent.slice(0, 40)),
+            noFn: [...document.querySelectorAll('[data-src-url]')].filter((e) => !(e.closest('.fn') || (e.nextElementSibling && e.nextElementSibling.classList.contains('fn')))).map((e) => e.textContent.slice(0, 40)),
             retired: retired.filter((t) => visible.includes(t)),
             n651: (visible.match(/6\.51B/g) || []).length,
             bad651: bad651.map((b) => b.textContent.slice(0, 80)),
