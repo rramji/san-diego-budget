@@ -552,7 +552,7 @@ async function section4(chromium) {
       });
       if (r.placeholder) fail(`${r.placeholder} placeholder(s) left in #piles`);
       if (!/pile up/.test(r.sectionLead)) fail(`section lead: "${r.sectionLead}"`);
-      const want = [['rainy-day', '$202.4M'], ['Roads', '$7.82B'], ['pension', '76 cents']];
+      const want = [['rainy-day', '$202.4M'], ['Infrastructure', '$7.82B'], ['pension', '76 cents']];
       r.parts.forEach((pt, i) => {
         if (!pt.h3.toLowerCase().includes(want[i][0].toLowerCase())) fail(`part ${i} heading "${pt.h3}"`);
         if (pt.leadFig !== want[i][1]) fail(`part ${i} lead's first figure is "${pt.leadFig}", expected ${want[i][1]}`);

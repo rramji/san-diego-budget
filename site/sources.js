@@ -93,7 +93,9 @@ function openPopover(btn, el) {
   a.rel = 'noopener';
   a.textContent = 'Open the document';
   pop.append(a);
-  btn.after(pop);
+  // Appended to the body, not beside the button: its page coordinates are then right inside positioned containers
+  // (chart stages, the timeline), and it doesn't inherit a row's white-space: nowrap.
+  document.body.append(pop);
   const r = btn.getBoundingClientRect();
   const w = pop.offsetWidth;
   const left = Math.max(8, Math.min(r.left + window.scrollX, window.scrollX + document.documentElement.clientWidth - w - 8));
@@ -103,6 +105,7 @@ function openPopover(btn, el) {
   btn.setAttribute('aria-controls', 'popover');
   openPop = pop;
   openBtn = btn;
+  a.focus({ preventScroll: true }); // it is a dialog at the end of the body, so Tab wouldn't reach it from the button
 }
 
 let globalListeners = false;

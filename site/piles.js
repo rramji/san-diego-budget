@@ -55,7 +55,7 @@ function reserve(el, copy, dig, d) {
     p(cite(c.iba_ye, 'The city plans to propose a revised reserve policy by the end of 2026.'), ' The FY2030 goal is still the policy on paper.'));
 }
 
-// ---- 4b. Roads and buildings ----
+// ---- 4b. Infrastructure ----
 function assets(el, d) {
   const inf = d.infrastructure;
   const rows = piles.prepareAssets(inf.by_asset);

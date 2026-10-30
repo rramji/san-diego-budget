@@ -108,6 +108,7 @@ h2 { font-size: clamp(1.4rem, 5vw, 1.75rem); font-weight: 700; }
   border: 1px solid var(--rule); border-radius: 6px;
   box-shadow: 0 4px 16px rgb(0 0 0 / 0.18);
   padding: 10px 12px; font: 0.85rem/1.45 var(--font-ui);
+  white-space: normal; overflow-wrap: anywhere; text-align: left;
 }
 .popover p { margin: 0 0 4px; }
 .popover .pop-doc { font-weight: 650; }
