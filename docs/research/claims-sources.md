@@ -32,6 +32,21 @@ The city CIP CSV leaves out SANDAG-built regional bikeways and most grant-funded
 ## Pensions
 IBA 26-11 p.75: ADC $563.2M (+$30.0M from $533.2M), GF $396.1M; 8.8% citywide, 17.7% GF; UAL $3.46B and 76.1% funded at 2025-06-30 (74.7% a year earlier). IBA 26-11 p.3: pension increase and slower revenue growth raised baseline deficit to $118.0M. IBA 25-36 p.7: full ADC funded since FY2006.
 
+Expanded 2026-11-11 after Reddit comments ("pensions are the real reason", "give employees 401(k)s", "reform already neutered pensions, 15 years to age out"). VAL25 = SDCERS City of San Diego Actuarial Valuation as of June 30, 2025 (Cheiron); ACFR25 = SDCERS Annual Comprehensive Financial Report 2025. Printed page numbers. Longer notes in `pension-reserves-2026-10.md`.
+
+- VAL25 Table V-1 p.35 (total City column, paid at start of year): UAL payment $375.3M; normal cost $170.4M; administrative expenses $16.1M; Prop B police tier conversion $1.9M; ADC $563.2M. Rates: total normal cost 28.04% of pay, member 14.03%, employer 14.01%. Non-safety columns: General Old Plan payroll $185.5M, 2009 Plan $699.6M, weighted non-safety $887.5M; normal cost 25.73% vs 23.78%; UAL $1,631.6M vs $240.6M.
+- VAL25 Table V-1 (safety) p.36: member contribution rate 18.56%, employer normal cost rate 18.25% (weighted safety).
+- VAL25 Appendix A p.76: employee rate includes the Charter Section 143 "substantially equal" rate, 50% of the normal cost of service retirement allowances.
+- VAL25 Appendix A p.71: non-safety employees withdrew from Social Security effective January 1, 1982; safety employees never participated.
+- ACFR25 MD&A Table 4 p.25 (City column, FY2025, $ thousands): plan sponsor contributions 487,515; member and other contributions 159,281; net investment income 965,717; benefit payments 659,587.
+- VAL25 Table I-1 p.3: UAL $3,464.3M; funded ratio 76.1% (74.7% prior).
+- VAL25 p.7: 2001–2004 funded ratio 97.3% → 65.8%, "dot com" decline "coupled with the City underfunding the Plan while benefits were increased"; 2007–2009 78.8% → 66.5%.
+- VAL25 p.16: UAL change since 2009: assumptions +$1,821.7M; investment + liability experience +$1,493.6M; all other −$1,154.2M "largely due to contributions in excess of the ADC"; net +$2,161.1M. Discount rate lowered from 8.00% to 6.50% (p.7).
+- VAL25 p.1: Prop B unwound; plan reopened to non-police employees July 10, 2021. FY25 CBO p.67: "In early 2021, the California Superior Court invalidated Proposition B."
+- VAL25 Table V-2 p.37: "Proposition B Shortfall" base 7/1/2022, $119,051,737, 20 years.
+- VAL25 p.12: baseline projection ADC FY2028 $573.2M, FY2029 $493.4M; 100% funded "by the June 30, 2041 valuation at which time the ADC declines sharply".
+- Not stated in any document, so not on the card: what a 401(k)-style plan would cost the city; "79%" (699.6 / 887.5) is left as the two figures.
+
 ## Managers
 No series of manager counts over time exists in the cached data or the CSVs. IBA 26-11 p.46: 833.00 of 12,628.50 standard-hour FTEs (6.6%) unclassified/unrepresented; p.47 GF table (City Council 135.00 unclassified); p.48: unclassified = 37.0% of net FTE reduction; p.7 footnote 8: unclassified as "general shorthand" for management. Axios 2024-12-12 returned HTTP 403 to WebFetch (implementer and reviewer). Only the headline is cited (seen by the controller in search results): "Amid $200 million annual deficit, San Diego managers have grown 461% in 10 years"; the article's definition of managers is unverified.
 

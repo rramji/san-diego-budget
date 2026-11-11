@@ -42,8 +42,14 @@
   {
     "id": "pensions",
     "claim": "Pensions are why the city is broke.",
-    "finding": "The city's required pension payment for FY2027 is $563.2 million, up $30.0 million from FY2026; the General Fund's share is $396.3 million in the adopted budget, and the proposed budget put that share at 17.7% of General Fund spending (IBA 26-11 p.75; the full payment is 8.8% of all city spending in the proposed budget). As of June 30, 2025, the pension system's promised benefits exceeded its assets by $3.46 billion, and it was 76.1% funded, up from 74.7% a year earlier. The IBA says the city has paid the full required amount every year since FY2006. The IBA names the higher pension payment as one of two reasons the FY2027 gap grew to $118.0 million, along with slower revenue growth.",
-    "caveat": "This shows how big the payment is, not how much of the deficit pensions cause on their own or whether the benefits are too generous.",
+    "finding": [
+      "The city's required pension payment for FY2027 is $563.2 million, up $30.0 million from FY2026. The General Fund pays $396.3 million of it in the adopted budget; the proposed budget put that share at 17.7% of General Fund spending, and the whole payment at 8.8% of all city spending. The IBA names the higher payment as one of two reasons the FY2027 gap grew to $118.0 million, along with slower revenue growth. The city has paid the full required amount every year since FY2006.",
+      "Most of the payment is debt from the past, not the cost of benefits being earned now. Of the $563.2 million, $375.3 million pays down the shortfall built up in earlier years (the unfunded liability), $170.4 million is the city's share of the benefits employees earn this year, $16.1 million runs the retirement system, and $1.9 million is a catch-up for police whose Proposition B-era benefits were converted back to the older tier.",
+      "Employees pay about half of each year's new benefits: the City Charter requires their contribution to be \"substantially equal\" to the city's. For general employees the cost of new benefits is 28.0% of pay, of which employees pay 14.0% and the city 14.0%; police and firefighters pay 18.6% of their pay and the city 18.3%. City employees are not in Social Security (non-safety employees left it in 1982, and safety employees never took part), so the pension is their only employer retirement plan. In FY2025 the city's plan took in $487.5 million from the city, $159.3 million from employees and $965.7 million in investment earnings, and paid out $659.6 million in benefits.",
+      "The shortfall is $3.46 billion: the fund held 76.1% of the benefits already earned at June 30, 2025, up from 74.7% a year earlier. The actuary points to two periods that did most of the damage. From 2001 to 2004 the city underfunded the plan while increasing benefits as the dot-com crash hit, and the funded ratio fell from 97.3% to 65.8%; the 2008 recession took it from 78.8% in 2007 to 66.5% in 2009. Since 2009 the shortfall has grown by $2.16 billion, mostly because the retirement board adopted more cautious assumptions, a lower expected investment return (6.5% instead of 8%) and longer lives ($1.82 billion), and because pay rose faster than assumed and investments fell short ($1.49 billion); contributions above the required amount and other changes cut it by $1.15 billion.",
+      "Reform has happened twice. Employees hired since July 2009 are in a separate, cheaper plan tier: it now covers $699.6 million of the $887.5 million of expected non-safety payroll, but its cost is only modestly lower (23.8% of pay against 25.7% for the old plan), and of the non-safety shortfall $1.63 billion belongs to the old plan and $0.24 billion to the 2009 plan. Proposition B in 2012 put new non-police hires in a 401(k)-style plan instead; a court invalidated it in early 2021, the city reopened the pension to those employees in July 2021, and the unwinding left a $119 million shortfall the city is paying off over 20 years. If every assumption holds, including 6.5% investment returns every year, the actuary projects the fund fully funded at the June 30, 2041 valuation, after which the payment drops sharply; before that it is projected to fall from $573.2 million in FY2028 to $493.4 million in FY2029 as older parts of the shortfall are paid off."
+    ],
+    "caveat": "This shows how big the payment is and where the shortfall came from, not whether the benefits are too generous or what a 401(k)-style plan would cost instead; the shortfall is owed for benefits already earned, so moving new hires to a different plan would not remove it.",
     "chart": null,
     "sources": [
       {
@@ -65,8 +71,69 @@
         "doc": "IBA Report 25-36, Review of the FY 2027-2031 Five-Year Financial Outlook: the City has fully funded the annual required pension contribution since FY 2006",
         "page": 7,
         "url": "https://www.sandiego.gov/sites/default/files/2025-12/25-36-review-of-the-mayor-s-fy-2027-2031-five-year-financial-outlook_2.pdf"
+      },
+      {
+        "doc": "SDCERS City Actuarial Valuation, June 30, 2025, Table V-1 (how the FY2027 payment is built: shortfall payment, normal cost, administration, Proposition B police catch-up; contribution rates; the old plan and the 2009 plan)",
+        "page": 35,
+        "url": "https://content.sdcers.gov/wp-content/uploads/2026/03/2025-sdcers-city-valuation-report.pdf"
+      },
+      {
+        "doc": "SDCERS City Actuarial Valuation, June 30, 2025, Table V-1, safety (police and fire contribution rates)",
+        "page": 36,
+        "url": "https://content.sdcers.gov/wp-content/uploads/2026/03/2025-sdcers-city-valuation-report.pdf"
+      },
+      {
+        "doc": "SDCERS City Actuarial Valuation, June 30, 2025, Appendix A (employee contribution rates; City Charter Section 143, the \"substantially equal\" rate)",
+        "page": 76,
+        "url": "https://content.sdcers.gov/wp-content/uploads/2026/03/2025-sdcers-city-valuation-report.pdf"
+      },
+      {
+        "doc": "SDCERS City Actuarial Valuation, June 30, 2025, Appendix A (City employees and Social Security)",
+        "page": 71,
+        "url": "https://content.sdcers.gov/wp-content/uploads/2026/03/2025-sdcers-city-valuation-report.pdf"
+      },
+      {
+        "doc": "SDCERS Annual Comprehensive Financial Report 2025, Management's Discussion and Analysis, Table 4 (FY2025 contributions, investment income and benefits, city plan)",
+        "page": 25,
+        "url": "https://content.sdcers.gov/wp-content/uploads/2025/11/fy-2025-sdcers-acfr-final.pdf"
+      },
+      {
+        "doc": "SDCERS City Actuarial Valuation, June 30, 2025, Table I-1 (unfunded liability and funded ratio)",
+        "page": 3,
+        "url": "https://content.sdcers.gov/wp-content/uploads/2026/03/2025-sdcers-city-valuation-report.pdf"
+      },
+      {
+        "doc": "SDCERS City Actuarial Valuation, June 30, 2025, Board Summary (funded ratio history and its causes)",
+        "page": 7,
+        "url": "https://content.sdcers.gov/wp-content/uploads/2026/03/2025-sdcers-city-valuation-report.pdf"
+      },
+      {
+        "doc": "SDCERS City Actuarial Valuation, June 30, 2025, Section II (factors contributing to unfunded liability changes since 2009)",
+        "page": 16,
+        "url": "https://content.sdcers.gov/wp-content/uploads/2026/03/2025-sdcers-city-valuation-report.pdf"
+      },
+      {
+        "doc": "SDCERS City Actuarial Valuation, June 30, 2025, Board Summary (unwinding of Proposition B; plan reopened July 10, 2021)",
+        "page": 1,
+        "url": "https://content.sdcers.gov/wp-content/uploads/2026/03/2025-sdcers-city-valuation-report.pdf"
+      },
+      {
+        "doc": "FY2025 Adopted Budget Vol. I, Citywide Budget Overview, Proposition B Status (invalidated by the California Superior Court in early 2021)",
+        "page": 67,
+        "url": "https://www.sandiego.gov/sites/default/files/2024-08/fy25ab_v1cbo.pdf"
+      },
+      {
+        "doc": "SDCERS City Actuarial Valuation, June 30, 2025, Table V-2 (Proposition B Shortfall amortization base, $119.1 million over 20 years)",
+        "page": 37,
+        "url": "https://content.sdcers.gov/wp-content/uploads/2026/03/2025-sdcers-city-valuation-report.pdf"
+      },
+      {
+        "doc": "SDCERS City Actuarial Valuation, June 30, 2025, Board Summary (baseline projection: payments for FY2028 and FY2029; 100% funded at the June 30, 2041 valuation)",
+        "page": 12,
+        "url": "https://content.sdcers.gov/wp-content/uploads/2026/03/2025-sdcers-city-valuation-report.pdf"
       }
-    ]
+    ],
+    "link": "#pension"
   },
   {
     "id": "managers",

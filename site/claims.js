@@ -12,8 +12,12 @@ const CHIP_LABELS = {
   homelessness: 'Homelessness spending',
 };
 const PREFIX = "What this doesn't tell you: ";
-// A card's link elsewhere on the page, named for what it leads to.
-const LINK_TEXT = { 'bike-lanes': 'How projects are chosen ↓' };
+// A card's link elsewhere on the page, named for what it leads to. openDig: the target sits inside that part's
+// Dig deeper, so following the link opens it.
+const LINKS = {
+  'bike-lanes': { text: 'How projects are chosen ↓', openDig: true },
+  pensions: { text: 'The pension, under What piles up ↓' },
+};
 // First use of a glossary term in each card links to its entry.
 const TERMS = [
   [/General Fund/, 'general-fund'],
@@ -26,12 +30,12 @@ export function claimCardModel(claim) {
     id: claim.id,
     chipLabel: CHIP_LABELS[claim.id] || claim.claim.split(' ').slice(0, 4).join(' '),
     claimText: `"${claim.claim}"`,
-    finding: claim.finding,
+    findings: Array.isArray(claim.finding) ? claim.finding : [claim.finding],
     hasChart: claim.chart != null,
     chart: claim.chart ?? null,
     matched: claim.matched_projects && claim.matched_projects.length ? claim.matched_projects : null,
     caveatText: PREFIX + claim.caveat,
-    link: claim.link ? { href: claim.link, text: LINK_TEXT[claim.id] || 'Read more ↓' } : null,
+    link: claim.link ? { href: claim.link, text: LINKS[claim.id]?.text || 'Read more ↓', openDig: !!LINKS[claim.id]?.openDig } : null,
     sources: claim.sources.map((s) => ({ text: s.page != null ? `${s.doc}, page ${s.page}` : s.doc, url: s.url })),
   };
 }
@@ -44,11 +48,11 @@ function el(tag, cls, text) {
 }
 
 // The bike card's link leads to "How projects are chosen", which sits in that part's Dig deeper: open it and go there.
-// Without the target on the page this is plain anchor navigation.
+// Without the target on the page, or for a link to the part itself, this is plain anchor navigation.
 function openLinkTarget(e) {
   const target = document.querySelector(e.currentTarget.getAttribute('href'));
   const dig = target?.querySelector('details.dig');
-  if (!dig) return;
+  if (!dig || e.currentTarget.dataset.openDig !== 'true') return;
   e.preventDefault();
   dig.open = true;
   const spot = dig.querySelector('[data-anchor]') || target;
@@ -81,9 +85,17 @@ export function mountClaims(root, claims) {
   const build = (m, claim) => {
     const h = el('h3', 'claim-q', m.claimText);
     h.tabIndex = -1;
-    const finding = el('p', 'claim-finding');
-    finding.append(...linkTerms(m.finding, TERMS));
-    const parts = [h, finding];
+    // Glossary terms link on their first appearance in the card, not once per paragraph.
+    const seen = new Set();
+    const findings = m.findings.map((text) => {
+      const p = el('p', 'claim-finding');
+      const fresh = TERMS.filter(([, s]) => !seen.has(s));
+      const nodes = linkTerms(text, fresh);
+      nodes.forEach((n) => { if (n.nodeType === 1) seen.add(n.getAttribute('href').slice(3)); });
+      p.append(...nodes);
+      return p;
+    });
+    const parts = [h, ...findings];
     let chartBox = null;
     if (m.hasChart) {
       const fig = el('figure', 'chart claim-fig');
@@ -103,6 +115,7 @@ export function mountClaims(root, claims) {
     if (m.link) {
       const a = el('a', 'read-more', m.link.text);
       a.href = m.link.href;
+      if (m.link.openDig) a.dataset.openDig = 'true';
       a.addEventListener('click', openLinkTarget);
       parts.push(a);
     }

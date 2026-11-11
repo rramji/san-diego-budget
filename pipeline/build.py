@@ -278,9 +278,15 @@ def build_claims(curated_claims: list[dict], cip_rows: list[dict], series: dict,
     """Claim-checker cards: curated text plus charts computed from the CSVs."""
     out = []
     for i, c in enumerate(curated_claims):
-        for key in ("id", "claim", "finding", "caveat"):
+        for key in ("id", "claim", "caveat"):
             if not isinstance(c.get(key), str) or not c[key].strip():
                 raise ValueError(f"claims[{i}].{key}: required non-empty string")
+        # The finding is one paragraph, or a list of paragraphs for a card that needs more room.
+        paras = c.get("finding")
+        if isinstance(paras, str):
+            paras = [paras]
+        if not isinstance(paras, list) or not paras or not all(isinstance(p, str) and p.strip() for p in paras):
+            raise ValueError(f"claims[{i}].finding: a non-empty string or a non-empty list of them")
         if not c.get("sources"):
             raise ValueError(f"claims[{i}].sources: at least one source required")
         for k, src in enumerate(c["sources"]):

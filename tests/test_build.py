@@ -403,7 +403,10 @@ def test_curated_claims_shape():
     split = re.compile(r"(?<=[.!?])\s+(?=[A-Z\"$(])")
     for c in claims:
         assert c["claim"].strip() and c["sources"]
-        assert len(split.split(c["finding"].strip())) <= 4, c["id"]
+        paras = c["finding"] if isinstance(c["finding"], list) else [c["finding"]]
+        assert 1 <= len(paras) <= 5, c["id"]
+        for para in paras:
+            assert len(split.split(para.strip())) <= 4, c["id"]
         assert len(split.split(c["caveat"].strip())) == 1, c["id"]
     managers = next(c for c in claims if c["id"] == "managers")
     assert managers["chart"] is None and "Axios" in managers["finding"]
@@ -487,8 +490,9 @@ def test_v2_corrections(tmp_path):
     assert [x["value"] for x in m28["figures"]] == [9.5, 32.9]
     assert m28["figures"][0]["source"]["page"] == 36 and m28["figures"][1]["source"]["page"] == 43
     claims = {c["id"]: c for c in json.loads((out / "claims.json").read_text())}
-    assert "396.3" in claims["pensions"]["finding"] and "396.1" not in claims["pensions"]["finding"]
-    assert "proposed budget" in claims["pensions"]["finding"]  # the 17.7% share is labelled as proposed-basis
+    pensions = " ".join(claims["pensions"]["finding"])
+    assert "396.3" in pensions and "396.1" not in pensions
+    assert "proposed budget" in pensions  # the 17.7% share is labelled as proposed-basis
     assert "June 8, 2026" in claims["trash-fee"]["finding"] and "tentative" not in claims["trash-fee"]["finding"]
 
 
@@ -539,7 +543,8 @@ def test_build_all_replaces_out_dir_on_success(tmp_path):
 def test_bike_card_links_to_how_projects_are_chosen(tmp_path):
     claims = {c["id"]: c for c in _claims_curated()}
     assert claims["bike-lanes"]["link"] == "#infrastructure"
-    assert all("link" not in c for i, c in claims.items() if i != "bike-lanes")
+    assert claims["pensions"]["link"] == "#pension"
+    assert all("link" not in c for i, c in claims.items() if i not in ("bike-lanes", "pensions"))
     out, _ = _build(tmp_path)
     built = {c["id"]: c for c in json.loads((out / "claims.json").read_text())}
     assert built["bike-lanes"]["link"] == "#infrastructure"
@@ -589,3 +594,24 @@ def test_county_sales_tax_checks():
     bad["sales_tax"]["county"]["cities"].pop()
     with pytest.raises(ValueError, match="18"):
         build_why_short(bad)
+
+
+def test_pensions_card_answers_who_pays_and_where_the_shortfall_came_from():
+    p = next(c for c in _claims_curated() if c["id"] == "pensions")
+    text = " ".join(p["finding"])
+    # The payment's parts (valuation Table V-1), who pays for new benefits, and the history of the shortfall.
+    for needle in ("$375.3 million", "$170.4 million", "14.0%", "18.6%", "Social Security", "$487.5 million",
+                   "$159.3 million", "97.3% to 65.8%", "$1.82 billion", "Proposition B", "$119 million", "2041"):
+        assert needle in text, needle
+    assert "would not remove it" in p["caveat"]
+    pages = {(s["url"].rsplit("/", 1)[1], s["page"]) for s in p["sources"]}
+    assert ("2025-sdcers-city-valuation-report.pdf", 35) in pages and ("fy-2025-sdcers-acfr-final.pdf", 25) in pages
+
+
+def test_build_claims_rejects_an_empty_finding_paragraph():
+    import pytest
+    from pipeline.build import build_claims
+    bad = [{"id": "x", "claim": "c", "finding": ["f.", " "], "caveat": "c.", "chart": None,
+            "sources": [{"doc": "d", "page": 1, "url": "https://example.org/d.pdf"}]}]
+    with pytest.raises(ValueError, match=r"^claims\[0\]\.finding"):
+        build_claims(bad, [], {"gf_by_fy": {}, "gf_dept_by_fy": {}})

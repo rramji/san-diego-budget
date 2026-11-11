@@ -11,13 +11,24 @@ const dir = new URL('../data/build/', import.meta.url);
 const load = (f) => expandUrls(JSON.parse(readFileSync(new URL(`${f}.json`, dir), 'utf8')));
 const all = Object.fromEntries(readdirSync(dir).map((f) => [f, expandUrls(JSON.parse(readFileSync(new URL(f, dir), 'utf8')))]));
 
-test('bike card exposes its link to how projects are chosen; the others have none', () => {
+test('bike and pension cards expose their links; the others have none', () => {
   const claims = load('claims');
   for (const c of claims) {
     const m = claimCardModel(c);
-    if (c.id === 'bike-lanes') assert.deepEqual(m.link, { href: '#infrastructure', text: 'How projects are chosen ↓' });
+    if (c.id === 'bike-lanes') assert.deepEqual(m.link, { href: '#infrastructure', text: 'How projects are chosen ↓', openDig: true });
+    else if (c.id === 'pensions') assert.deepEqual(m.link, { href: '#pension', text: 'The pension, under What piles up ↓', openDig: false });
     else assert.equal(m.link, null);
   }
+});
+
+test('a finding is one paragraph or several; the pensions card has several', () => {
+  const claims = load('claims');
+  for (const c of claims) {
+    const m = claimCardModel(c);
+    assert.ok(Array.isArray(m.findings) && m.findings.length >= 1 && m.findings.every((p) => typeof p === 'string' && p.length));
+  }
+  assert.ok(claimCardModel(claims.find((c) => c.id === 'pensions')).findings.length >= 4);
+  assert.equal(claimCardModel(claims.find((c) => c.id === 'managers')).findings.length, 1);
 });
 
 test('Sources: one entry per URL, each titled by the document, never by one cited part', () => {

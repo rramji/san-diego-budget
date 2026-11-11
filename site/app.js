@@ -421,7 +421,7 @@ async function main() {
   if (new URLSearchParams(location.search).has('debug')) window.__data = data;
   guarded('headline', null, () => renderHeadline(data.headline));
   guarded('glossary', 'glossary-list', () => renderGlossary(document.getElementById('glossary-list'), data.glossary));
-  // Section order on the page: what, why-short, gap, piles, how-long, claims. Later tasks add their renderers here.
+  // Section order on the page: claims, what, why-short, gap, piles, how-long. Rendering order is unchanged.
   guarded('section 1: budget maps', 's1-maps', () => renderWhat(data));
   guarded('section 1 dig: money-flow Sankey', 'ch2-sankey', () => renderSankey(data.flows));
   guarded('section 1 dig: how we built this', 's1-methods', () => renderMethods(document.getElementById('s1-methods'), data.budgetTree));
