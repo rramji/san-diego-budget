@@ -1,6 +1,7 @@
 // Chapter 4 claim cards: a tablist of chips, one open tabpanel at a time.
-import { figureSpan, mountPopovers } from './sources.js';
+import { figureSpan, mountPopovers, cite } from './sources.js';
 import * as claimChart from './charts/claim-chart.js';
+import * as pensionCard from './charts/pension-card.js';
 import { linkTerms } from './glossary.js';
 import { themeColors, observeWidth } from './charts/util.js';
 
@@ -31,6 +32,7 @@ export function claimCardModel(claim) {
     chipLabel: CHIP_LABELS[claim.id] || claim.claim.split(' ').slice(0, 4).join(' '),
     claimText: `"${claim.claim}"`,
     findings: Array.isArray(claim.finding) ? claim.finding : [claim.finding],
+    visual: claim.visual ?? null,
     hasChart: claim.chart != null,
     chart: claim.chart ?? null,
     matched: claim.matched_projects && claim.matched_projects.length ? claim.matched_projects : null,
@@ -96,6 +98,12 @@ export function mountClaims(root, claims) {
       return p;
     });
     const parts = [h, ...findings];
+    // The pensions card's four pictures (claims.json visual): plain HTML bars, every number a sourced figure.
+    if (m.visual) {
+      const box = el('div', 'pc');
+      pensionCard.render(box, m.visual, { figureSpan, cite });
+      parts.push(box);
+    }
     let chartBox = null;
     if (m.hasChart) {
       const fig = el('figure', 'chart claim-fig');

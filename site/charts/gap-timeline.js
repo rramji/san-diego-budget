@@ -13,6 +13,7 @@ export function monthTime(date) {
 
 // timeline: gap_story.timeline. Points come back sorted by date (ties keep their input order). Two points within
 // NEAR_DAYS of each other sit in different lanes (0/1); a point far from the one before it goes back to lane 0.
+// An entry's optional surplus flag (a forecast surplus, not a shortfall) comes through on the point.
 export function prepare(timeline) {
   const pts = timeline
     .map((e, i) => ({ e, i, t: monthTime(e.date) }))
@@ -132,10 +133,12 @@ export function render(host, prep, opts) {
     const dotX = p.lane === 0 ? AXIS_X : colX[1] - 7;
 
     const who = opts.officeName(p.office);
-    const values = p.figure2 ? `${opts.money(p.value_m)}, or ${opts.money(p.figure2.value)} counting the skipped reserve deposit` : opts.money(p.value_m);
+    // A surplus says so wherever its amount appears (the chart otherwise shows shortfalls).
+    const amount = (v) => `${opts.money(v)}${p.surplus ? ' surplus' : ''}`;
+    const values = p.figure2 ? `${amount(p.value_m)}, or ${opts.money(p.figure2.value)} counting the skipped reserve deposit` : amount(p.value_m);
     const btn = document.createElement('button');
     btn.type = 'button';
-    btn.className = 'tl-dot';
+    btn.className = `tl-dot${p.surplus ? ' is-surplus' : ''}`;
     btn.style.left = `${dotX - colX[p.lane] - 12}px`;
     btn.setAttribute('aria-expanded', 'false');
     btn.setAttribute('aria-label', `Details: ${values}, ${who}, ${monthLabel(p.t)}`);
@@ -144,7 +147,7 @@ export function render(host, prep, opts) {
 
     const v = document.createElement('p');
     v.className = 'tl-val';
-    v.append(opts.figureSpan(p.figure, opts.money(p.value_m)));
+    v.append(opts.figureSpan(p.figure, amount(p.value_m)));
     const label = [v];
     if (p.figure2) {
       const v2 = document.createElement('p');

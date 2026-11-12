@@ -5,7 +5,7 @@ import { prepare as cents } from '../site/charts/cents-bar.js';
 import { rateBars, countyBars, shareText } from '../site/why.js';
 import { prepare as waterfall } from '../site/charts/waterfall.js';
 import { prepare as timeline, layoutY, BREAK_MONTHS } from '../site/charts/gap-timeline.js';
-import { noteParts, stepLabel, citeParts } from '../site/gapstory.js';
+import { stepLabel, citeParts } from '../site/gapstory.js';
 import { markerParts } from '../site/charts/deficit-bars.js';
 import { moneyToken } from '../site/format.js';
 import { isOurs, expandUrls } from '../site/sources.js';
@@ -149,35 +149,36 @@ test('timeline lanes: synthetic close and far points', () => {
   assert.throws(() => timeline([e('2026-13', 1)]), /date/);
 });
 
-test('what\'s coming note: the city figure and the forecast date are sourced parts', () => {
+test('what\'s coming note: every cite is a sourced part of the note, in order; a missing one throws', () => {
   const c = story.headlines.coming;
-  const parts = noteParts(c);
+  const parts = citeParts(c.note, c.cites);
   assert.equal(parts.map((x) => (typeof x === 'string' ? x : x.text)).join(''), c.note);
-  const fig = parts.find((x) => x.kind === 'figure');
-  assert.equal(fig.text, '$9.5M');
-  assert.equal(fig.figure, c.city_m);
-  const cite = parts.find((x) => x.kind === 'cite');
-  assert.match(cite.text, /November 6, 2026/);
-  assert.equal(cite.source, c.forecast_due.source);
+  const cites = parts.filter((x) => x.kind === 'cite');
+  assert.deepEqual(cites.map((x) => x.text), c.cites.map((x) => x.text));
+  assert.match(cites[cites.length - 1].text, /December 14, 2026/);
+  assert.equal(cites[cites.length - 1].source, c.cites[c.cites.length - 1].source);
+  assert.throws(() => citeParts(c.note.replace('December 14, 2026', 'in December'), c.cites), /December 14, 2026/);
 });
 
-test('what\'s coming note: a whole-number city figure is found as "$12M"; a missing token or cite anchor throws', () => {
-  const c = structuredClone(story.headlines.coming);
-  c.city_m.value = 12.0;
-  c.note = c.note.replace('$9.5M', '$12M');
-  assert.equal(noteParts(c).find((x) => x.kind === 'figure').text, '$12M');
-  assert.throws(() => noteParts({ ...c, note: c.note.replace('$12M', '$12.0M') }), /\$12M/);
-  assert.throws(() => noteParts({ ...c, note: c.note.replace('A new forecast is due', 'Next forecast:') }), /A new forecast is due/);
+test('what\'s coming: the new outlook is a surplus, the earlier pair a shortfall; the timeline carries the surplus flag', () => {
+  const c = story.headlines.coming;
+  assert.ok(c.outlook.baseline_m.value > 0 && c.outlook.revised_m.value > 0 && c.outlook.next_fy > c.fy);
+  const p = timeline(story.timeline);
+  const last = p.points[p.points.length - 1];
+  assert.equal(last.surplus, true);
+  assert.deepEqual(last.figure, c.outlook.baseline_m);
+  assert.ok(p.points.slice(0, -1).every((x) => !x.surplus));
 });
 
-test('deficit chart: the FY2028 marker shows both figures; a missing amount throws', () => {
-  const m = sd.markers.find((x) => x.fy === story.headlines.coming.fy);
-  assert.deepEqual(m.figures, [story.headlines.coming.city_m, story.headlines.coming.iba_m]);
+test('deficit chart: the FY2028 marker shows the outlook and both earlier figures; a missing amount throws', () => {
+  const c = story.headlines.coming;
+  const m = sd.markers.find((x) => x.fy === c.fy);
+  assert.deepEqual(m.figures, [c.outlook.baseline_m, c.earlier.city_m, c.earlier.iba_m]);
   const parts = markerParts(m.label, m.figures);
-  assert.deepEqual(parts.filter((x) => typeof x !== 'string').map((x) => x.token), ['$9.5M', '$32.9M']);
+  assert.deepEqual(parts.filter((x) => typeof x !== 'string').map((x) => x.token), ['$5.1M', '$9.5M', '$32.9M']);
   assert.equal(parts.map((x) => (typeof x === 'string' ? x : x.token)).join(''), m.label);
   const twelve = { value: 12.0, source: m.figures[0].source };
-  assert.deepEqual(markerParts('city $12M, IBA $32.9M', [twelve, m.figures[1]]).filter((x) => typeof x !== 'string').map((x) => x.token), ['$12M', '$32.9M']);
+  assert.deepEqual(markerParts('outlook $12M surplus; city $9.5M, IBA $32.9M', [twelve, m.figures[1], m.figures[2]]).filter((x) => typeof x !== 'string').map((x) => x.token), ['$12M', '$9.5M', '$32.9M']);
   assert.throws(() => markerParts('city $12.0M', [twelve]), /\$12M/);
 });
 

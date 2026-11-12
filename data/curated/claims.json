@@ -43,14 +43,518 @@
     "id": "pensions",
     "claim": "Pensions are why the city is broke.",
     "finding": [
-      "The city's required pension payment for FY2027 is $563.2 million, up $30.0 million from FY2026. The General Fund pays $396.3 million of it in the adopted budget; the proposed budget put that share at 17.7% of General Fund spending, and the whole payment at 8.8% of all city spending. The IBA names the higher payment as one of two reasons the FY2027 gap grew to $118.0 million, along with slower revenue growth. The city has paid the full required amount every year since FY2006.",
-      "Most of the payment is debt from the past, not the cost of benefits being earned now. Of the $563.2 million, $375.3 million pays down the shortfall built up in earlier years (the unfunded liability), $170.4 million is the city's share of the benefits employees earn this year, $16.1 million runs the retirement system, and $1.9 million is a catch-up for police whose Proposition B-era benefits were converted back to the older tier.",
-      "Employees pay about half of each year's new benefits: the City Charter requires their contribution to be \"substantially equal\" to the city's. For general employees the cost of new benefits is 28.0% of pay, of which employees pay 14.0% and the city 14.0%; police and firefighters pay 18.6% of their pay and the city 18.3%. City employees are not in Social Security (non-safety employees left it in 1982, and safety employees never took part), so the pension is their only employer retirement plan. In FY2025 the city's plan took in $487.5 million from the city, $159.3 million from employees and $965.7 million in investment earnings, and paid out $659.6 million in benefits.",
-      "The shortfall is $3.46 billion: the fund held 76.1% of the benefits already earned at June 30, 2025, up from 74.7% a year earlier. The actuary points to two periods that did most of the damage. From 2001 to 2004 the city underfunded the plan while increasing benefits as the dot-com crash hit, and the funded ratio fell from 97.3% to 65.8%; the 2008 recession took it from 78.8% in 2007 to 66.5% in 2009. Since 2009 the shortfall has grown by $2.16 billion, mostly because the retirement board adopted more cautious assumptions, a lower expected investment return (6.5% instead of 8%) and longer lives ($1.82 billion), and because pay rose faster than assumed and investments fell short ($1.49 billion); contributions above the required amount and other changes cut it by $1.15 billion.",
-      "Reform has happened twice. Employees hired since July 2009 are in a separate, cheaper plan tier: it now covers $699.6 million of the $887.5 million of expected non-safety payroll, but its cost is only modestly lower (23.8% of pay against 25.7% for the old plan), and of the non-safety shortfall $1.63 billion belongs to the old plan and $0.24 billion to the 2009 plan. Proposition B in 2012 put new non-police hires in a 401(k)-style plan instead; a court invalidated it in early 2021, the city reopened the pension to those employees in July 2021, and the unwinding left a $119 million shortfall the city is paying off over 20 years. If every assumption holds, including 6.5% investment returns every year, the actuary projects the fund fully funded at the June 30, 2041 valuation, after which the payment drops sharply; before that it is projected to fall from $573.2 million in FY2028 to $493.4 million in FY2029 as older parts of the shortfall are paid off."
+      "The city's required pension payment for FY2027 is $563.2 million, up $30.0 million from FY2026; the proposed budget put the General Fund's share at 17.7% of General Fund spending, and the IBA names the higher payment as one of two reasons the FY2027 gap grew. But most of the payment is paying off the past, employees already pay about half of each year's new benefits, and reform has happened twice. Four things the documents show:"
     ],
     "caveat": "This shows how big the payment is and where the shortfall came from, not whether the benefits are too generous or what a 401(k)-style plan would cost instead; the shortfall is owed for benefits already earned, so moving new hires to a different plan would not remove it.",
     "chart": null,
+    "visual": {
+      "kind": "pensions",
+      "payment": {
+        "heading": "Where does this year's {total_m} pension payment go?",
+        "figures": {
+          "total_m": {
+            "value": 563.2,
+            "source": {
+              "doc": "SDCERS City Actuarial Valuation, June 30, 2025, Table V-1 (FY2027 ADC if paid at beginning of year, total city, $563.2 million)",
+              "page": 35,
+              "url": "https://content.sdcers.gov/wp-content/uploads/2026/03/2025-sdcers-city-valuation-report.pdf"
+            }
+          },
+          "gf_m": {
+            "value": 396.3,
+            "source": {
+              "doc": "FY2027 Adopted Budget Vol. I, Citywide Budget Overview, Table 8 (Retirement ADC, General Fund $396,300,918)",
+              "page": 30,
+              "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1cbo.pdf"
+            }
+          }
+        },
+        "parts": [
+          {
+            "role": "past",
+            "label": "Paying down the past shortfall",
+            "legend": "Shortfall built up in earlier years (the unfunded liability)",
+            "amount_m": {
+              "value": 375.3,
+              "source": {
+                "doc": "SDCERS City Actuarial Valuation, June 30, 2025, Table V-1 (total FY2027 UAL payment on 7/1/2026, $375.3 million)",
+                "page": 35,
+                "url": "https://content.sdcers.gov/wp-content/uploads/2026/03/2025-sdcers-city-valuation-report.pdf"
+              }
+            }
+          },
+          {
+            "role": "now",
+            "label": "This year's benefits",
+            "legend": "The city’s share of the benefits employees earn this year",
+            "amount_m": {
+              "value": 170.4,
+              "source": {
+                "doc": "SDCERS City Actuarial Valuation, June 30, 2025, Table V-1 (FY2027 normal cost paid at start of year, $170.4 million)",
+                "page": 35,
+                "url": "https://content.sdcers.gov/wp-content/uploads/2026/03/2025-sdcers-city-valuation-report.pdf"
+              }
+            }
+          },
+          {
+            "role": "other",
+            "label": "Running the system",
+            "legend": "Running the retirement system",
+            "amount_m": {
+              "value": 16.1,
+              "source": {
+                "doc": "SDCERS City Actuarial Valuation, June 30, 2025, Table V-1 (administrative expenses, $16.1 million)",
+                "page": 35,
+                "url": "https://content.sdcers.gov/wp-content/uploads/2026/03/2025-sdcers-city-valuation-report.pdf"
+              }
+            }
+          },
+          {
+            "role": "other",
+            "label": "Prop B police catch-up",
+            "legend": "A catch-up for police whose Proposition B-era benefits were converted back to the older tier",
+            "amount_m": {
+              "value": 1.9,
+              "source": {
+                "doc": "SDCERS City Actuarial Valuation, June 30, 2025, Table V-1 (Proposition B police tier conversion normal cost, $1.9 million)",
+                "page": 35,
+                "url": "https://content.sdcers.gov/wp-content/uploads/2026/03/2025-sdcers-city-valuation-report.pdf"
+              }
+            }
+          }
+        ],
+        "text": "Two-thirds of the payment is debt from the past, not the cost of pensions being earned now. Moving new hires to a 401(k) would touch only the part for benefits being earned now. The General Fund pays {gf_m} of the whole; the rest is charged to water, sewer and other funds."
+      },
+      "who_pays": {
+        "heading": "Who pays for the benefits being earned?",
+        "rates_caption": "Cost of each year’s new benefits, as a share of pay",
+        "rates": [
+          {
+            "label": "General employees",
+            "employee_pct": {
+              "value": 14.0,
+              "source": {
+                "doc": "SDCERS City Actuarial Valuation, June 30, 2025, Table V-1 (member contribution rate, total city, 14.03% of pay)",
+                "page": 35,
+                "url": "https://content.sdcers.gov/wp-content/uploads/2026/03/2025-sdcers-city-valuation-report.pdf"
+              }
+            },
+            "city_pct": {
+              "value": 14.0,
+              "source": {
+                "doc": "SDCERS City Actuarial Valuation, June 30, 2025, Table V-1 (employer normal cost rate, total city, 14.01% of pay)",
+                "page": 35,
+                "url": "https://content.sdcers.gov/wp-content/uploads/2026/03/2025-sdcers-city-valuation-report.pdf"
+              }
+            }
+          },
+          {
+            "label": "Police and firefighters",
+            "employee_pct": {
+              "value": 18.6,
+              "source": {
+                "doc": "SDCERS City Actuarial Valuation, June 30, 2025, Table V-1, safety (member contribution rate, 18.56% of pay)",
+                "page": 36,
+                "url": "https://content.sdcers.gov/wp-content/uploads/2026/03/2025-sdcers-city-valuation-report.pdf"
+              }
+            },
+            "city_pct": {
+              "value": 18.3,
+              "source": {
+                "doc": "SDCERS City Actuarial Valuation, June 30, 2025, Table V-1, safety (employer normal cost rate, 18.25% of pay)",
+                "page": 36,
+                "url": "https://content.sdcers.gov/wp-content/uploads/2026/03/2025-sdcers-city-valuation-report.pdf"
+              }
+            }
+          }
+        ],
+        "flows_caption": "Money into and out of the city’s plan, FY2025",
+        "flows": [
+          {
+            "role": "city",
+            "label": "From the city",
+            "amount_m": {
+              "value": 487.5,
+              "source": {
+                "doc": "SDCERS Annual Comprehensive Financial Report 2025, Management's Discussion and Analysis, Table 4 (FY2025, city plan: plan sponsor contributions $487,515 thousand)",
+                "page": 25,
+                "url": "https://content.sdcers.gov/wp-content/uploads/2025/11/fy-2025-sdcers-acfr-final.pdf"
+              }
+            }
+          },
+          {
+            "role": "employee",
+            "label": "From employees",
+            "amount_m": {
+              "value": 159.3,
+              "source": {
+                "doc": "SDCERS Annual Comprehensive Financial Report 2025, Management's Discussion and Analysis, Table 4 (FY2025, city plan: member and other contributions $159,281 thousand)",
+                "page": 25,
+                "url": "https://content.sdcers.gov/wp-content/uploads/2025/11/fy-2025-sdcers-acfr-final.pdf"
+              }
+            }
+          },
+          {
+            "role": "other",
+            "label": "Investment earnings",
+            "amount_m": {
+              "value": 965.7,
+              "source": {
+                "doc": "SDCERS Annual Comprehensive Financial Report 2025, Management's Discussion and Analysis, Table 4 (FY2025, city plan: net investment income $965,717 thousand)",
+                "page": 25,
+                "url": "https://content.sdcers.gov/wp-content/uploads/2025/11/fy-2025-sdcers-acfr-final.pdf"
+              }
+            }
+          },
+          {
+            "role": "out",
+            "label": "Benefits paid out",
+            "amount_m": {
+              "value": 659.6,
+              "source": {
+                "doc": "SDCERS Annual Comprehensive Financial Report 2025, Management's Discussion and Analysis, Table 4 (FY2025, city plan: benefit payments $659,587 thousand)",
+                "page": 25,
+                "url": "https://content.sdcers.gov/wp-content/uploads/2025/11/fy-2025-sdcers-acfr-final.pdf"
+              }
+            }
+          }
+        ],
+        "text": "The City Charter requires employee contributions to be “substantially equal” to the city’s. City employees are not in Social Security, so the pension is their only employer retirement plan.",
+        "cites": [
+          {
+            "text": "requires employee contributions to be “substantially equal” to the city’s",
+            "source": {
+              "doc": "SDCERS City Actuarial Valuation, June 30, 2025, Appendix A (employee contribution rates; City Charter Section 143, the \"substantially equal\" rate)",
+              "page": 76,
+              "url": "https://content.sdcers.gov/wp-content/uploads/2026/03/2025-sdcers-city-valuation-report.pdf"
+            }
+          },
+          {
+            "text": "not in Social Security",
+            "source": {
+              "doc": "SDCERS City Actuarial Valuation, June 30, 2025, Appendix A (City employees and Social Security: non-safety employees withdrew January 1, 1982; safety employees never participated)",
+              "page": 71,
+              "url": "https://content.sdcers.gov/wp-content/uploads/2026/03/2025-sdcers-city-valuation-report.pdf"
+            }
+          }
+        ]
+      },
+      "shortfall": {
+        "heading": "Where did the {ual_bn} shortfall come from?",
+        "figures": {
+          "ual_bn": {
+            "value": 3.46,
+            "source": {
+              "doc": "SDCERS City Actuarial Valuation, June 30, 2025, Table I-1 (unfunded actuarial liability $3,464.3 million)",
+              "page": 3,
+              "url": "https://content.sdcers.gov/wp-content/uploads/2026/03/2025-sdcers-city-valuation-report.pdf"
+            }
+          },
+          "funded_cents": {
+            "value": 76.1,
+            "source": {
+              "doc": "SDCERS City Actuarial Valuation, June 30, 2025, Table I-1 (funded ratio 76.1%)",
+              "page": 3,
+              "url": "https://content.sdcers.gov/wp-content/uploads/2026/03/2025-sdcers-city-valuation-report.pdf"
+            }
+          },
+          "prior_cents": {
+            "value": 74.7,
+            "source": {
+              "doc": "SDCERS City Actuarial Valuation, June 30, 2025, Table I-1 (funded ratio a year earlier, 74.7%)",
+              "page": 3,
+              "url": "https://content.sdcers.gov/wp-content/uploads/2026/03/2025-sdcers-city-valuation-report.pdf"
+            }
+          }
+        },
+        "history_caption": "Share of promised benefits the fund held, at the actuary’s valuation",
+        "history": [
+          {
+            "year": 2001,
+            "funded_pct": {
+              "value": 97.3,
+              "source": {
+                "doc": "SDCERS City Actuarial Valuation, June 30, 2025, Board Summary (funded ratio 97.3% in 2001)",
+                "page": 7,
+                "url": "https://content.sdcers.gov/wp-content/uploads/2026/03/2025-sdcers-city-valuation-report.pdf"
+              }
+            }
+          },
+          {
+            "year": 2004,
+            "funded_pct": {
+              "value": 65.8,
+              "source": {
+                "doc": "SDCERS City Actuarial Valuation, June 30, 2025, Board Summary (funded ratio 65.8% in 2004)",
+                "page": 7,
+                "url": "https://content.sdcers.gov/wp-content/uploads/2026/03/2025-sdcers-city-valuation-report.pdf"
+              }
+            }
+          },
+          {
+            "year": 2007,
+            "funded_pct": {
+              "value": 78.8,
+              "source": {
+                "doc": "SDCERS City Actuarial Valuation, June 30, 2025, Board Summary (funded ratio 78.8% in 2007)",
+                "page": 7,
+                "url": "https://content.sdcers.gov/wp-content/uploads/2026/03/2025-sdcers-city-valuation-report.pdf"
+              }
+            }
+          },
+          {
+            "year": 2009,
+            "funded_pct": {
+              "value": 66.5,
+              "source": {
+                "doc": "SDCERS City Actuarial Valuation, June 30, 2025, Board Summary (funded ratio 66.5% in 2009)",
+                "page": 7,
+                "url": "https://content.sdcers.gov/wp-content/uploads/2026/03/2025-sdcers-city-valuation-report.pdf"
+              }
+            }
+          },
+          {
+            "year": 2025,
+            "funded_pct": {
+              "value": 76.1,
+              "source": {
+                "doc": "SDCERS City Actuarial Valuation, June 30, 2025, Table I-1 (funded ratio 76.1%)",
+                "page": 3,
+                "url": "https://content.sdcers.gov/wp-content/uploads/2026/03/2025-sdcers-city-valuation-report.pdf"
+              }
+            },
+            "now": true
+          }
+        ],
+        "episodes": [
+          {
+            "from": 2001,
+            "to": 2004,
+            "text": "The city underfunded the plan while increasing benefits, as the dot-com crash hit",
+            "source": {
+              "doc": "SDCERS City Actuarial Valuation, June 30, 2025, Board Summary (2001 to 2004: the \"dot com\" decline coupled with the City underfunding the Plan while benefits were increased)",
+              "page": 7,
+              "url": "https://content.sdcers.gov/wp-content/uploads/2026/03/2025-sdcers-city-valuation-report.pdf"
+            }
+          },
+          {
+            "from": 2007,
+            "to": 2009,
+            "text": "The 2008 recession",
+            "source": {
+              "doc": "SDCERS City Actuarial Valuation, June 30, 2025, Board Summary (2007 to 2009: the 2008 recession)",
+              "page": 7,
+              "url": "https://content.sdcers.gov/wp-content/uploads/2026/03/2025-sdcers-city-valuation-report.pdf"
+            }
+          },
+          {
+            "from": 2025,
+            "to": 2025,
+            "text": "{ual_bn} short today"
+          }
+        ],
+        "changes_caption": "What changed the shortfall since 2009",
+        "changes": [
+          {
+            "label": "More cautious assumptions: expected return cut from 8% to 6.5%, longer lives",
+            "amount_bn": {
+              "value": 1.82,
+              "source": {
+                "doc": "SDCERS City Actuarial Valuation, June 30, 2025, Section II (factors contributing to unfunded liability changes since 2009: assumption changes +$1,821.7 million; discount rate lowered from 8.00% to 6.50%)",
+                "page": 16,
+                "url": "https://content.sdcers.gov/wp-content/uploads/2026/03/2025-sdcers-city-valuation-report.pdf"
+              }
+            }
+          },
+          {
+            "label": "Pay rose faster than assumed; investments fell short",
+            "amount_bn": {
+              "value": 1.49,
+              "source": {
+                "doc": "SDCERS City Actuarial Valuation, June 30, 2025, Section II (factors contributing to unfunded liability changes since 2009: investment and liability experience +$1,493.6 million)",
+                "page": 16,
+                "url": "https://content.sdcers.gov/wp-content/uploads/2026/03/2025-sdcers-city-valuation-report.pdf"
+              }
+            }
+          },
+          {
+            "label": "Contributions above the required amount, and other changes",
+            "amount_bn": {
+              "value": -1.15,
+              "source": {
+                "doc": "SDCERS City Actuarial Valuation, June 30, 2025, Section II (factors contributing to unfunded liability changes since 2009: all other, largely contributions in excess of the ADC, −$1,154.2 million)",
+                "page": 16,
+                "url": "https://content.sdcers.gov/wp-content/uploads/2026/03/2025-sdcers-city-valuation-report.pdf"
+              }
+            }
+          }
+        ],
+        "net_label": "Net change, 2009 to 2025",
+        "net_bn": {
+          "value": 2.16,
+          "source": {
+            "doc": "SDCERS City Actuarial Valuation, June 30, 2025, Section II (factors contributing to unfunded liability changes since 2009: net change +$2,161.1 million)",
+            "page": 16,
+            "url": "https://content.sdcers.gov/wp-content/uploads/2026/03/2025-sdcers-city-valuation-report.pdf"
+          }
+        },
+        "text": "The fund held {funded_cents} for every dollar promised at June 30, 2025, up from {prior_cents} a year earlier. The city has paid the full required amount every year since FY2006.",
+        "cites": [
+          {
+            "text": "paid the full required amount every year since FY2006",
+            "source": {
+              "doc": "IBA Report 25-36, Review of the FY 2027-2031 Five-Year Financial Outlook: the City has fully funded the annual required pension contribution since FY 2006",
+              "page": 7,
+              "url": "https://www.sandiego.gov/sites/default/files/2025-12/25-36-review-of-the-mayor-s-fy-2027-2031-five-year-financial-outlook_2.pdf"
+            }
+          }
+        ]
+      },
+      "reform": {
+        "heading": "Hasn’t this already been reformed?",
+        "tiers": [
+          {
+            "label": "Old plan: hired before July 2009",
+            "rate_pct": {
+              "value": 25.7,
+              "source": {
+                "doc": "SDCERS City Actuarial Valuation, June 30, 2025, Table V-1 (General Old Plan total normal cost rate, 25.73% of pay)",
+                "page": 35,
+                "url": "https://content.sdcers.gov/wp-content/uploads/2026/03/2025-sdcers-city-valuation-report.pdf"
+              }
+            },
+            "payroll_m": {
+              "value": 185.5,
+              "source": {
+                "doc": "SDCERS City Actuarial Valuation, June 30, 2025, Table V-1 (General Old Plan expected payroll for FY2027, $185.5 million)",
+                "page": 35,
+                "url": "https://content.sdcers.gov/wp-content/uploads/2026/03/2025-sdcers-city-valuation-report.pdf"
+              }
+            },
+            "ual_bn": {
+              "value": 1.63,
+              "source": {
+                "doc": "SDCERS City Actuarial Valuation, June 30, 2025, Table V-1 (General Old Plan unfunded actuarial liability, $1,631.6 million)",
+                "page": 35,
+                "url": "https://content.sdcers.gov/wp-content/uploads/2026/03/2025-sdcers-city-valuation-report.pdf"
+              }
+            }
+          },
+          {
+            "label": "2009 plan: hired since",
+            "rate_pct": {
+              "value": 23.8,
+              "source": {
+                "doc": "SDCERS City Actuarial Valuation, June 30, 2025, Table V-1 (General 2009 Plan total normal cost rate, 23.78% of pay)",
+                "page": 35,
+                "url": "https://content.sdcers.gov/wp-content/uploads/2026/03/2025-sdcers-city-valuation-report.pdf"
+              }
+            },
+            "payroll_m": {
+              "value": 699.6,
+              "source": {
+                "doc": "SDCERS City Actuarial Valuation, June 30, 2025, Table V-1 (General 2009 Plan expected payroll for FY2027, $699.6 million)",
+                "page": 35,
+                "url": "https://content.sdcers.gov/wp-content/uploads/2026/03/2025-sdcers-city-valuation-report.pdf"
+              }
+            },
+            "ual_bn": {
+              "value": 0.24,
+              "source": {
+                "doc": "SDCERS City Actuarial Valuation, June 30, 2025, Table V-1 (General 2009 Plan unfunded actuarial liability, $240.6 million)",
+                "page": 35,
+                "url": "https://content.sdcers.gov/wp-content/uploads/2026/03/2025-sdcers-city-valuation-report.pdf"
+              }
+            }
+          }
+        ],
+        "tier_rows": [
+          [
+            "rate_pct",
+            "Cost of new benefits, share of pay"
+          ],
+          [
+            "payroll_m",
+            "Payroll covered, FY2027"
+          ],
+          [
+            "ual_bn",
+            "Share of the shortfall"
+          ]
+        ],
+        "tiers_note": "Non-safety employees. Most of today’s payroll is already in the cheaper plan; almost all of the shortfall belongs to the old one.",
+        "timeline": [
+          {
+            "when": "2012",
+            "role": "neutral",
+            "text": "Voters pass Proposition B: new non-police hires get a 401(k)-style plan",
+            "source": {
+              "doc": "FY2025 Adopted Budget Vol. I, Citywide Budget Overview, Proposition B Status (approved by voters in June 2012; invalidated by the California Superior Court in early 2021)",
+              "page": 67,
+              "url": "https://www.sandiego.gov/sites/default/files/2024-08/fy25ab_v1cbo.pdf"
+            }
+          },
+          {
+            "when": "2021",
+            "role": "neutral",
+            "text": "A court invalidates it; the pension reopens and those employees are brought back in",
+            "source": {
+              "doc": "SDCERS City Actuarial Valuation, June 30, 2025, Board Summary (unwinding of Proposition B; plan reopened July 10, 2021)",
+              "page": 1,
+              "url": "https://content.sdcers.gov/wp-content/uploads/2026/03/2025-sdcers-city-valuation-report.pdf"
+            }
+          },
+          {
+            "when": "2022",
+            "role": "past",
+            "text": "The unwinding leaves a {propb_m} shortfall, paid off over 20 years",
+            "figures": {
+              "propb_m": {
+                "value": 119.1,
+                "source": {
+                  "doc": "SDCERS City Actuarial Valuation, June 30, 2025, Table V-2 (Proposition B Shortfall amortization base dated July 1, 2022, $119,051,737 over 20 years)",
+                  "page": 37,
+                  "url": "https://content.sdcers.gov/wp-content/uploads/2026/03/2025-sdcers-city-valuation-report.pdf"
+                }
+              }
+            }
+          },
+          {
+            "when": "FY2029",
+            "role": "now",
+            "text": "The payment is projected to fall from {fy28_m} to {fy29_m} as older layers of the shortfall are paid off",
+            "figures": {
+              "fy28_m": {
+                "value": 573.2,
+                "source": {
+                  "doc": "SDCERS City Actuarial Valuation, June 30, 2025, Board Summary (baseline projection: FY2028 ADC $573.2 million)",
+                  "page": 12,
+                  "url": "https://content.sdcers.gov/wp-content/uploads/2026/03/2025-sdcers-city-valuation-report.pdf"
+                }
+              },
+              "fy29_m": {
+                "value": 493.4,
+                "source": {
+                  "doc": "SDCERS City Actuarial Valuation, June 30, 2025, Board Summary (baseline projection: FY2029 ADC $493.4 million)",
+                  "page": 12,
+                  "url": "https://content.sdcers.gov/wp-content/uploads/2026/03/2025-sdcers-city-valuation-report.pdf"
+                }
+              }
+            }
+          },
+          {
+            "when": "2041",
+            "role": "now",
+            "text": "Projected fully funded, if investment returns are 6.5% every year",
+            "source": {
+              "doc": "SDCERS City Actuarial Valuation, June 30, 2025, Board Summary (100% funded by the June 30, 2041 valuation, at which time the ADC declines sharply)",
+              "page": 12,
+              "url": "https://content.sdcers.gov/wp-content/uploads/2026/03/2025-sdcers-city-valuation-report.pdf"
+            }
+          }
+        ]
+      }
+    },
     "sources": [
       {
         "doc": "IBA Report 26-11, Key Citywide Issues: Pension (FY 2027 ADC, General Fund share, shares of expenditures, UAL and funded ratio)",

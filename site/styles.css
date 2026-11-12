@@ -287,6 +287,96 @@ main { padding-bottom: 80px; }
 .gap-reserve, .gap-note { margin: 14px 0 0; font-size: 0.95rem; }
 .gap-note { color: var(--muted); }
 
+/* The pensions card's pictures (site/charts/pension-card.js). Roles: past = --gap, now/city = --cat-1, employee = --cat-2,
+   other/context = --cents-a / --cents-b. Numbers inside a fill are sourced figures; their dotted underline follows the text. */
+.pc { display: flex; flex-direction: column; gap: 26px; margin: 16px 0 4px; }
+.pc-sec { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.pc-h { margin: 0; font: 650 1rem/1.3 var(--font-ui); }
+.pc-cap { margin: 4px 0 0; font: 0.8rem/1.4 var(--font-ui); color: var(--muted); }
+.pc-text { margin: 2px 0 0; }
+.pc-past { background: var(--gap); color: var(--on-fill-light); }
+.pc-now { background: var(--cat-1); color: var(--on-fill-light); }
+.pc-employee { background: var(--cat-2); color: var(--on-fill-light); }
+.pc-other { background: var(--cents-a); color: var(--on-fill-light); }
+.pc-context { background: var(--cents-b); }
+.pc-out { background: none; border: 2px solid var(--muted); }
+:root[data-theme="dark"] .pc-past { color: var(--on-fill-dark); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .pc-past { color: var(--on-fill-dark); } }
+.pc-bar { height: 18px; border-radius: 0 4px 4px 0; flex: none; }
+.pc .figure { white-space: nowrap; }
+.pc-bar .fn-fig, .pc-stack .fn-fig { text-decoration-color: currentColor; }
+/* 1. the stacked payment */
+.pc-stack { display: flex; gap: 2px; height: 44px; border-radius: 4px; overflow: hidden; }
+.pc-stack .pc-bar { height: auto; border-radius: 0; display: flex; align-items: center; gap: 0.35em; padding: 0 10px; min-width: 0;
+  font: 600 0.85rem/1.2 var(--font-ui); white-space: nowrap; overflow: hidden; }
+.pc-stack .pc-bar:empty { padding: 0; } /* a sliver too narrow for its amount keeps its true width */
+.pc-legend { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 4px 18px; font: 0.8rem/1.4 var(--font-ui); color: var(--muted); }
+.pc-legend li { display: flex; align-items: center; gap: 6px; }
+.pc-legend .figure { color: var(--text); }
+.pc-swatch { width: 12px; height: 12px; border-radius: 3px; flex: none; }
+/* rows: label | bar | value */
+.pc-rows { display: grid; grid-template-columns: minmax(96px, 150px) minmax(0, 1fr); gap: 8px 12px; align-items: center; font: 0.85rem/1.3 var(--font-ui); }
+.pc-rows-val { grid-template-columns: minmax(96px, 150px) minmax(0, 1fr) auto; }
+.pc-row-label { min-width: 0; }
+.pc-track { display: flex; min-width: 0; }
+.pc-val { font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+.pc-muted { color: var(--muted); }
+.pc-split { display: flex; gap: 2px; height: 30px; border-radius: 4px; overflow: hidden; }
+.pc-split .pc-bar { height: auto; border-radius: 0; display: flex; align-items: center; gap: 0.35em; padding: 0 8px; min-width: 0; font-weight: 600; white-space: nowrap; overflow: hidden; }
+/* 3. the funded-ratio columns and what moved the shortfall */
+.pc-hist { display: grid; grid-template-columns: repeat(var(--pc-cols), minmax(0, 1fr)); gap: 12px; align-items: end; font: 0.8rem/1.3 var(--font-ui); }
+.pc-hist-col { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 0; }
+.pc-hist-val { font-weight: 600; }
+.pc-col-box { width: 100%; height: 136px; display: flex; align-items: flex-end; }
+.pc-col { width: 100%; border-radius: 4px 4px 0 0; }
+.pc-hist-year { color: var(--muted); }
+.pc-episodes { display: grid; grid-template-columns: repeat(var(--pc-cols), minmax(0, 1fr)); gap: 12px; font: 0.8rem/1.4 var(--font-ui); color: var(--muted); }
+.pc-episode { border-top: 2px solid var(--rule); padding-top: 6px; min-width: 0; }
+.pc-episode .figure { color: var(--text); }
+.pc-changes { display: grid; grid-template-columns: minmax(120px, 250px) minmax(0, 1fr); gap: 8px 12px; align-items: center; font: 0.85rem/1.3 var(--font-ui); }
+.pc-change { display: contents; }
+.pc-strong .pc-row-label, .pc-strong .pc-val { font-weight: 650; }
+.pc-change-track { display: flex; min-width: 0; }
+.pc-change-neg, .pc-change-pos { display: flex; align-items: center; width: 50%; min-width: 0; }
+.pc-change-neg { justify-content: flex-end; gap: 8px; }
+.pc-change-neg .pc-bar { border-radius: 4px 0 0 4px; }
+.pc-change-pos { gap: 8px; border-left: 2px solid var(--rule); }
+.pc-strong .pc-change-pos { border-left-color: var(--text); }
+.pc-change .pc-bar { max-width: 100%; }
+.pc-change-pos .pc-bar, .pc-change-neg .pc-bar { flex: 0 1 auto; }
+/* 4. the two plan tiers and the timeline */
+.pc-tiers { display: grid; grid-template-columns: minmax(110px, 170px) minmax(0, 1fr) minmax(0, 1fr); gap: 8px 14px; align-items: center; font: 0.85rem/1.3 var(--font-ui); }
+.pc-tier-h { font-weight: 650; }
+.pc-tier-cell { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.pc-tier-cell .pc-track { flex: 1 1 auto; }
+.pc-timeline { margin: 6px 0 0; padding: 0; list-style: none; display: flex; font: 0.8rem/1.4 var(--font-ui); }
+.pc-tl { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 4px; padding-right: 12px; position: relative; }
+.pc-tl::before { content: ""; position: absolute; left: 12px; right: 0; top: 5px; height: 2px; background: var(--rule); }
+.pc-tl:last-child::before { content: none; }
+.pc-tl-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--text); position: relative; }
+.pc-tl-past .pc-tl-dot { background: var(--gap); }
+.pc-tl-now .pc-tl-dot { background: var(--cat-1); }
+.pc-tl-when { font-weight: 650; }
+.pc-tl-text { color: var(--muted); }
+.pc-tl-text .figure { color: var(--text); }
+@media (max-width: 599px) {
+  .pc-stack .pc-seg-label, .pc-split .pc-seg-label { display: none; }
+  .pc-stack { height: 40px; }
+  .pc-rows { grid-template-columns: minmax(84px, 118px) minmax(0, 1fr); }
+  .pc-rows-val { grid-template-columns: minmax(84px, 118px) minmax(0, 1fr) auto; }
+  .pc-changes { grid-template-columns: 1fr; gap: 4px 0; }
+  .pc-change .pc-row-label { margin-top: 6px; }
+  .pc-tiers { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .pc-tiers > .pc-row-label { grid-column: 1 / -1; margin-top: 6px; }
+  .pc-tiers > div:first-child { display: none; }
+  .pc-col-box { height: 100px; }
+  .pc-hist, .pc-episodes { gap: 6px; }
+  .pc-timeline { flex-direction: column; gap: 10px; }
+  .pc-tl { padding: 0 0 0 22px; }
+  .pc-tl::before { left: 5px; top: 14px; bottom: -12px; right: auto; width: 2px; height: auto; }
+  .pc-tl-dot { position: absolute; left: 0; top: 3px; }
+}
+
 /* Chapter 4 claim cards */
 .chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
 .chip { font: 600 0.9rem/1.2 var(--font-ui); min-height: 44px; padding: 8px 14px; border-radius: 22px; border: 1px solid var(--rule); background: var(--surface); color: var(--text); cursor: pointer; }
@@ -453,6 +543,7 @@ main { padding-bottom: 80px; }
 .hl-num { white-space: nowrap; }
 .hl-num .figure { font-variant-numeric: proportional-nums; font-weight: 750; }
 .hl-num .fn:not(.fn-fig) { font-size: 0.8rem; vertical-align: 0.9em; }
+.hl-num .hl-word { display: block; font: 600 0.85rem/1.3 var(--font-ui); letter-spacing: 0; color: var(--muted); }
 .hl-sub { margin: 4px 0 0; font: 0.9rem/1.4 var(--font-ui); }
 .hl-what, .hl-who { margin: 8px 0 0; font: 0.85rem/1.45 var(--font-ui); color: var(--muted); }
 .hl-fy { margin: 0 0 6px; font: 600 0.85rem/1.3 var(--font-ui); color: var(--muted); }
@@ -519,6 +610,8 @@ main { padding-bottom: 80px; }
 .tl-dot { position: absolute; top: -1px; width: 24px; height: 24px; padding: 0; border: 0; background: none; cursor: pointer; border-radius: 50%; }
 .tl-dot::before { content: ""; position: absolute; left: 7px; top: 7px; width: 10px; height: 10px; border-radius: 50%; background: var(--gap); box-shadow: 0 0 0 2px var(--bg); }
 .tl-dot[aria-expanded="true"]::before { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--gap); }
+.tl-dot.is-surplus::before { background: var(--surface); box-shadow: inset 0 0 0 2.5px var(--gap), 0 0 0 2px var(--bg); }
+.tl-dot.is-surplus[aria-expanded="true"]::before { box-shadow: inset 0 0 0 2.5px var(--gap), 0 0 0 2px var(--bg), 0 0 0 4px var(--gap); }
 .tl-tip { position: absolute; top: calc(100% + 6px); z-index: 30; background: var(--surface); color: var(--text); border: 1px solid var(--rule); border-radius: 6px; box-shadow: 0 4px 16px rgb(0 0 0 / 0.18); padding: 8px 10px; font: 0.8rem/1.4 var(--font-ui); }
 .tl-tip[hidden] { display: none; }
 .tl-tip dl { margin: 4px 0 0; }

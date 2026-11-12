@@ -21,13 +21,14 @@ test('bike and pension cards expose their links; the others have none', () => {
   }
 });
 
-test('a finding is one paragraph or several; the pensions card has several', () => {
+test('a finding is one paragraph or several; only the pensions card carries a visual', () => {
   const claims = load('claims');
   for (const c of claims) {
     const m = claimCardModel(c);
     assert.ok(Array.isArray(m.findings) && m.findings.length >= 1 && m.findings.every((p) => typeof p === 'string' && p.length));
+    assert.equal(m.visual != null, c.id === 'pensions', c.id);
   }
-  assert.ok(claimCardModel(claims.find((c) => c.id === 'pensions')).findings.length >= 4);
+  assert.equal(claimCardModel(claims.find((c) => c.id === 'pensions')).visual.kind, 'pensions');
   assert.equal(claimCardModel(claims.find((c) => c.id === 'managers')).findings.length, 1);
 });
 

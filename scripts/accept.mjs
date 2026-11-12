@@ -394,12 +394,12 @@ async function section3(chromium) {
       const stack = new Set(r.cards.map((c) => c[0])).size === 1;
       if (width < 640 ? !stack : !row) fail(`cards ${width < 640 ? 'do not stack' : 'not in a row'}: ${JSON.stringify(r.cards)}`);
       if (r.questions.join('|') !== 'How big was it this year?|How bad did it get?|What’s coming?') fail(`questions: ${r.questions}`);
-      if (r.pair.length !== 2 || r.pair[0][0] !== '$9.5M' || r.pair[1][0] !== '$32.9M' || r.pair[0][1] !== r.pair[1][1] || r.pair[0][2] !== r.pair[1][2]) {
+      if (r.pair.length !== 2 || !r.pair[0][0].startsWith('$5.1M') || !r.pair[1][0].startsWith('$1M') || r.pair[0][1] !== r.pair[1][1] || r.pair[0][2] !== r.pair[1][2]) {
         fail(`FY2028 pair not side by side at equal size: ${JSON.stringify(r.pair)}`);
       }
       if (r.cardOverflow.length) fail(`headline numbers overflow their card: ${r.cardOverflow.join(', ')}`);
       if (r.sett !== 2) fail(`${r.sett} settlement items`);
-      if (!/November 6, 2026/.test(r.note)) fail(`note: "${r.note}"`);
+      if (!/December 14, 2026/.test(r.note)) fail(`note: "${r.note}"`);
       if (r.steps.length !== 9) fail(`${r.steps.length} waterfall steps`);
       if (r.hatched !== 1) fail(`${r.hatched} hatched bars`);
       if (r.valsOut) fail(`${r.valsOut} waterfall value label(s) outside the chart`);
@@ -432,7 +432,7 @@ async function section3(chromium) {
         };
       }, { pts: overlaps('#s3-timeline .tl-pt') });
       if (d.defs.join('|') !== 'Forecast gap|Structural deficit|Balanced budget') fail(`definitions: ${d.defs}`);
-      if (d.points !== 8) fail(`${d.points} timeline points`);
+      if (d.points !== 9) fail(`${d.points} timeline points`);
       if (d.ptOverlap.length) fail(`timeline labels overlap: ${JSON.stringify(d.ptOverlap)}`);
       if (d.ptOut) fail(`${d.ptOut} timeline label(s) past the right edge`);
       if (!d.funnelW || Math.abs(d.funnelW - d.funnelBox) > 2) fail(`funnel drawn at ${d.funnelW}px in a ${d.funnelBox}px box after opening`);
@@ -662,6 +662,33 @@ async function pageWide(chromium) {
           });
           if (!there.open || !there.inView) fail(`bike card link did not open and show "How projects are chosen": ${JSON.stringify(there)}`);
         }
+        // The pensions card: four pictures, every number a sourced figure, every bar and label inside the panel.
+        await page.click('#claim-tab-pensions');
+        await page.waitForSelector('#claim-panel .pc-sec', { timeout: 3000 }).catch(() => {});
+        const pc = await page.evaluate(() => {
+          const box = document.querySelector('#claim-panel .pc');
+          if (!box) return null;
+          const panel = document.getElementById('claim-panel').getBoundingClientRect();
+          const inside = (e) => { const r = e.getBoundingClientRect(); return r.right <= panel.right + 0.5 && r.left >= panel.left - 0.5; };
+          const out = [...box.querySelectorAll('.pc-bar, .pc-val, .pc-hist-val, .pc-tl-text, .pc-legend li, .pc-row-label, .pc-episode')].filter((e) => !inside(e)).map((e) => e.textContent.slice(0, 30));
+          return {
+            secs: box.querySelectorAll('.pc-sec').length,
+            figs: box.querySelectorAll('.figure').length,
+            unsourced: [...box.querySelectorAll('.figure')].filter((f) => !f.closest('.fn')).length,
+            flat: [...box.querySelectorAll('.pc-bar')].filter((b) => b.getBoundingClientRect().width <= 0).length,
+            out,
+            heading: box.querySelector('.pc-h')?.textContent || '',
+          };
+        });
+        if (!pc) fail('pensions card has no pictures');
+        else {
+          if (pc.secs !== 4) fail(`pensions card has ${pc.secs} pictures`);
+          if (pc.figs < 30) fail(`pensions card shows ${pc.figs} figures`);
+          if (pc.unsourced) fail(`${pc.unsourced} pensions figure(s) without a source button`);
+          if (pc.flat) fail(`${pc.flat} pensions bar(s) with no width`);
+          if (pc.out.length) fail(`pensions card content outside the panel: ${pc.out.join(' | ')}`);
+          if (!/^1\. Where does this year’s \$563\.2M pension payment go\?$/.test(pc.heading.replace("'", '’'))) fail(`pensions heading: "${pc.heading}"`);
+        }
         await page.evaluate(() => document.querySelectorAll('details').forEach((d) => { d.open = true; }));
         await page.waitForTimeout(400);
 
@@ -686,6 +713,9 @@ async function pageWide(chromium) {
           });
           if (pops.length) fail(`${pops.length} popover(s) off the page or away from their control: ${pops.slice(0, 3).join('; ')}`);
         }
+        // Back to the bike card, which the page-wide checks and the section screenshot expect open.
+        await page.click('#claim-tab-bike-lanes');
+        await page.waitForTimeout(300);
 
         const r = await page.evaluate((retired) => {
           const visible = document.body.innerText;
@@ -744,7 +774,7 @@ async function pageWide(chromium) {
         if (!/FY2027/.test(r.methodsText) || !/FY2026/.test(r.methodsText) || !/Small items in a map are grouped into an "Everything else" box/.test(r.methodsText)
           || !/our arithmetic/.test(r.methodsText) || !/Internal services & other/.test(r.methodsText)) fail('methods note copy is incomplete');
         if (r.methodsFigs.join() !== '$82.4M,$83.1M') fail(`methods note figures: ${r.methodsFigs.join()}`);
-        if (!/\$9\.5M/.test(r.marker) || !/\$32\.9M/.test(r.marker)) fail(`FY2028 marker does not show both figures: "${r.marker.slice(0, 160)}"`);
+        if (!/\$5\.1M surplus/.test(r.marker) || !/\$9\.5M/.test(r.marker) || !/\$32\.9M/.test(r.marker)) fail(`FY2028 marker does not show all three figures: "${r.marker.slice(0, 200)}"`);
         if (!r.cutRows) fail('no cut table rows');
         if (width < 640 && !r.cutsStacked) fail('cut tables do not stack into blocks at phone width');
         if (r.cutsOut) fail(`${r.cutsOut} cut-table cell(s) clipped past the right edge`);
@@ -767,6 +797,19 @@ async function pageWide(chromium) {
           await shot('#how-long', `v2-s5-375${sfx}`);
           await shot('#claims', `v2-s6-375${sfx}`);
           if (scheme === 'light') await shot('#sources', 'v2-sources-375');
+          await page.click('#claim-tab-pensions');
+          await page.waitForTimeout(300);
+          await shot('#claim-panel', `v2-s6-pensions-375${sfx}`);
+        }
+        if (width === 1200 && scheme === 'light') {
+          await page.click('#claim-tab-pensions');
+          await page.waitForTimeout(300);
+          await page.evaluate(() => document.activeElement?.blur());
+          const box = await page.evaluate(() => { const e = document.getElementById('claim-panel').getBoundingClientRect(); return { x: e.left + window.scrollX, y: e.top + window.scrollY, width: e.width, height: e.height }; });
+          await page.setViewportSize({ width, height: Math.ceil(box.y + box.height) });
+          await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+          await page.waitForTimeout(200);
+          await page.screenshot({ path: path.join(SHOTS, 'v2-s6-pensions-1200.png'), clip: box });
         }
         });
       }

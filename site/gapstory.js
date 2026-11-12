@@ -1,31 +1,11 @@
-// Section 3: the gap and how it was closed. noteParts() and stepLabel() are pure (Node-testable);
+// Section 3: the gap and how it was closed. citeParts() and stepLabel() are pure (Node-testable);
 // renderGapStory() fills the section's mounts from gap_story.json.
 import { figureSpan, mountPopovers, h, fig as sourced, cite, isOurs } from './sources.js';
 import { gapMoney } from './gapui.js';
-import { moneyToken } from './format.js';
 import * as waterfall from './charts/waterfall.js';
 import * as timeline from './charts/gap-timeline.js';
 import { themeColors, observeWidth } from './charts/util.js';
 import { onThemeChange } from './theme.js';
-
-// The "what's coming" note as text and sourced parts: the city's figure becomes a .figure, the forecast date a cite.
-// The build checks the note shows the figure as moneyToken() writes it and contains the cite anchor; if either is
-// missing here the data and code disagree, so this throws (the section's guarded() render then says so on screen).
-export const FORECAST_CITE_ANCHOR = 'A new forecast is due';
-export function noteParts(coming) {
-  const token = moneyToken(coming.city_m.value);
-  const at = coming.note.indexOf(token);
-  if (at < 0) throw new Error(`coming.note does not show the city's figure as ${token}`);
-  const rest = coming.note.slice(at + token.length);
-  const d = rest.indexOf(FORECAST_CITE_ANCHOR);
-  if (d < 0) throw new Error(`coming.note has no "${FORECAST_CITE_ANCHOR}" after ${token}`);
-  return [
-    coming.note.slice(0, at),
-    { kind: 'figure', text: token, figure: coming.city_m },
-    rest.slice(0, d),
-    { kind: 'cite', text: rest.slice(d), source: coming.forecast_due.source },
-  ].filter((x) => x !== '');
-}
 
 // Copy with named cites: each {text, source} in cites becomes a cite on its first appearance in the text (in order).
 // Throws when a cite's text is missing, as the build checks it is there.
@@ -52,13 +32,11 @@ const OFFICE = { IBA: "The IBA (the Council's independent budget analyst)", City
 function headlines(d) {
   const { this_year: ty, worst, coming } = d.headlines;
   const card = (cls, q, ...kids) => h('section', `hl-card${cls ? ` ${cls}` : ''}`, h('h3', 'hl-q', q), ...kids);
-  const note = h('p', 'hl-note');
-  for (const part of noteParts(coming)) {
-    if (typeof part === 'string') note.append(part);
-    else if (part.kind === 'figure') note.append(figureSpan(part.figure, part.text));
-    else note.append(cite(part.source, part.text));
-  }
-  const sett = h('ul', 'hl-sett', ...coming.settlement.map((s) => h('li', null, h('span', null, s.label), ' ', fig(s.amount_m, `about ${gapMoney(s.amount_m.value)}`))));
+  const note = h('p', 'hl-note', ...citeParts(coming.note, coming.cites).map((x) => (typeof x === 'string' ? x : cite(x.source, x.text))));
+  const o = coming.outlook;
+  const e = coming.earlier;
+  const sett = h('ul', 'hl-sett', ...e.settlement.map((s) => h('li', null, h('span', null, s.label), ' ', fig(s.amount_m, `about ${gapMoney(s.amount_m.value)}`))));
+  const surplus = (f) => h('p', 'hl-num', fig(f), h('span', 'hl-word', 'surplus'));
   return h('div', 'hl-cards',
     card('', 'How big was it this year?',
       h('p', 'hl-num', fig(ty.value_m)),
@@ -68,11 +46,12 @@ function headlines(d) {
       h('p', 'hl-sub', `In FY${worst.fy}. Without the skipped deposits: `, fig(worst.without_reserve_m), '.'),
       h('p', 'hl-what', worst.counting)),
     card('hl-coming', 'What’s coming?',
-      h('p', 'hl-fy', `FY${coming.fy}, measured two ways`),
+      h('p', 'hl-fy', `FY${coming.fy}. `, cite(o.source, o.label)),
       h('div', 'hl-pair',
-        h('div', null, h('p', 'hl-num', fig(coming.city_m)), h('p', 'hl-who', coming.city_counting)),
-        h('div', null, h('p', 'hl-num', fig(coming.iba_m)), h('p', 'hl-who', coming.iba_counting))),
-      h('p', 'hl-sett-h', 'Costs from the 2026 trash and parking settlement, which the IBA listed separately and which are not added to either number, for FY2028:'),
+        h('div', null, surplus(o.baseline_m), h('p', 'hl-who', o.baseline_counting)),
+        h('div', null, surplus(o.revised_m), h('p', 'hl-who', `${o.revised_counting}. For FY${o.next_fy} the same count shows a `, fig(o.next_m), ' shortfall.'))),
+      h('p', 'hl-sett-h', 'Earlier in 2026 the same year looked short, by ', fig(e.city_m), ` (${e.city_counting.toLowerCase()}) and `, fig(e.iba_m),
+        ` (${e.iba_counting.replace(/^The /, 'the ')}). Neither counted the costs of the 2026 trash and parking settlement, which the IBA listed separately for FY${coming.fy}:`),
       sett,
       note));
 }

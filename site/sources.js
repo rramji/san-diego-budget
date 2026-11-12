@@ -214,6 +214,7 @@ export const TITLES = {
   [`${SD}19_06_review_of_fy2020_proposed_budget.pdf`]: 'IBA Report 19-06, Review of the FY 2020 Proposed Budget',
   [`${SD}2026-08/fy27ab_v3.pdf`]: 'FY2027 Adopted Budget Vol. III, Capital Improvements Program',
   [`${SD}2025-08/fy26ab_v1executivesummary.pdf`]: 'FY2026 Adopted Budget Vol. I, Executive Summary',
+  [`${SD}2026-11/fy2028-2032-five-year-financial-outlook-and-attachments-general-fund.pdf`]: 'FY2028-2032 Five-Year Financial Outlook, General Fund (November 2026)',
   [`${SD}2026-02/fy-27-31-five-year-capital-infrastructure-planning-outlook.pdf`]: 'FY2027-2031 Five-Year Capital Infrastructure Planning Outlook (CIP Outlook)',
   'https://sandiego.gov/sites/default/files/2025-02/fy-26-30-five-year-capital-infrastructure-planning-outlook.pdf': 'FY2026-2030 Five-Year Capital Infrastructure Planning Outlook',
   [`${SD}2026-06/2026-06-08-reduced-trash-collection-fees-for-city-of-san-diego-customers-effective-july-1-2027.pdf`]:

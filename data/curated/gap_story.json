@@ -51,59 +51,131 @@
     },
     "coming": {
       "fy": 2028,
-      "city_m": {
-        "value": 9.5,
+      "outlook": {
+        "released": "2026-11-06",
+        "label": "The city's new five-year outlook, released November 6, 2026",
         "source": {
-          "doc": "FY2027 Adopted Budget Vol. I, Citywide Budget Overview: Table 10, Updated Five-Year Financial Outlook, FY 2028 Updated Baseline (Shortfall)",
-          "page": 36,
-          "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1cbo.pdf"
+          "doc": "FY 2028-2032 Five-Year Financial Outlook (November 2026): cover and executive summary; released November 6, 2026 (IBA Report 26-20 key dates)",
+          "page": 5,
+          "url": "https://www.sandiego.gov/sites/default/files/2026-11/fy2028-2032-five-year-financial-outlook-and-attachments-general-fund.pdf"
+        },
+        "baseline_m": {
+          "value": 5.1,
+          "source": {
+            "doc": "FY 2028-2032 Five-Year Financial Outlook (November 2026): Table 1.1, Summary of Key Financial Data, FY 2028 Available Resources (baseline revenues exceed baseline expenditures by $5.1 million)",
+            "page": 8,
+            "url": "https://www.sandiego.gov/sites/default/files/2026-11/fy2028-2032-five-year-financial-outlook-and-attachments-general-fund.pdf"
+          }
+        },
+        "baseline_counting": "A surplus at current service levels, before any FY2028 decisions; no reserve deposits",
+        "revised_m": {
+          "value": 1.0,
+          "source": {
+            "doc": "FY 2028-2032 Five-Year Financial Outlook (November 2026): Table 2.33, Revised Outlook Surplus/Shortfall, FY 2028 Revised Surplus",
+            "page": 60,
+            "url": "https://www.sandiego.gov/sites/default/files/2026-11/fy2028-2032-five-year-financial-outlook-and-attachments-general-fund.pdf"
+          }
+        },
+        "revised_counting": "Counting reserve deposits and the running costs of new facilities",
+        "next_fy": 2029,
+        "next_m": {
+          "value": 27.4,
+          "source": {
+            "doc": "FY 2028-2032 Five-Year Financial Outlook (November 2026): Table 2.33, Revised Outlook Surplus/Shortfall, FY 2029 Revised (Shortfall)",
+            "page": 60,
+            "url": "https://www.sandiego.gov/sites/default/files/2026-11/fy2028-2032-five-year-financial-outlook-and-attachments-general-fund.pdf"
+          }
         }
       },
-      "city_counting": "The city budget office's updated outlook, made with the adopted budget",
-      "city_stage": "adopted budget",
-      "iba_m": {
-        "value": 32.9,
-        "source": {
-          "doc": "IBA Report 26-15, Review of the May Revision: projected FY 2028 deficit 'as estimated at the time of the Proposed Budget', excluding reserve contributions",
-          "page": 43,
-          "url": "https://www.sandiego.gov/sites/default/files/2026-05/26-15-recommended-city-council-modifications-to-the-mayors-proposed-fy-2027-budget-and-review-of-the-may-revision.pdf"
-        }
-      },
-      "iba_counting": "The IBA's estimate, made at the proposed-budget stage, not counting reserve deposits",
-      "iba_stage": "estimated at the proposed budget",
-      "note": "The two were measured at different stages. The city's documents don't say whether its $9.5M includes the settlement costs. A new forecast is due November 6, 2026.",
-      "settlement": [
-        {
-          "label": "More General Fund money for trash pickup, after lower trash fees",
-          "amount_m": {
-            "value": 10.8,
-            "source": {
-              "doc": "IBA Report 26-15, Review of the May Revision: Solid Waste Management Fee impacts, estimated General Fund impact in FY 2028",
-              "page": 45,
-              "url": "https://www.sandiego.gov/sites/default/files/2026-05/26-15-recommended-city-council-modifications-to-the-mayors-proposed-fy-2027-budget-and-review-of-the-may-revision.pdf"
+      "earlier": {
+        "city_m": {
+          "value": 9.5,
+          "source": {
+            "doc": "FY2027 Adopted Budget Vol. I, Citywide Budget Overview: Table 10, Updated Five-Year Financial Outlook, FY 2028 Updated Baseline (Shortfall)",
+            "page": 36,
+            "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1cbo.pdf"
+          }
+        },
+        "city_counting": "The city's budget office, with the adopted budget",
+        "city_stage": "adopted budget",
+        "iba_m": {
+          "value": 32.9,
+          "source": {
+            "doc": "IBA Report 26-15, Review of the May Revision: projected FY 2028 deficit 'as estimated at the time of the Proposed Budget', excluding reserve contributions",
+            "page": 43,
+            "url": "https://www.sandiego.gov/sites/default/files/2026-05/26-15-recommended-city-council-modifications-to-the-mayors-proposed-fy-2027-budget-and-review-of-the-may-revision.pdf"
+          }
+        },
+        "iba_counting": "The IBA, at the proposed budget",
+        "iba_stage": "estimated at the proposed budget",
+        "settlement": [
+          {
+            "label": "More General Fund money for trash pickup, after lower trash fees",
+            "amount_m": {
+              "value": 10.8,
+              "source": {
+                "doc": "IBA Report 26-15, Review of the May Revision: Solid Waste Management Fee impacts, estimated General Fund impact in FY 2028",
+                "page": 45,
+                "url": "https://www.sandiego.gov/sites/default/files/2026-05/26-15-recommended-city-council-modifications-to-the-mayors-proposed-fy-2027-budget-and-review-of-the-may-revision.pdf"
+              }
             }
+          },
+          {
+            "label": "Balboa Park parking revenue lost",
+            "amount_m": {
+              "value": 9.4,
+              "source": {
+                "doc": "IBA Report 26-15, Review of the May Revision: net FY 2028 impact of eliminating Balboa Park paid parking",
+                "page": 44,
+                "url": "https://www.sandiego.gov/sites/default/files/2026-05/26-15-recommended-city-council-modifications-to-the-mayors-proposed-fy-2027-budget-and-review-of-the-may-revision.pdf"
+              }
+            }
+          }
+        ]
+      },
+      "note": "The new outlook counts both of those settlement costs: a General Fund subsidy to trash collection and the end of paid parking in Balboa Park. It says that reaching a balanced baseline took service cuts and lower personnel and pension costs, and that the later shortfalls are mostly the financing of planned infrastructure. The IBA reviews it for the City Council on December 14, 2026.",
+      "cites": [
+        {
+          "text": "a General Fund subsidy to trash collection",
+          "source": {
+            "doc": "FY 2028-2032 Five-Year Financial Outlook (November 2026): Transfers Out, FY 2028 Forecast: an $11.5 million General Fund subsidy to the Solid Waste Management Fund, as approved by City Council in June 2026",
+            "page": 54,
+            "url": "https://www.sandiego.gov/sites/default/files/2026-11/fy2028-2032-five-year-financial-outlook-and-attachments-general-fund.pdf"
           }
         },
         {
-          "label": "Balboa Park parking revenue lost",
-          "amount_m": {
-            "value": 9.4,
-            "source": {
-              "doc": "IBA Report 26-15, Review of the May Revision: net FY 2028 impact of eliminating Balboa Park paid parking",
-              "page": 44,
-              "url": "https://www.sandiego.gov/sites/default/files/2026-05/26-15-recommended-city-council-modifications-to-the-mayors-proposed-fy-2027-budget-and-review-of-the-may-revision.pdf"
-            }
+          "text": "the end of paid parking in Balboa Park",
+          "source": {
+            "doc": "FY 2028-2032 Five-Year Financial Outlook (November 2026): Revenue from Money and Property: paid parking in Balboa Park discontinued effective January 1, 2027, removing $4.4 million in projected revenue",
+            "page": 32,
+            "url": "https://www.sandiego.gov/sites/default/files/2026-11/fy2028-2032-five-year-financial-outlook-and-attachments-general-fund.pdf"
+          }
+        },
+        {
+          "text": "reaching a balanced baseline took service cuts and lower personnel and pension costs",
+          "source": {
+            "doc": "FY 2028-2032 Five-Year Financial Outlook (November 2026): Executive Summary: reaching a balanced baseline required reductions to service levels and disciplined management of personnel and pension costs",
+            "page": 5,
+            "url": "https://www.sandiego.gov/sites/default/files/2026-11/fy2028-2032-five-year-financial-outlook-and-attachments-general-fund.pdf"
+          }
+        },
+        {
+          "text": "the later shortfalls are mostly the financing of planned infrastructure",
+          "source": {
+            "doc": "FY 2028-2032 Five-Year Financial Outlook (November 2026): Executive Summary: the projected shortfalls in FY 2029 through FY 2032 are mostly attributable to the financing of planned infrastructure investments",
+            "page": 5,
+            "url": "https://www.sandiego.gov/sites/default/files/2026-11/fy2028-2032-five-year-financial-outlook-and-attachments-general-fund.pdf"
+          }
+        },
+        {
+          "text": "December 14, 2026",
+          "source": {
+            "doc": "IBA Report 26-20, Key Dates for FY 2028 Budget Development: Key Dates attachment, City Council reviews the General Fund FY 2028-2032 Five-Year Financial Outlook and related IBA reports, December 14, 2026",
+            "page": 2,
+            "url": "https://www.sandiego.gov/sites/default/files/2026-09/26-20-fy-2028-budget-development-and-fy-2027-budget-monitoring-key-dates.pdf"
           }
         }
-      ],
-      "forecast_due": {
-        "date": "2026-11-06",
-        "source": {
-          "doc": "IBA Report 26-20, Key Dates for FY 2028 Budget Development: Key Dates attachment, FY 2028-2032 Five-Year Financial Outlook released November 6, 2026",
-          "page": 1,
-          "url": "https://www.sandiego.gov/sites/default/files/2026-09/26-20-fy-2028-budget-development-and-fy-2027-budget-monitoring-key-dates.pdf"
-        }
-      }
+      ]
     }
   },
   "waterfall": [
@@ -480,6 +552,23 @@
         }
       },
       "value2_m": null
+    },
+    {
+      "date": "2026-11",
+      "office": "City",
+      "doc_label": "The Mayor's Five-Year Outlook, November 2026",
+      "describes_fy": 2028,
+      "counts": "Forecast surplus at current service levels, before any FY2028 decisions; no reserve deposits",
+      "value_m": {
+        "value": 5.1,
+        "source": {
+          "doc": "FY 2028-2032 Five-Year Financial Outlook (November 2026): Table 1.1, Summary of Key Financial Data, FY 2028 Available Resources (baseline revenues exceed baseline expenditures by $5.1 million)",
+          "page": 8,
+          "url": "https://www.sandiego.gov/sites/default/files/2026-11/fy2028-2032-five-year-financial-outlook-and-attachments-general-fund.pdf"
+        }
+      },
+      "value2_m": null,
+      "surplus": true
     }
   ]
 }

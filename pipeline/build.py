@@ -88,12 +88,15 @@ def money_token(v) -> str:
 
 
 def coming_marker(coming: dict) -> dict:
-    """The chart's "what's coming" marker, built from gap_story.headlines.coming (ruling R15: the pair has one home)."""
+    """The chart's "what's coming" marker, built from gap_story.headlines.coming (ruling R15: the figures have one home):
+    the new outlook's baseline, then the two earlier estimates."""
+    o, e = coming["outlook"], coming["earlier"]
     return {
         "fy": coming["fy"],
-        "label": (f"FY{coming['fy']} outlook: city {money_token(coming['city_m']['value'])} ({coming['city_stage']}), "
-                  f"IBA {money_token(coming['iba_m']['value'])} ({coming['iba_stage']})"),
-        "figures": [coming["city_m"], coming["iba_m"]],
+        "label": (f"FY{coming['fy']} outlook (November 2026): {money_token(o['baseline_m']['value'])} surplus at current service levels; "
+                  f"earlier in 2026 the city put the shortfall at {money_token(e['city_m']['value'])} ({e['city_stage']}) "
+                  f"and the IBA at {money_token(e['iba_m']['value'])} ({e['iba_stage']})"),
+        "figures": [o["baseline_m"], e["city_m"], e["iba_m"]],
     }
 
 
@@ -274,6 +277,149 @@ def _homelessness_chart(series: dict, funnel: dict | None = None) -> dict:
     return chart
 
 
+PENSION_PARTS_TOLERANCE_M = 1.0  # the pieces of the payment are printed at slightly different payment dates (Table V-1)
+PENSION_NET_TOLERANCE_BN = 0.02
+_TOKEN = re.compile(r"\{(\w+)\}")
+_PENSION_ROLES = {"past", "now", "other"}
+_FLOW_ROLES = {"city", "employee", "other", "out"}
+_TIMELINE_ROLES = {"neutral", "past", "now"}
+
+
+def _tokens_resolve(text: str, scope: dict, path: str) -> None:
+    for key in _TOKEN.findall(text):
+        if key not in scope:
+            raise ValueError(f"{path}: no figure for {{{key}}}")
+        curated.validate_figure(scope[key], f"{path} {{{key}}}")
+
+
+def _cites_in(text: str, cites, path: str) -> None:
+    for i, ct in enumerate(cites or []):
+        if _text(ct.get("text") if isinstance(ct, dict) else None, f"{path}.cites[{i}].text") not in text:
+            raise ValueError(f"{path}.cites[{i}].text: {ct['text']!r} must appear in the text")
+        _check_source(ct.get("source"), f"{path}.cites[{i}].source")
+
+
+def _check_pension_visual(v: dict, path: str) -> None:
+    """The pensions card's four pictures (site/charts/pension-card.js): every number a Figure, every "{key}" token in
+    the copy a figure in scope, the payment's parts summing to its total, the changes summing to the net."""
+    if not isinstance(v, dict) or v.get("kind") != "pensions":
+        raise ValueError(f'{path}.kind: "pensions" required')
+    for sec in ("payment", "who_pays", "shortfall", "reform"):
+        if not isinstance(v.get(sec), dict):
+            raise ValueError(f"{path}.{sec}: object required")
+    pay = v["payment"]
+    figs = pay.get("figures") if isinstance(pay.get("figures"), dict) else {}
+    _tokens_resolve(_text(pay.get("heading"), f"{path}.payment.heading"), figs, f"{path}.payment.heading")
+    _tokens_resolve(_text(pay.get("text"), f"{path}.payment.text"), figs, f"{path}.payment.text")
+    total = _need_value(figs.get("total_m"), f"{path}.payment.figures.total_m")
+    parts = pay.get("parts")
+    if not isinstance(parts, list) or len(parts) < 2:
+        raise ValueError(f"{path}.payment.parts: at least two parts required")
+    for i, pt in enumerate(parts):
+        pp = f"{path}.payment.parts[{i}]"
+        if not isinstance(pt, dict) or pt.get("role") not in _PENSION_ROLES:
+            raise ValueError(f"{pp}.role: one of {', '.join(sorted(_PENSION_ROLES))}")
+        for k in ("label", "legend"):
+            _text(pt.get(k), f"{pp}.{k}")
+        _need_value(pt.get("amount_m"), f"{pp}.amount_m")
+    if abs(sum(pt["amount_m"]["value"] for pt in parts) - total) > PENSION_PARTS_TOLERANCE_M:
+        raise ValueError(f"{path}.payment.parts: amounts must sum to figures.total_m within {PENSION_PARTS_TOLERANCE_M}")
+
+    who = v["who_pays"]
+    _text(who.get("heading"), f"{path}.who_pays.heading")
+    for k in ("rates_caption", "flows_caption"):
+        _text(who.get(k), f"{path}.who_pays.{k}")
+    rates = who.get("rates")
+    if not isinstance(rates, list) or not rates:
+        raise ValueError(f"{path}.who_pays.rates: non-empty list required")
+    for i, r in enumerate(rates):
+        rp = f"{path}.who_pays.rates[{i}]"
+        _text(r.get("label") if isinstance(r, dict) else None, f"{rp}.label")
+        for k in ("employee_pct", "city_pct"):
+            _need_value(r.get(k), f"{rp}.{k}")
+    flows = who.get("flows")
+    if not isinstance(flows, list) or len(flows) < 2:
+        raise ValueError(f"{path}.who_pays.flows: at least two flows required")
+    for i, f in enumerate(flows):
+        fp = f"{path}.who_pays.flows[{i}]"
+        if not isinstance(f, dict) or f.get("role") not in _FLOW_ROLES:
+            raise ValueError(f"{fp}.role: one of {', '.join(sorted(_FLOW_ROLES))}")
+        _text(f.get("label"), f"{fp}.label")
+        _need_value(f.get("amount_m"), f"{fp}.amount_m")
+    _cites_in(_text(who.get("text"), f"{path}.who_pays.text"), who.get("cites"), f"{path}.who_pays")
+
+    sh = v["shortfall"]
+    sfigs = sh.get("figures") if isinstance(sh.get("figures"), dict) else {}
+    _tokens_resolve(_text(sh.get("heading"), f"{path}.shortfall.heading"), sfigs, f"{path}.shortfall.heading")
+    for k in ("history_caption", "changes_caption", "net_label"):
+        _text(sh.get(k), f"{path}.shortfall.{k}")
+    hist = sh.get("history")
+    if not isinstance(hist, list) or len(hist) < 2:
+        raise ValueError(f"{path}.shortfall.history: at least two valuations required")
+    years = []
+    for i, y in enumerate(hist):
+        yp = f"{path}.shortfall.history[{i}]"
+        if not isinstance(y, dict) or not isinstance(y.get("year"), int) or isinstance(y["year"], bool):
+            raise ValueError(f"{yp}.year: int required")
+        if not 0 <= _need_value(y.get("funded_pct"), f"{yp}.funded_pct") <= 100:
+            raise ValueError(f"{yp}.funded_pct: a percentage between 0 and 100")
+        years.append(y["year"])
+    if years != sorted(years) or len(set(years)) != len(years):
+        raise ValueError(f"{path}.shortfall.history: years must increase")
+    if sum(1 for y in hist if y.get("now")) != 1:
+        raise ValueError(f"{path}.shortfall.history: exactly one entry marked now (the latest valuation)")
+    for i, e in enumerate(sh.get("episodes") or []):
+        ep = f"{path}.shortfall.episodes[{i}]"
+        if not isinstance(e, dict) or e.get("from") not in years or e.get("to") not in years or e["to"] < e["from"]:
+            raise ValueError(f"{ep}: from and to must be years on the history axis, in order")
+        text = _text(e.get("text"), f"{ep}.text")
+        if e.get("source") is not None:
+            _check_source(e["source"], f"{ep}.source")
+        _tokens_resolve(text, sfigs, f"{ep}.text")
+    changes = sh.get("changes")
+    if not isinstance(changes, list) or not changes:
+        raise ValueError(f"{path}.shortfall.changes: non-empty list required")
+    for i, c in enumerate(changes):
+        _text(c.get("label") if isinstance(c, dict) else None, f"{path}.shortfall.changes[{i}].label")
+        _need_value(c.get("amount_bn"), f"{path}.shortfall.changes[{i}].amount_bn")
+    net = _need_value(sh.get("net_bn"), f"{path}.shortfall.net_bn")
+    if abs(sum(c["amount_bn"]["value"] for c in changes) - net) > PENSION_NET_TOLERANCE_BN:
+        raise ValueError(f"{path}.shortfall.net_bn: must equal the sum of changes within {PENSION_NET_TOLERANCE_BN}")
+    stext = _text(sh.get("text"), f"{path}.shortfall.text")
+    _tokens_resolve(stext, sfigs, f"{path}.shortfall.text")
+    _cites_in(stext, sh.get("cites"), f"{path}.shortfall")
+
+    rf = v["reform"]
+    _text(rf.get("heading"), f"{path}.reform.heading")
+    _text(rf.get("tiers_note"), f"{path}.reform.tiers_note")
+    tiers = rf.get("tiers")
+    rows = rf.get("tier_rows")
+    if not isinstance(tiers, list) or len(tiers) != 2:
+        raise ValueError(f"{path}.reform.tiers: exactly two plan tiers required")
+    if not isinstance(rows, list) or not rows or not all(isinstance(r, list) and len(r) == 2 for r in rows):
+        raise ValueError(f"{path}.reform.tier_rows: list of [figure key, row label] pairs required")
+    for i, t in enumerate(tiers):
+        tp = f"{path}.reform.tiers[{i}]"
+        _text(t.get("label") if isinstance(t, dict) else None, f"{tp}.label")
+        for key, label in rows:
+            _text(label, f"{path}.reform.tier_rows ({key})")
+            _need_value(t.get(key), f"{tp}.{key}")
+    tl = rf.get("timeline")
+    if not isinstance(tl, list) or not tl:
+        raise ValueError(f"{path}.reform.timeline: non-empty list required")
+    for i, t in enumerate(tl):
+        tp = f"{path}.reform.timeline[{i}]"
+        if not isinstance(t, dict) or t.get("role") not in _TIMELINE_ROLES:
+            raise ValueError(f"{tp}.role: one of {', '.join(sorted(_TIMELINE_ROLES))}")
+        _text(t.get("when"), f"{tp}.when")
+        text = _text(t.get("text"), f"{tp}.text")
+        if t.get("source") is None and not isinstance(t.get("figures"), dict):
+            raise ValueError(f"{tp}: a source for the text, or figures for its tokens, required")
+        if t.get("source") is not None:
+            _check_source(t["source"], f"{tp}.source")
+        _tokens_resolve(text, t.get("figures") or {}, f"{tp}.text")
+
+
 def build_claims(curated_claims: list[dict], cip_rows: list[dict], series: dict, funnel: dict | None = None) -> list[dict]:
     """Claim-checker cards: curated text plus charts computed from the CSVs."""
     out = []
@@ -293,6 +439,8 @@ def build_claims(curated_claims: list[dict], cip_rows: list[dict], series: dict,
             _check_source(src, f"claims[{i}].sources[{k}]")
         if "link" in c and not (isinstance(c["link"], str) and c["link"].startswith("#") and len(c["link"]) > 1):
             raise ValueError(f"claims[{i}].link: an in-page anchor such as \"#infrastructure\"")
+        if c.get("visual") is not None:
+            _check_pension_visual(c["visual"], f"claims[{i}].visual")
         card = {**c, "chart": c.get("chart"), "matched_projects": None}
         if c["id"] == "bike-lanes":
             card["chart"], card["matched_projects"] = _bike_chart(cip_rows)
@@ -663,7 +811,6 @@ GAP_TOLERANCE_M = 0.05
 WATERFALL_KINDS = ("start", "up", "down", "subtotal", "end")
 GAP_OFFICES = ("IBA", "City")
 _OURS = "our arithmetic: "
-FORECAST_CITE_ANCHOR = "A new forecast is due"  # site/gapstory.js noteParts() starts the cite here
 
 
 def _text(v, path: str) -> str:
@@ -741,25 +888,38 @@ def build_gap_story(d: dict) -> dict:
     c = h["coming"]
     if not isinstance(c.get("fy"), int):
         raise ValueError("headlines.coming.fy: int required")
+    o = c.get("outlook")
+    if not isinstance(o, dict):
+        raise ValueError("headlines.coming.outlook: object required")
+    if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", str(o.get("released", ""))):
+        raise ValueError("headlines.coming.outlook.released: date (YYYY-MM-DD) required")
+    _text(o.get("label"), "headlines.coming.outlook.label")
+    _check_source(o.get("source"), "headlines.coming.outlook.source")
+    for k in ("baseline_m", "revised_m", "next_m"):
+        _need_value(o.get(k), f"headlines.coming.outlook.{k}")
+    for k in ("baseline_counting", "revised_counting"):
+        _text(o.get(k), f"headlines.coming.outlook.{k}")
+    if not isinstance(o.get("next_fy"), int) or isinstance(o["next_fy"], bool) or o["next_fy"] <= c["fy"]:
+        raise ValueError("headlines.coming.outlook.next_fy: a fiscal year after headlines.coming.fy")
+    e = c.get("earlier")
+    if not isinstance(e, dict):
+        raise ValueError("headlines.coming.earlier: object required")
     for k in ("city_m", "iba_m"):
-        _need_value(c.get(k), f"headlines.coming.{k}")
-    for k in ("note", "city_counting", "iba_counting", "city_stage", "iba_stage"):
-        _text(c.get(k), f"headlines.coming.{k}")
-    token = money_token(c["city_m"]["value"])
-    if token not in c["note"]:
-        raise ValueError(f"headlines.coming.note: must name the city's figure as it is shown ({token})")
-    if FORECAST_CITE_ANCHOR not in c["note"]:
-        raise ValueError(f"headlines.coming.note: must contain {FORECAST_CITE_ANCHOR!r}, where the forecast-date cite starts")
-    sett = c.get("settlement")
+        _need_value(e.get(k), f"headlines.coming.earlier.{k}")
+    for k in ("city_counting", "iba_counting", "city_stage", "iba_stage"):
+        _text(e.get(k), f"headlines.coming.earlier.{k}")
+    sett = e.get("settlement")
     if not isinstance(sett, list) or not sett:
-        raise ValueError("headlines.coming.settlement: non-empty list required")
-    for i, s in enumerate(sett):
-        _text(s.get("label") if isinstance(s, dict) else None, f"headlines.coming.settlement[{i}].label")
-        _need_value(s.get("amount_m"), f"headlines.coming.settlement[{i}].amount_m")
-    due = c.get("forecast_due")
-    if not isinstance(due, dict) or not re.fullmatch(r"\d{4}-\d{2}-\d{2}", str(due.get("date", ""))):
-        raise ValueError("headlines.coming.forecast_due: date (YYYY-MM-DD) required")
-    _check_source(due.get("source"), "headlines.coming.forecast_due.source")
+        raise ValueError("headlines.coming.earlier.settlement: non-empty list required")
+    for i, st in enumerate(sett):
+        _text(st.get("label") if isinstance(st, dict) else None, f"headlines.coming.earlier.settlement[{i}].label")
+        _need_value(st.get("amount_m"), f"headlines.coming.earlier.settlement[{i}].amount_m")
+    _text(c.get("note"), "headlines.coming.note")
+    for i, ct in enumerate(c.get("cites") or []):
+        path = f"headlines.coming.cites[{i}]"
+        if _text(ct.get("text") if isinstance(ct, dict) else None, f"{path}.text") not in c["note"]:
+            raise ValueError(f"{path}.text: {ct['text']!r} must appear in headlines.coming.note")
+        _check_source(ct.get("source"), f"{path}.source")
 
     _check_waterfall(d.get("waterfall"))
     note = d.get("adopted_note")
@@ -800,10 +960,13 @@ def build_gap_story(d: dict) -> dict:
         _need_value(e.get("value_m"), f"{path}.value_m")
         if e.get("value2_m") is not None:
             _need_value(e["value2_m"], f"{path}.value2_m")
-    # Ruling R15: each office's latest entry for the coming year is the headline figure, not a second copy of it.
-    for office, k in (("City", "city_m"), ("IBA", "iba_m")):
+        if "surplus" in e and not isinstance(e["surplus"], bool):
+            raise ValueError(f"{path}.surplus: boolean (true when value_m is a surplus, not a shortfall)")
+    # Ruling R15: each office's latest entry for the coming year is the headline figure, not a second copy of it:
+    # the city's is the new outlook's baseline, the IBA's its earlier estimate.
+    for office, k, figure in (("City", "outlook.baseline_m", c["outlook"]["baseline_m"]), ("IBA", "earlier.iba_m", c["earlier"]["iba_m"])):
         mine = [e for e in tl if e["office"] == office and e["describes_fy"] == c["fy"]]
-        if mine and max(mine, key=lambda e: e["date"])["value_m"] != c[k]:
+        if mine and max(mine, key=lambda e: e["date"])["value_m"] != figure:
             raise ValueError(f"timeline: the latest {office} entry for FY{c['fy']} must equal headlines.coming.{k}")
     return d
 

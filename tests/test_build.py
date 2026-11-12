@@ -1,4 +1,5 @@
 import json
+import pytest
 import shutil
 from pathlib import Path
 
@@ -160,12 +161,13 @@ def test_structural_deficit_merges_gf_expenditure(tmp_path):
     assert sorted(markers) == [2011, 2025, 2026, 2028]
     assert markers[2011]["label"] == "2010: temporary sales tax measure fails"
     assert markers[2025]["label"] == "2024: sales tax measure fails"
-    assert markers[2028]["label"] == "FY2028 outlook: city $9.5M (adopted budget), IBA $32.9M (estimated at the proposed budget)"
-    assert "as estimated at the time of the Proposed Budget" in markers[2028]["figures"][1]["source"]["doc"]
+    assert markers[2028]["label"] == ("FY2028 outlook (November 2026): $5.1M surplus at current service levels; earlier in 2026 the city put "
+                                      "the shortfall at $9.5M (adopted budget) and the IBA at $32.9M (estimated at the proposed budget)")
+    assert "as estimated at the time of the Proposed Budget" in markers[2028]["figures"][2]["source"]["doc"]
     for fy in (2011, 2025, 2026):
         src = markers[fy]["source"]["source"]
         assert src["url"].startswith("https://") and src["page"] in (3, 77)
-    assert [f["value"] for f in markers[2028]["figures"]] == [9.5, 32.9]
+    assert [f["value"] for f in markers[2028]["figures"]] == [5.1, 9.5, 32.9]
     assert "source" not in markers[2028]
 
 
@@ -487,11 +489,11 @@ def test_v2_corrections(tmp_path):
     assert g["cuttable_m"]["value"] == 1785.4
     sd = json.loads((out / "structural_deficit.json").read_text())
     m28 = next(m for m in sd["markers"] if m["fy"] == 2028)
-    assert [x["value"] for x in m28["figures"]] == [9.5, 32.9]
-    assert m28["figures"][0]["source"]["page"] == 36 and m28["figures"][1]["source"]["page"] == 43
+    assert [x["value"] for x in m28["figures"]] == [5.1, 9.5, 32.9]
+    assert [x["source"]["page"] for x in m28["figures"]] == [8, 36, 43]
     claims = {c["id"]: c for c in json.loads((out / "claims.json").read_text())}
     pensions = " ".join(claims["pensions"]["finding"])
-    assert "396.3" in pensions and "396.1" not in pensions
+    assert "396.1" not in pensions and claims["pensions"]["visual"]["payment"]["figures"]["gf_m"]["value"] == 396.3
     assert "proposed budget" in pensions  # the 17.7% share is labelled as proposed-basis
     assert "June 8, 2026" in claims["trash-fee"]["finding"] and "tentative" not in claims["trash-fee"]["finding"]
 
@@ -598,14 +600,57 @@ def test_county_sales_tax_checks():
 
 def test_pensions_card_answers_who_pays_and_where_the_shortfall_came_from():
     p = next(c for c in _claims_curated() if c["id"] == "pensions")
-    text = " ".join(p["finding"])
-    # The payment's parts (valuation Table V-1), who pays for new benefits, and the history of the shortfall.
-    for needle in ("$375.3 million", "$170.4 million", "14.0%", "18.6%", "Social Security", "$487.5 million",
-                   "$159.3 million", "97.3% to 65.8%", "$1.82 billion", "Proposition B", "$119 million", "2041"):
-        assert needle in text, needle
+    v = p["visual"]
+    assert v["kind"] == "pensions" and "{total_m}" in v["payment"]["heading"] and "{gf_m}" in v["payment"]["text"]
+    # The payment's parts (valuation Table V-1) sum to the total paid at the start of the year, within the tolerance.
+    parts = [x["amount_m"]["value"] for x in v["payment"]["parts"]]
+    assert parts == [375.3, 170.4, 16.1, 1.9] and v["payment"]["figures"]["total_m"]["value"] == 563.2
+    assert [x["role"] for x in v["payment"]["parts"]] == ["past", "now", "other", "other"]
+    # Who pays: the rates (Table V-1, p.35 and p.36) and the FY2025 flows (ACFR Table 4).
+    rates = [(r["employee_pct"]["value"], r["city_pct"]["value"]) for r in v["who_pays"]["rates"]]
+    assert rates == [(14.0, 14.0), (18.6, 18.3)]
+    assert [f["amount_m"]["value"] for f in v["who_pays"]["flows"]] == [487.5, 159.3, 965.7, 659.6]
+    assert "Social Security" in v["who_pays"]["text"] and v["who_pays"]["cites"][1]["source"]["page"] == 71
+    # The shortfall: the funded-ratio history and what moved it since 2009.
+    hist = [(y["year"], y["funded_pct"]["value"]) for y in v["shortfall"]["history"]]
+    assert hist == [(2001, 97.3), (2004, 65.8), (2007, 78.8), (2009, 66.5), (2025, 76.1)]
+    assert [c["amount_bn"]["value"] for c in v["shortfall"]["changes"]] == [1.82, 1.49, -1.15] and v["shortfall"]["net_bn"]["value"] == 2.16
+    assert v["shortfall"]["figures"]["ual_bn"]["value"] == 3.46
+    # Reform: the two tiers and the Proposition B story.
+    assert [t["ual_bn"]["value"] for t in v["reform"]["tiers"]] == [1.63, 0.24]
+    tl = v["reform"]["timeline"]
+    assert [t["when"] for t in tl] == ["2012", "2021", "2022", "FY2029", "2041"]
+    assert tl[2]["figures"]["propb_m"]["value"] == 119.1 and tl[3]["figures"]["fy29_m"]["value"] == 493.4
     assert "would not remove it" in p["caveat"]
     pages = {(s["url"].rsplit("/", 1)[1], s["page"]) for s in p["sources"]}
     assert ("2025-sdcers-city-valuation-report.pdf", 35) in pages and ("fy-2025-sdcers-acfr-final.pdf", 25) in pages
+
+
+def _pensions_visual():
+    import copy
+    return copy.deepcopy(next(c for c in _claims_curated() if c["id"] == "pensions"))
+
+
+@pytest.mark.parametrize("edit, where", [
+    (lambda v: v["payment"]["parts"][0]["amount_m"].__setitem__("value", 300.0), r"payment\.parts: amounts must sum"),
+    (lambda v: v["payment"].__setitem__("text", "The General Fund pays {nothing}."), r"payment\.text: no figure for \{nothing\}"),
+    (lambda v: v["payment"]["parts"][1].__setitem__("role", "future"), r"payment\.parts\[1\]\.role"),
+    (lambda v: v["who_pays"]["cites"][0].__setitem__("text", "not in the text"), r"who_pays\.cites\[0\]\.text"),
+    (lambda v: v["who_pays"]["flows"][0].__setitem__("role", "in"), r"who_pays\.flows\[0\]\.role"),
+    (lambda v: v["shortfall"]["history"][4].pop("now"), r"shortfall\.history: exactly one entry marked now"),
+    (lambda v: v["shortfall"]["episodes"][0].__setitem__("to", 2003), r"shortfall\.episodes\[0\]"),
+    (lambda v: v["shortfall"]["net_bn"].__setitem__("value", 2.5), r"shortfall\.net_bn"),
+    (lambda v: v["reform"]["tiers"].pop(), r"reform\.tiers: exactly two"),
+    (lambda v: v["reform"]["timeline"][2].pop("figures"), r"reform\.timeline\[2\]"),
+    (lambda v: v.__setitem__("kind", "bars"), r"visual\.kind"),
+])
+def test_build_claims_rejects_a_broken_pensions_visual(edit, where):
+    import pytest
+    from pipeline.build import build_claims
+    c = _pensions_visual()
+    edit(c["visual"])
+    with pytest.raises(ValueError, match=r"^claims\[0\]\.visual\." + where if not where.startswith("visual") else r"^claims\[0\]\." + where):
+        build_claims([c], [], {"gf_by_fy": {}, "gf_dept_by_fy": {}})
 
 
 def test_build_claims_rejects_an_empty_finding_paragraph():

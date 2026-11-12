@@ -35,9 +35,9 @@ test('prepare marks the two bases and the scale line has no zero-fill', () => {
   assert.deepEqual(p.markers.map((m) => m.fy), [2011, 2025, 2026, 2028]);
 });
 
-test('FY2028 marker carries the city and IBA figures', () => {
+test('FY2028 marker carries the outlook, city and IBA figures', () => {
   const mk = prepare(data).markers.find((m) => m.fy === 2028);
-  assert.deepEqual(mk.figures.map((f) => f.value), [9.5, 32.9]);
+  assert.deepEqual(mk.figures.map((f) => f.value), [5.1, 9.5, 32.9]);
 });
 
 test('prepare stacks: components when present, direct fields otherwise, no double count', () => {

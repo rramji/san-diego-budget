@@ -252,17 +252,21 @@ def test_gap_story_values():
     h = d["headlines"]
     assert (h["this_year"]["value_m"]["value"], h["worst"]["value_m"]["value"], h["worst"]["without_reserve_m"]["value"]) == (118.0, 203.8, 181.4)
     assert h["worst"]["fy"] == 2025 and h["coming"]["fy"] == 2028
-    assert (h["coming"]["city_m"]["value"], h["coming"]["iba_m"]["value"]) == (9.5, 32.9)
-    assert [s["amount_m"]["value"] for s in h["coming"]["settlement"]] == [10.8, 9.4]
-    assert h["coming"]["note"] == ("The two were measured at different stages. The city's documents don't say whether its "
-                                   "$9.5M includes the settlement costs. A new forecast is due November 6, 2026.")
-    assert h["coming"]["forecast_due"]["date"] == "2026-11-06"
+    cm = h["coming"]
+    o = cm["outlook"]
+    assert (o["baseline_m"]["value"], o["revised_m"]["value"], o["next_m"]["value"], o["next_fy"]) == (5.1, 1.0, 27.4, 2029)
+    assert o["released"] == "2026-11-06" and o["baseline_m"]["source"]["page"] == 8 and o["revised_m"]["source"]["page"] == 60
+    assert (cm["earlier"]["city_m"]["value"], cm["earlier"]["iba_m"]["value"]) == (9.5, 32.9)
+    assert [s["amount_m"]["value"] for s in cm["earlier"]["settlement"]] == [10.8, 9.4]
+    assert cm["note"].startswith("The new outlook counts both of those settlement costs") and "December 14, 2026" in cm["note"]
+    assert [c["text"] for c in cm["cites"]][-1] == "December 14, 2026" and cm["cites"][-1]["source"]["page"] == 2
     r = d["residual"]
     assert (r["one_time_m"]["value"], r["one_time_uses_m"]["value"], r["ongoing_m"]["value"]) == (40.8, 17.7, 23.1)
     assert r["with_reserve_m"]["source"]["doc"].startswith("our arithmetic") and r["with_reserve_m"]["value"] == 103.2
     assert (r["iba_proposed_m"]["value"], r["iba_may_m"]["value"]) == (91.3, 95.4)
     vals = sorted(e["value_m"]["value"] for e in d["timeline"])
-    assert vals == sorted([258.2, 88.8, 118.0, 11.2, 15.3, 23.1, 32.9, 9.5])
+    assert vals == sorted([258.2, 88.8, 118.0, 11.2, 15.3, 23.1, 32.9, 9.5, 5.1])
+    assert [e for e in d["timeline"] if e.get("surplus")][0]["value_m"]["value"] == 5.1
     assert sorted(e["value2_m"]["value"] for e in d["timeline"] if e["value2_m"]) == [91.3, 95.4]
     assert [x["term"] for x in d["definitions"]] == ["Forecast gap", "Structural deficit", "Balanced budget"]
 
@@ -326,7 +330,10 @@ def test_gap_story_rejects_unbalanced_waterfall():
     (_bump(["residual", "one_time_uses_m"]), "ongoing_m"),
     (lambda d: d["residual"]["with_reserve_m"]["source"].__setitem__("doc", "IBA"), "with_reserve_m"),
     (lambda d: d["headlines"]["coming"].__setitem__("note", " "), "coming.note"),
-    (lambda d: d["headlines"]["coming"]["forecast_due"].__setitem__("date", "Nov 6"), "forecast_due"),
+    (lambda d: d["headlines"]["coming"]["outlook"].__setitem__("released", "Nov 6"), "outlook.released"),
+    (lambda d: d["headlines"]["coming"]["outlook"].__setitem__("next_fy", 2028), "next_fy"),
+    (lambda d: d["headlines"]["coming"]["cites"][0].__setitem__("text", "nowhere in the note"), r"cites\[0\]"),
+    (lambda d: d["timeline"][-1].__setitem__("surplus", "yes"), "surplus"),
     (lambda d: d["timeline"][0].__setitem__("office", "Mayor"), "timeline"),
     (lambda d: d["timeline"][0].__setitem__("date", "2024-13"), "timeline"),
     (lambda d: d["definitions"][0]["source"].__setitem__("url", "http://x"), "definitions"),
@@ -450,34 +457,27 @@ def test_money_token_matches_javascript_string():
     assert money_token(0.25) == "$0.25M"
 
 
-def _coming_whole(d, value=12.0, token="$12M"):
+def _coming_whole(d, value=12.0):
     c = d["headlines"]["coming"]
-    old = f"${c['city_m']['value']}M"
-    c["city_m"]["value"] = value
-    c["note"] = c["note"].replace(old, token)
+    c["outlook"]["baseline_m"]["value"] = value
     for e in d["timeline"]:
         if e["describes_fy"] == c["fy"] and e["office"] == "City":
             e["value_m"]["value"] = value
     return d
 
 
-def test_gap_story_accepts_whole_number_city_figure():
+def test_gap_story_marker_writes_a_whole_number_as_javascript_does():
+    from pipeline.build import coming_marker
     d = _coming_whole(copy.deepcopy(curated.load(CUR, "gap_story")))
     out = build_gap_story(d)
-    assert "$12M" in out["headlines"]["coming"]["note"]
+    assert "$12M surplus" in coming_marker(out["headlines"]["coming"])["label"]
 
 
-def test_gap_story_rejects_python_style_whole_number_token():
-    d = _coming_whole(copy.deepcopy(curated.load(CUR, "gap_story")), token="$12.0M")
-    with pytest.raises(ValueError, match=r"coming.note.*\$12M"):
-        build_gap_story(d)
-
-
-def test_gap_story_note_needs_forecast_cite_anchor():
+def test_gap_story_note_cites_must_appear_in_the_note():
     d = copy.deepcopy(curated.load(CUR, "gap_story"))
     c = d["headlines"]["coming"]
-    c["note"] = c["note"].replace("A new forecast is due", "The next forecast comes")
-    with pytest.raises(ValueError, match="A new forecast is due"):
+    c["note"] = c["note"].replace("December 14, 2026", "in December")
+    with pytest.raises(ValueError, match=r"coming\.cites\[4\]\.text"):
         build_gap_story(d)
 
 
@@ -493,7 +493,7 @@ def test_gap_story_timeline_must_match_coming(office):
 
 def test_gap_story_stage_words_required():
     d = copy.deepcopy(curated.load(CUR, "gap_story"))
-    d["headlines"]["coming"]["city_stage"] = " "
+    d["headlines"]["coming"]["earlier"]["city_stage"] = " "
     with pytest.raises(ValueError, match="city_stage"):
         build_gap_story(d)
 
@@ -504,8 +504,9 @@ def test_deficit_marker_is_built_from_coming():
     coming = build_gap_story(d)["headlines"]["coming"]
     out = build_structural_deficit(curated.load(CUR, "structural_deficit"), {"gf_by_fy": {}}, coming=coming)
     m = next(m for m in out["markers"] if m["fy"] == coming["fy"])
-    assert m["label"] == "FY2028 outlook: city $12M (adopted budget), IBA $32.9M (estimated at the proposed budget)"
-    assert m["figures"] == [coming["city_m"], coming["iba_m"]]
+    assert m["label"] == ("FY2028 outlook (November 2026): $12M surplus at current service levels; earlier in 2026 the city put the "
+                          "shortfall at $9.5M (adopted budget) and the IBA at $32.9M (estimated at the proposed budget)")
+    assert m["figures"] == [coming["outlook"]["baseline_m"], coming["earlier"]["city_m"], coming["earlier"]["iba_m"]]
 
 
 def test_no_curated_source_uses_the_old_derived_prefix():
