@@ -6,6 +6,7 @@ import { moneyToken } from './format.js';
 import * as waterfall from './charts/waterfall.js';
 import * as timeline from './charts/gap-timeline.js';
 import { themeColors, observeWidth } from './charts/util.js';
+import { onThemeChange } from './theme.js';
 
 // The "what's coming" note as text and sourced parts: the city's figure becomes a .figure, the forecast date a cite.
 // The build checks the note shows the figure as moneyToken() writes it and contains the cite anchor; if either is
@@ -129,7 +130,7 @@ function waterfallBlock(el, d) {
     ariaLabel: aria,
   });
   observeWidth(plot, draw);
-  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', draw);
+  onThemeChange(draw);
   mountPopovers(el);
 }
 

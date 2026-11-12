@@ -23,8 +23,25 @@
   /* section 2: the context segments of the cents bar and the other cities' rate bars (the highlight is --gap) */
   --cents-a: #8a95a1; --cents-b: #b4bcc5;
 }
+/* Dark tokens apply when the system prefers dark and the reader hasn't chosen light, or when they chose dark (site/theme.js). */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
+    --bg: #11161c;
+    --surface: #1a212a;
+    --text: #e6e9ed;
+    --muted: #9aa5b1;
+    --rule: #2e3844;
+    --link: #8ab4f0;
+    --locked: #8c97a5;
+    --restricted: #4fb3bf;
+    --discretionary: #8e9de0;
+    --gap: #ff6f9c;
+    --cat-1: #3987e5; --cat-2: #d95926; --cat-3: #199e70; --cat-4: #c98500; --cat-5: #d55181;
+    --cat-6: #008300; --cat-7: #9085e9; --cat-8: #e66767; --cat-9: #1597ae; --cat-10: #b07434;
+    --cents-a: #6b7682; --cents-b: #4a5561;
+    }
+}
+:root[data-theme="dark"] {
     --bg: #11161c;
     --surface: #1a212a;
     --text: #e6e9ed;
@@ -39,7 +56,8 @@
     --cat-6: #008300; --cat-7: #9085e9; --cat-8: #e66767; --cat-9: #1597ae; --cat-10: #b07434;
     --cents-a: #6b7682; --cents-b: #4a5561;
   }
-}
+:root[data-theme="light"] { color-scheme: light; }
+:root[data-theme="dark"] { color-scheme: dark; }
 * { box-sizing: border-box; }
 /* overflow-x on html propagates to the viewport; on body it would make body the sticky containing block (no sticky bars). */
 html { scroll-behavior: smooth; scroll-padding-top: 56px; overflow-x: hidden; } /* scroll-padding: under the sticky section bar */
@@ -75,6 +93,23 @@ a { color: var(--link); }
 .secbar a:hover { color: var(--text); }
 .secbar a[aria-current="true"] { color: var(--text); border-bottom-color: var(--text); }
 #progress { position: absolute; left: 0; bottom: -1px; height: 2px; width: 0; background: var(--gap); }
+/* Theme toggle: at the bar's right edge (the stage's edge on wide screens); the list leaves room for it. */
+.secbar { position: sticky; }
+@media (max-width: 899px) { .secbar ul { margin-right: calc(var(--gutter) + 40px); } } /* the strip ends before the button */
+@media (min-width: 900px) { .secbar ul { padding-right: calc(var(--gutter) + 40px); } }
+.theme-btn {
+  position: absolute; top: 50%; transform: translateY(-50%); right: max(var(--gutter), calc((100% - 1200px) / 2 + var(--gutter)));
+  width: 36px; height: 36px; padding: 0; border: 1px solid var(--rule); border-radius: 50%; background: var(--surface); color: var(--muted);
+  display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+}
+.theme-btn:hover { color: var(--text); }
+.theme-btn svg { width: 18px; height: 18px; }
+.theme-btn .moon, :root[data-theme="dark"] .theme-btn .sun { display: none; }
+:root[data-theme="dark"] .theme-btn .moon { display: block; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .theme-btn .sun { display: none; }
+  :root:not([data-theme="light"]) .theme-btn .moon { display: block; }
+}
 
 .masthead { padding-top: 40px; padding-bottom: 24px; }
 h1, h2 { font-family: var(--font-ui); letter-spacing: -0.015em; line-height: 1.15; margin: 0; }

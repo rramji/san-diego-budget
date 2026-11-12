@@ -677,6 +677,26 @@
               "page": 9,
               "url": "https://www.sdvote.com/content/dam/rov/en/election/nov-3-2026-gubernatorial-general-election/san-diego-county-fund-health-and-safety-services.pdf"
             }
+          },
+          "results": {
+            "as_of": "2026-11-10",
+            "passed": true,
+            "yes_pct": {
+              "value": 52.91,
+              "source": {
+                "doc": "County of San Diego Registrar of Voters election results, November 3, 2026 (unofficial count posted November 10, 2026, 5:56 PM; 120,000 ballots projected outstanding): County of San Diego Measure B, yes 570,810 (52.91%), no 507,922 (47.09%); majority required to pass",
+                "page": null,
+                "url": "https://www.livevoterturnout.com/ENR/sandiegocaenr/25/en/Index_25.html"
+              }
+            },
+            "no_pct": {
+              "value": 47.09,
+              "source": {
+                "doc": "County of San Diego Registrar of Voters election results, November 3, 2026 (unofficial count posted November 10, 2026, 5:56 PM; 120,000 ballots projected outstanding): County of San Diego Measure B, yes 570,810 (52.91%), no 507,922 (47.09%); majority required to pass",
+                "page": null,
+                "url": "https://www.livevoterturnout.com/ENR/sandiegocaenr/25/en/Index_25.html"
+              }
+            }
           }
         },
         "santee": {
@@ -711,6 +731,33 @@
               "page": null,
               "url": "https://www.cityofsanteeca.gov/our-community/local-funding---measure-y"
             }
+          },
+          "results": {
+            "as_of": "2026-11-10",
+            "passed": false,
+            "yes_pct": {
+              "value": 41.05,
+              "source": {
+                "doc": "County of San Diego Registrar of Voters election results, November 3, 2026 (unofficial count posted November 10, 2026, 5:56 PM; 120,000 ballots projected outstanding): City of Santee Measure Y, yes 9,044 (41.05%), no 12,988 (58.95%); majority required to pass",
+                "page": null,
+                "url": "https://www.livevoterturnout.com/ENR/sandiegocaenr/25/en/Index_25.html"
+              }
+            },
+            "no_pct": {
+              "value": 58.95,
+              "source": {
+                "doc": "County of San Diego Registrar of Voters election results, November 3, 2026 (unofficial count posted November 10, 2026, 5:56 PM; 120,000 ballots projected outstanding): City of Santee Measure Y, yes 9,044 (41.05%), no 12,988 (58.95%); majority required to pass",
+                "page": null,
+                "url": "https://www.livevoterturnout.com/ENR/sandiegocaenr/25/en/Index_25.html"
+              }
+            }
+          }
+        },
+        "cites": {
+          "unofficial": {
+            "doc": "County of San Diego Registrar of Voters election results, November 3, 2026 (unofficial count posted November 10, 2026, 5:56 PM; 120,000 ballots projected outstanding): the page is headed 'Unofficial election results', with the next update due November 12, 2026",
+            "page": null,
+            "url": "https://www.livevoterturnout.com/ENR/sandiegocaenr/25/en/Index_25.html"
           }
         }
       }
@@ -755,6 +802,14 @@
         "doc": "City of San Diego, FY 2027 Adopted Budget Vol. I, General Fund Revenues, General Fund Transient Occupancy Tax (TOT)",
         "page": 69,
         "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v1generalfundrevenues.pdf"
+      }
+    },
+    "council_m": {
+      "value": 30.16269,
+      "source": {
+        "doc": "FY2027 Adopted Budget Vol. II, Special Promotional Programs, Transient Occupancy Tax Fund Department Expenditures: Discretionary Funding, FY2027 Adopted $30,162,690",
+        "page": 526,
+        "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v2specialpromo.pdf"
       }
     }
   },
@@ -934,6 +989,11 @@
       "doc": "IBA Report 26-11, Review of the FY 2027 Proposed Budget, Key Citywide Issues: Structural Budget Deficit",
       "page": 77,
       "url": "https://www.sandiego.gov/sites/default/files/2026-04/iba-report-26-11-review-of-the-fiscal-year-2027-proposed-budget_0.pdf"
+    },
+    "council_to_gf": {
+      "doc": "FY2027 Adopted Budget Vol. II, Special Promotional Programs: 'Discretionary Transient Occupancy Tax Support to General Fund' $30,162,691 (p. 528); Budget Adjustments, 'One-Cent TOT Discretionary: adjustment to reflect a decrease in the One-Cent Transient Occupancy Tax (TOT) transfer to support the General Fund' (p. 526)",
+      "page": 528,
+      "url": "https://www.sandiego.gov/sites/default/files/2026-08/fy27ab_v2specialpromo.pdf"
     }
   }
 }

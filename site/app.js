@@ -14,6 +14,7 @@ export { mountClaims, claimCardModel };
 import * as sankey from './charts/sankey.js';
 import { themeColors, observeWidth } from './charts/util.js';
 import { mountSectionBar } from './nav.js';
+import { mountThemeToggle, onThemeChange } from './theme.js';
 import * as bm from './charts/budget-map.js';
 import { renderWhy } from './why.js';
 export { renderWhy };
@@ -302,7 +303,7 @@ export function renderWhat(data) {
   observeWidth(cols.in, () => drawSide('in'));
   observeWidth(cols.out, () => drawSide('out'));
   showPanel(false);
-  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+  onThemeChange(() => {
     colors = mapColors();
     drawPots();
     drawSide('in');
@@ -416,6 +417,7 @@ export function guarded(name, mountId, fn) {
 async function main() {
   mountProgress();
   mountSectionBar();
+  mountThemeToggle(document.getElementById('theme-toggle'));
   mountDigDeeper(document);
   const data = await loadData();
   if (new URLSearchParams(location.search).has('debug')) window.__data = data;

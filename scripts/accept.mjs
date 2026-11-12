@@ -59,6 +59,23 @@ async function smoke(chromium) {
         if (!r.claims) failures.push(`${label}: #ch4-claims missing`);
         if (r.renderErrors) failures.push(`${label}: ${r.renderErrors} .render-error element(s)`);
         if (r.loadError) failures.push(`${label}: #load-error is showing`);
+        if (width === 1200 && scheme === 'light') {
+          const before = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--bg').trim());
+          await page.click('#theme-toggle');
+          const t = await page.evaluate(() => ({
+            theme: document.documentElement.dataset.theme,
+            bg: getComputedStyle(document.documentElement).getPropertyValue('--bg').trim(),
+            stored: localStorage.getItem('theme'),
+            label: document.getElementById('theme-toggle').getAttribute('aria-label'),
+          }));
+          if (t.theme !== 'dark' || t.bg === before || t.stored !== 'dark' || t.label !== 'Switch to light mode') failures.push(`${label}: theme toggle ${JSON.stringify(t)}`);
+          await page.reload({ waitUntil: 'networkidle' });
+          const kept = await page.evaluate(() => document.documentElement.dataset.theme);
+          if (kept !== 'dark') failures.push(`${label}: theme choice not kept across reload (${kept})`);
+          await page.click('#theme-toggle');
+          const back = await page.evaluate(() => document.documentElement.dataset.theme);
+          if (back !== 'light') failures.push(`${label}: theme toggle back (${back})`);
+        }
         });
       }
     }

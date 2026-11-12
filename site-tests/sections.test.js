@@ -364,3 +364,16 @@ test('section bar: the current chapter is the last one whose top is above the re
   assert.equal(currentSection(tops, 3000), 'why-short');
   assert.equal(currentSection(tops, 99999), 'gap');
 });
+
+// ---- Theme toggle ----
+import { resolveTheme, nextTheme } from '../site/theme.js';
+
+test('theme: a stored choice wins, otherwise the system preference; the toggle flips it', () => {
+  assert.equal(resolveTheme(null, true), 'dark');
+  assert.equal(resolveTheme(null, false), 'light');
+  assert.equal(resolveTheme('light', true), 'light');
+  assert.equal(resolveTheme('dark', false), 'dark');
+  assert.equal(resolveTheme('bogus', true), 'dark');
+  assert.equal(nextTheme('dark'), 'light');
+  assert.equal(nextTheme('light'), 'dark');
+});

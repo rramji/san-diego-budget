@@ -5,6 +5,7 @@ import { figureSpan, mountPopovers, h, fig, cite } from './sources.js';
 import * as piles from './charts/piles.js';
 import { inkOn } from './charts/budget-map.js';
 import { observeWidth } from './charts/util.js';
+import { onThemeChange } from './theme.js';
 
 const { m1, bn } = piles;
 const pctText = (v) => `${v}%`;
@@ -160,7 +161,7 @@ function pension(barsEl, payersEl, copy, dig, d) {
     mountPopovers(payersEl);
   };
   draw();
-  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', draw);
+  onThemeChange(draw);
   copy.replaceChildren(
     p('Why it rose this year: ', cite(pn.rise_m.source, 'pay raises were bigger than the actuary had assumed'), ', which added ', fig(pn.rise_m, m1(pn.rise_m.value)), ' to the payment.'),
     p('Some relief is scheduled. The actuary projects ', fig(pn.fy2028_m, m1(pn.fy2028_m.value)), ' for FY2028 and then ', fig(pn.fy2029_m, m1(pn.fy2029_m.value)),

@@ -2,6 +2,7 @@
 import { figureSpan, mountPopovers, h, fig, cite } from './sources.js';
 import * as centsBar from './charts/cents-bar.js';
 import { observeWidth } from './charts/util.js';
+import { onThemeChange } from './theme.js';
 
 // Sales-tax rates as HTML bars, highest first; widths are a share of the highest rate (bars start at zero).
 export function rateBars(peers) {
@@ -20,14 +21,14 @@ export function ballotParas(b) {
   const co = b.county, sa = b.santee;
   const popM = (p) => `${(p.value / 1e6).toFixed(2)} million`;
   return [
-    h('p', 'ballot-note', `The County estimates that ${co.measure} would raise `, fig(co.est_low_m, mText(co.est_low_m.value)), ' to ',
+    h('p', 'ballot-note', `The County estimates that ${co.measure} will raise `, fig(co.est_low_m, mText(co.est_low_m.value)), ' to ',
       fig(co.est_high_m, mText(co.est_high_m.value)), ' a year, ', cite(co.cites.question, 'with no end date'), '. Spread over the county’s ',
       fig(co.population, popM(co.population)), ' residents, that is about ', fig(co.per_resident_low, `$${co.per_resident_low.value}`), ' to ',
       fig(co.per_resident_high, `$${co.per_resident_high.value}`), ' per person per year, though visitors and businesses pay part of any sales tax. ',
-      cite(co.cites.county_fund, 'The money would go to the County of San Diego, not to cities'), ': its spending plan allows ',
+      cite(co.cites.county_fund, 'The money goes to the County of San Diego, not to cities'), ': its spending plan allows ',
       ...co.shares.flatMap((sh, i) => [i ? (i === co.shares.length - 1 ? ', and ' : ', ') : '', fig(sh.pct, shareText(sh)), ` for ${sh.label}`]),
-      '. None of it would flow into the City of San Diego’s budget.'),
-    h('p', 'ballot-note', `Santee’s ${sa.measure}, a one-cent tax for `, fig(sa.years, `${sa.years.value} years`), ', is estimated to raise about ',
+      '. None of it flows into the City of San Diego’s budget.'),
+    h('p', 'ballot-note', `Santee’s ${sa.measure} would have been a one-cent tax for `, fig(sa.years, `${sa.years.value} years`), ', estimated to raise about ',
       fig(sa.est_m, `$${sa.est_m.value}M`), ' a year for that city, about ', fig(sa.per_resident, `$${sa.per_resident.value}`), ' per Santee resident, ',
       cite(sa.cites.uses, 'for streets, storm drains, and fire and emergency services'), '.'),
   ];
@@ -119,15 +120,20 @@ export function blocks(d) {
       countyList(co),
       h('p', 'chart-cap', `Total rate charged at the register, effective ${co.effective}. Grey: the countywide rate. Teal: the city’s own tax. Unincorporated areas of the county pay `,
         fig(co.unincorporated_pct, pctText(co.unincorporated_pct.value)), '.'),
-      h('p', null, 'On November 3, 2026, county voters decide on ', cite(co.cites.ballot_county, 'a countywide half-cent sales tax (Measure B)'),
-        ', which would apply in every city, San Diego included, and Santee voters on ', cite(co.cites.ballot_santee, 'a one-cent city sales tax (Measure Y)'), '.'),
+      h('p', null, 'On November 3, 2026, county voters approved ', cite(co.cites.ballot_county, 'a countywide half-cent sales tax (Measure B)'),
+        ', which applies in every city, San Diego included, by ', fig(co.ballot.county.results.yes_pct, pctText(co.ballot.county.results.yes_pct.value)),
+        ' to ', fig(co.ballot.county.results.no_pct, pctText(co.ballot.county.results.no_pct.value)), '. Santee voters rejected ',
+        cite(co.cites.ballot_santee, 'a one-cent city sales tax (Measure Y)'), ', ', fig(co.ballot.santee.results.no_pct, pctText(co.ballot.santee.results.no_pct.value)),
+        ' to ', fig(co.ballot.santee.results.yes_pct, pctText(co.ballot.santee.results.yes_pct.value)), '. ',
+        cite(co.ballot.cites.unofficial, 'Both counts are unofficial until the Registrar of Voters finishes counting and certifies them'), '.'),
       ...ballotParas(co.ballot)),
     block('Hotel tax: part of it goes to promoting tourism',
       ['Hotel guests pay a base hotel tax (transient occupancy tax) of ', fig(ho.base_cents, centsWord(ho.base_cents.value)),
-        ' per dollar of rent, and city law sends ', fig(ho.gf_cents, centsWord(ho.gf_cents.value)), ' of it (', fig(ho.gf_m, mText(ho.gf_m.value)),
-        ' in FY2027) to the General Fund. Of the rest, ', fig(ho.promo_cents, centsWord(ho.promo_cents.value)),
-        ' go to promoting tourism, some of it paid back to the General Fund for costs such as safety and upkeep around visitor sites, and ',
-        fig(ho.council_cents, centsWord(ho.council_cents.value)), ' can go to any purpose the City Council approves.'],
+        ' per dollar of rent, and city law splits it three ways. ', fig(ho.gf_cents, centsWord(ho.gf_cents.value)), ' (', fig(ho.gf_m, mText(ho.gf_m.value)),
+        ' in FY2027) is General Fund income by law. ', fig(ho.promo_cents, centsWord(ho.promo_cents.value)),
+        ' go to a separate fund for promoting tourism, some of it paid back to the General Fund for costs such as safety and upkeep around visitor sites. The last ',
+        fig(ho.council_cents, centsWord(ho.council_cents.value)), ' can go to any purpose the City Council approves: it sits in that separate fund rather than counting as General Fund income, and the Council decides each year. ',
+        cite(c.council_to_gf, 'For FY2027 the Council sent the whole cent to the General Fund'), ' (', fig(ho.council_m, mText(ho.council_m.value)), ').'],
       [cite(c.measure_c, 'A further hotel tax that voters approved in March 2020 (Measure C), collected since May 2025, can pay only for the Convention Center and homelessness programs, and from November 2030 also street repair.')]),
     block('Trash pickup: free for a century',
       [cite(c.peoples_ordinance, 'From 1919 until 2025, a voter-approved law (the People’s Ordinance) had the city pick up trash from most single-family homes for free'),
@@ -203,7 +209,7 @@ export function renderWhy(el, d) {
     mountPopovers(centsEl);
   };
   observeWidth(centsEl, draw);
-  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', draw);
+  onThemeChange(draw);
   const blocksEl = el.querySelector('#s2-blocks');
   blocksEl.replaceChildren(...blocks(d));
   mountPopovers(blocksEl);

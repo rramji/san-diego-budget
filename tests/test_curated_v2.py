@@ -202,6 +202,8 @@ def test_why_short_sources_and_arithmetic():
     assert d["trash"]["settlement_gf_fy2028_m"]["source"]["page"] == 45
     h = d["hotel"]
     assert (h["promo_cents"]["value"], h["council_cents"]["value"]) == (4.0, 1.0)
+    assert h["council_m"]["value"] == 30.16269 and h["council_m"]["source"]["page"] == 526
+    assert "Support to General Fund" in d["cites"]["council_to_gf"]["doc"]
     assert "June 2, 2026" in d["trash"]["settlement_gf_fy2028_m"]["source"]["doc"]
     # November 3, 2026 measures: the County's estimate spread over the E-5 population, labeled our arithmetic
     b = d["sales_tax"]["county"]["ballot"]
@@ -212,6 +214,10 @@ def test_why_short_sources_and_arithmetic():
     assert [sh["pct"]["value"] for sh in b["county"]["shares"]] == [60, 22.5, 17.5, 1.5]
     assert b["santee"]["per_resident"]["value"] == round(14e6 / 59812) == 234
     assert b["santee"]["years"]["value"] == 10
+    # Results (unofficial count posted November 10, 2026): Measure B passed, Santee's Measure Y failed
+    assert b["county"]["results"]["passed"] is True and b["county"]["results"]["yes_pct"]["value"] == 52.91
+    assert b["santee"]["results"]["passed"] is False and b["santee"]["results"]["no_pct"]["value"] == 58.95
+    assert "unofficial" in b["cites"]["unofficial"]["doc"].lower()
 
 
 @pytest.mark.parametrize("edit, where", [
@@ -224,6 +230,8 @@ def test_why_short_sources_and_arithmetic():
     (lambda d: d["growth"].__setitem__("revenue_period", ""), "growth.revenue_period"),
     (lambda d: d["quote"]["source"].__setitem__("url", "http://x"), "quote.source"),
     (lambda d: d["hotel"]["promo_cents"].__setitem__("value", 5.0), "hotel"),
+    (lambda d: d["sales_tax"]["county"]["ballot"]["county"]["results"].__setitem__("passed", False), "results.passed"),
+    (lambda d: d["sales_tax"]["county"]["ballot"]["santee"]["results"]["no_pct"].__setitem__("value", 70), "results"),
 ])
 def test_why_short_rejects_bad_input(edit, where):
     d = copy.deepcopy(curated.load(CUR, "why_short"))

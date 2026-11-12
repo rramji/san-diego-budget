@@ -473,7 +473,7 @@ WHY_GROUP_TOLERANCE = 0.05
 WHY_FIGURES = {
     "property_dollar": ("cities_cents",),
     "sales_tax": ("sd_rate_pct", "city_cents_of_rate"),
-    "hotel": ("base_cents", "gf_cents", "promo_cents", "council_cents", "gf_m"),
+    "hotel": ("base_cents", "gf_cents", "promo_cents", "council_cents", "gf_m", "council_m"),
     "trash": ("moved_m", "positions", "fee_monthly", "settlement_gf_fy2028_m"),
     "growth": ("revenue_pct", "inflation_pct"),
     "prop13": ("rate_pct", "cap_pct", "lag_low_months", "lag_high_months"),
@@ -640,6 +640,22 @@ def _check_ballot(b) -> dict:
     co["per_resident_low"] = _per_resident(co["est_low_m"], co["population"], "county")
     co["per_resident_high"] = _per_resident(co["est_high_m"], co["population"], "county")
     sa["per_resident"] = _per_resident(sa["est_m"], sa["population"], "santee")
+    for side in ("county", "santee"):
+        r = b[side].get("results")
+        if r is None:
+            continue
+        for k in ("yes_pct", "no_pct"):
+            _need_value(r.get(k), f"ballot.{side}.results.{k}")
+        yes, no = r["yes_pct"]["value"], r["no_pct"]["value"]
+        if not (0 < yes < 100 and 0 < no < 100 and abs(yes + no - 100) <= 0.05):
+            raise ValueError(f"ballot.{side}.results: yes_pct + no_pct must be 100")
+        if r.get("passed") is not (yes > no):
+            raise ValueError(f"ballot.{side}.results.passed: must match the percentages")
+        if not isinstance(r.get("as_of"), str) or not re.fullmatch(r"\d{4}-\d{2}-\d{2}", r["as_of"]):
+            raise ValueError(f"ballot.{side}.results.as_of: YYYY-MM-DD")
+    if "cites" in b:
+        for k, c in b["cites"].items():
+            _check_source(c, f"ballot.cites.{k}")
     return b
 
 
